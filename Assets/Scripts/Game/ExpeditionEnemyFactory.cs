@@ -1,0 +1,295 @@
+using System.Collections.Generic;
+using UnityEngine;
+
+public static class ExpeditionEnemyFactory
+{
+    private static EnemyArchetypeDatabaseAsset cachedEnemyDatabase;
+    private static RegionEncounterDatabaseAsset cachedEncounterDatabase;
+
+    public static List<ExpeditionEnemyState> BuildEnemies(WorldRegionDefinition region, ExpeditionRoomState room, System.Random random)
+    {
+        return BuildEnemies(region, room, random, null, 0);
+    }
+
+    public static List<ExpeditionEnemyState> BuildEnemies(
+        WorldRegionDefinition region,
+        ExpeditionRoomState room,
+        System.Random random,
+        ExpeditionEnemyFaction? preferredFaction,
+        int pressureLevel)
+    {
+        var enemies = new List<ExpeditionEnemyState>();
+        var enemyCount = room.Kind == ExpeditionRoomKind.Boss ? 3 : room.Kind == ExpeditionRoomKind.Elite ? 2 : 1 + region.DangerRank / 2;
+        if (pressureLevel >= 4 && room.Kind == ExpeditionRoomKind.Battle)
+        {
+            enemyCount++;
+        }
+
+        var factions = GetRegionFactions(region.Id);
+
+        for (var i = 0; i < enemyCount; i++)
+        {
+            var isElite = room.Kind == ExpeditionRoomKind.Boss || room.Kind == ExpeditionRoomKind.Elite || (i == enemyCount - 1 && region.DangerRank >= 4);
+            var faction = preferredFaction.HasValue && i == 0 ? preferredFaction.Value : factions[(room.Seed + i * 5 + (isElite ? 1 : 0)) % factions.Length];
+            enemies.Add(CreateEnemy(region, room, faction, isElite, i));
+        }
+
+        return enemies;
+    }
+
+    private static ExpeditionEnemyState CreateEnemy(WorldRegionDefinition region, ExpeditionRoomState room, ExpeditionEnemyFaction faction, bool isElite, int index)
+    {
+        var maxHealth = 7 + region.DangerRank * 2 + (isElite ? 5 : 0) + index;
+        var damage = 2 + region.RequiredRealmTier + (isElite ? 2 : 0);
+        var stressDamage = 4 + region.DangerRank + (isElite ? 2 : 0);
+        var armor = isElite ? 2 : 1;
+        var poisonResistance = 0;
+        var stunResistance = 0;
+        string name;
+        string techniqueName;
+
+        var archetype = GetEnemyArchetype(faction, isElite, room.Kind, room.Seed + index * 11);
+        if (archetype != null)
+        {
+            name = archetype.displayName;
+            techniqueName = archetype.techniqueName;
+            maxHealth += archetype.healthOffset;
+            damage += archetype.damageOffset;
+            stressDamage += archetype.stressOffset;
+            armor += archetype.armorOffset;
+            poisonResistance = Mathf.Max(0, archetype.poisonResistance);
+            stunResistance = Mathf.Max(0, archetype.stunResistance);
+        }
+        else
+        {
+            ApplyFallbackEnemyData(room.Kind, faction, index, isElite, ref maxHealth, ref damage, ref stressDamage, ref armor, ref poisonResistance, ref stunResistance, out name, out techniqueName);
+        }
+
+        maxHealth = Mathf.Max(1, maxHealth);
+        damage = Mathf.Max(1, damage);
+        stressDamage = Mathf.Max(1, stressDamage);
+        armor = Mathf.Max(0, armor);
+
+        return new ExpeditionEnemyState(
+            faction,
+            name,
+            techniqueName,
+            archetype != null ? archetype.portraitImage : null,
+            maxHealth,
+            damage,
+            stressDamage,
+            isElite,
+            armor,
+            poisonResistance,
+            stunResistance,
+            index);
+    }
+
+    private static EnemyArchetypeRecord GetEnemyArchetype(ExpeditionEnemyFaction faction, bool isElite, ExpeditionRoomKind roomKind, int seed)
+    {
+        var database = GetEnemyDatabase();
+        if (database == null || database.archetypes == null || database.archetypes.Length == 0)
+        {
+            return null;
+        }
+
+        var candidates = new List<EnemyArchetypeRecord>();
+        for (var i = 0; i < database.archetypes.Length; i++)
+        {
+            var archetype = database.archetypes[i];
+            if (archetype == null || archetype.faction != (int)faction)
+            {
+                continue;
+            }
+
+            if (isElite && !archetype.eliteOnly && HasEliteCandidate(database, faction, roomKind))
+            {
+                continue;
+            }
+
+            if (!isElite && archetype.eliteOnly)
+            {
+                continue;
+            }
+
+            if (!MatchesRoomKind(archetype, roomKind))
+            {
+                continue;
+            }
+
+            candidates.Add(archetype);
+        }
+
+        if (candidates.Count == 0)
+        {
+            for (var i = 0; i < database.archetypes.Length; i++)
+            {
+                var archetype = database.archetypes[i];
+                if (archetype == null || archetype.faction != (int)faction)
+                {
+                    continue;
+                }
+
+                if (!isElite && archetype.eliteOnly)
+                {
+                    continue;
+                }
+
+                candidates.Add(archetype);
+            }
+        }
+
+        return candidates.Count > 0 ? candidates[Mathf.Abs(seed) % candidates.Count] : null;
+    }
+
+    private static bool HasEliteCandidate(EnemyArchetypeDatabaseAsset database, ExpeditionEnemyFaction faction, ExpeditionRoomKind roomKind)
+    {
+        if (database == null || database.archetypes == null)
+        {
+            return false;
+        }
+
+        for (var i = 0; i < database.archetypes.Length; i++)
+        {
+            var archetype = database.archetypes[i];
+            if (archetype != null && archetype.faction == (int)faction && archetype.eliteOnly && MatchesRoomKind(archetype, roomKind))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool MatchesRoomKind(EnemyArchetypeRecord archetype, ExpeditionRoomKind roomKind)
+    {
+        if (archetype.allowedRoomKinds == null || archetype.allowedRoomKinds.Length == 0)
+        {
+            return true;
+        }
+
+        for (var i = 0; i < archetype.allowedRoomKinds.Length; i++)
+        {
+            if (archetype.allowedRoomKinds[i] == (int)roomKind)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static EnemyArchetypeDatabaseAsset GetEnemyDatabase()
+    {
+        if (cachedEnemyDatabase == null)
+        {
+            cachedEnemyDatabase = Resources.Load<EnemyArchetypeDatabaseAsset>("Data/EnemyArchetypeDatabase");
+        }
+
+        return cachedEnemyDatabase;
+    }
+
+    private static RegionEncounterDatabaseAsset GetEncounterDatabase()
+    {
+        if (cachedEncounterDatabase == null)
+        {
+            cachedEncounterDatabase = Resources.Load<RegionEncounterDatabaseAsset>("Data/RegionEncounterDatabase");
+        }
+
+        return cachedEncounterDatabase;
+    }
+
+    private static ExpeditionEnemyFaction[] GetRegionFactions(string regionId)
+    {
+        var database = GetEncounterDatabase();
+        if (database != null && database.profiles != null)
+        {
+            for (var i = 0; i < database.profiles.Length; i++)
+            {
+                var profile = database.profiles[i];
+                if (profile == null || profile.regionId != regionId || profile.factions == null || profile.factions.Length == 0)
+                {
+                    continue;
+                }
+
+                var factions = new ExpeditionEnemyFaction[profile.factions.Length];
+                for (var factionIndex = 0; factionIndex < profile.factions.Length; factionIndex++)
+                {
+                    factions[factionIndex] = (ExpeditionEnemyFaction)profile.factions[factionIndex];
+                }
+
+                return factions;
+            }
+        }
+
+        switch (regionId)
+        {
+            case "misty_forest":
+                return new[] { ExpeditionEnemyFaction.Beast, ExpeditionEnemyFaction.HeartDemon, ExpeditionEnemyFaction.Bandit };
+            case "crimson_valley":
+                return new[] { ExpeditionEnemyFaction.Cultivator, ExpeditionEnemyFaction.Beast, ExpeditionEnemyFaction.HeartDemon };
+            case "deep_springs":
+                return new[] { ExpeditionEnemyFaction.CorpsePuppet, ExpeditionEnemyFaction.HeartDemon, ExpeditionEnemyFaction.Cultivator };
+            case "northern_pass":
+                return new[] { ExpeditionEnemyFaction.Bandit, ExpeditionEnemyFaction.Cultivator, ExpeditionEnemyFaction.CorpsePuppet, ExpeditionEnemyFaction.Beast };
+            case "celestial_ruins":
+                return new[] { ExpeditionEnemyFaction.CorpsePuppet, ExpeditionEnemyFaction.HeartDemon, ExpeditionEnemyFaction.Cultivator, ExpeditionEnemyFaction.Beast };
+            default:
+                return new[] { ExpeditionEnemyFaction.Bandit, ExpeditionEnemyFaction.HeartDemon, ExpeditionEnemyFaction.Cultivator };
+        }
+    }
+
+    private static void ApplyFallbackEnemyData(
+        ExpeditionRoomKind roomKind,
+        ExpeditionEnemyFaction faction,
+        int index,
+        bool isElite,
+        ref int maxHealth,
+        ref int damage,
+        ref int stressDamage,
+        ref int armor,
+        ref int poisonResistance,
+        ref int stunResistance,
+        out string name,
+        out string techniqueName)
+    {
+        switch (faction)
+        {
+            case ExpeditionEnemyFaction.Bandit:
+                name = isElite ? "悍匪头目" : index % 2 == 0 ? "山贼刀手" : "黑风弩匪";
+                techniqueName = "掷灰夺灯";
+                maxHealth -= 1;
+                stressDamage = System.Math.Max(2, stressDamage - 2);
+                armor = 0;
+                break;
+            case ExpeditionEnemyFaction.Cultivator:
+                name = isElite ? "魔焰祭使" : index % 2 == 0 ? "夺灵邪修" : "血符散修";
+                techniqueName = "邪诀侵神";
+                poisonResistance = 1;
+                armor += 1;
+                break;
+            case ExpeditionEnemyFaction.Beast:
+                name = isElite ? "山魈头领" : index % 2 == 0 ? "裂爪妖狼" : "沼鳞蜥妖";
+                techniqueName = "扑杀撕咬";
+                damage += 1;
+                stressDamage = System.Math.Max(2, stressDamage - 1);
+                poisonResistance = 1;
+                break;
+            case ExpeditionEnemyFaction.HeartDemon:
+                name = roomKind == ExpeditionRoomKind.Boss ? "魇念魔主" : index % 2 == 0 ? "心魔残影" : "执念幻身";
+                techniqueName = "幻念侵心";
+                stressDamage += 2;
+                armor = 0;
+                poisonResistance = 2;
+                break;
+            default:
+                name = isElite ? "尸煞督统" : index % 2 == 0 ? "腐甲尸傀" : "阴骨行尸";
+                techniqueName = "尸毒重击";
+                maxHealth += 2;
+                armor += 1;
+                poisonResistance = 3;
+                stunResistance = 1;
+                break;
+        }
+    }
+}

@@ -1,0 +1,36 @@
+.DS_Store
+
+# Unity generated folders
+/Library/
+/Logs/
+/Temp/
+/Obj/
+/Build/
+/Builds/
+/MemoryCaptures/
+/UserSettings/
+
+# Unity generated files
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# Tooling and local agent state
+/.agents/
+/.claude/
+/.codex/
+
+# OS / IDE
+.idea/
+.vscode/

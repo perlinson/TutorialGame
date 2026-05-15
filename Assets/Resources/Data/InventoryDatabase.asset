@@ -1,0 +1,141 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c633faaff6664e6cb5b3013ed0c42c76, type: 3}
+  m_Name: InventoryDatabase
+  m_EditorClassIdentifier: 
+  items:
+  - id: green_spirit_sand
+    displayName: "\u9752\u77F3\u7075\u7802"
+    category: "\u4FEE\u70BC\u8D44\u6E90"
+    rarity: "\u51E1\u9636"
+    description: "\u5C71\u95E8\u9644\u8FD1\u6700\u5E38\u89C1\u7684\u7075\u7802\uFF0C\u53EF\u7528\u4E8E\u7A33\u56FA\u7EC3\u6C14\u671F\u6839\u57FA\u3002"
+    crystalValue: 1
+  - id: bandit_route_token
+    displayName: "\u532A\u5BE8\u8DEF\u5F15"
+    category: "\u4EFB\u52A1\u51ED\u8BC1"
+    rarity: "\u51E1\u9636"
+    description: "\u4ECE\u5C71\u8D3C\u8EAB\u4E0A\u641C\u51FA\u7684\u8DEF\u5F15\uFF0C\u53EF\u8FFD\u67E5\u9644\u8FD1\u6D41\u5BC7\u636E\u70B9\u3002"
+    crystalValue: 1
+  - id: mist_mushroom
+    displayName: "\u96FE\u9690\u829D"
+    category: "\u5929\u6750\u5730\u5B9D"
+    rarity: "\u7075\u9636"
+    description: "\u751F\u957F\u5728\u7634\u96FE\u6E7F\u5730\u7684\u7075\u829D\uFF0C\u5E38\u7528\u4E8E\u5B89\u795E\u4E0E\u89E3\u7634\u3002"
+    crystalValue: 2
+  - id: vine_fruit
+    displayName: "\u9752\u841D\u679C"
+    category: "\u4FEE\u70BC\u8D44\u6E90"
+    rarity: "\u7075\u9636"
+    description: "\u542B\u6728\u6C34\u7075\u673A\u7684\u679C\u5B9E\uFF0C\u9002\u5408\u4F5C\u4E3A\u4E39\u4FEE\u8F85\u6750\u3002"
+    crystalValue: 2
+  - id: crimson_ore
+    displayName: "\u8D64\u971E\u77FF\u9AD3"
+    category: "\u70BC\u5668\u6750\u6599"
+    rarity: "\u7075\u9636"
+    description: "\u706B\u8109\u9644\u8FD1\u51DD\u51FA\u7684\u77FF\u9AD3\uFF0C\u70BC\u706B\u5C5E\u6027\u6CD5\u5668\u5E38\u8981\u7528\u5230\u3002"
+    crystalValue: 2
+  - id: flame_jujube
+    displayName: "\u706B\u67A3"
+    category: "\u5929\u6750\u5730\u5B9D"
+    rarity: "\u7075\u9636"
+    description: "\u6E29\u8865\u6C14\u8840\u7684\u706B\u5C5E\u6027\u7075\u679C\uFF0C\u517C\u5177\u4FEE\u70BC\u4E0E\u7597\u4F24\u4EF7\u503C\u3002"
+    crystalValue: 2
+  - id: spring_jade_dew
+    displayName: "\u7384\u6CC9\u7389\u9732"
+    category: "\u5929\u6750\u5730\u5B9D"
+    rarity: "\u7075\u9636"
+    description: "\u6DF1\u6CC9\u4E2D\u6C89\u6DC0\u51FA\u7684\u7389\u9732\uFF0C\u5E38\u7528\u4E8E\u7A33\u795E\u548C\u6E29\u517B\u7ECF\u8109\u3002"
+    crystalValue: 2
+  - id: cold_marrow_algae
+    displayName: "\u5BD2\u9AD3\u85FB"
+    category: "\u70BC\u4E39\u8F85\u6750"
+    rarity: "\u7075\u9636"
+    description: "\u5BD2\u6CC9\u8FB9\u5C11\u89C1\u7684\u85FB\u7C7B\uFF0C\u53EF\u5E73\u8861\u706B\u6BD2\u4E39\u65B9\u3002"
+    crystalValue: 2
+  - id: north_iron
+    displayName: "\u6714\u98CE\u7384\u94C1"
+    category: "\u70BC\u5668\u6750\u6599"
+    rarity: "\u7384\u9636"
+    description: "\u5E38\u89C1\u4E8E\u5317\u5730\u53E4\u9053\u7684\u786C\u94C1\uFF0C\u7528\u4E8E\u6CD5\u5668\u80DA\u6599\u6781\u4F73\u3002"
+    crystalValue: 4
+  - id: ancient_pass_order
+    displayName: "\u53E4\u9053\u5173\u4EE4"
+    category: "\u4EFB\u52A1\u51ED\u8BC1"
+    rarity: "\u7384\u9636"
+    description: "\u7559\u5728\u5317\u51A5\u53E4\u9053\u6B8B\u5173\u4E2D\u7684\u4EE4\u724C\uFF0C\u53EF\u7528\u6765\u6362\u53D6\u66F4\u5927\u52BF\u529B\u7684\u59D4\u6258\u3002"
+    crystalValue: 4
+  - id: starfall_crystal
+    displayName: "\u661F\u9668\u6B8B\u6676"
+    category: "\u5929\u6750\u5730\u5B9D"
+    rarity: "\u7384\u9636"
+    description: "\u5929\u5916\u9057\u8FF9\u4E2D\u624D\u80FD\u627E\u5230\u7684\u661F\u8F89\u7ED3\u6676\uFF0C\u4EF7\u503C\u6781\u9AD8\u3002"
+    crystalValue: 4
+  - id: void_script
+    displayName: "\u592A\u865A\u9057\u7B80"
+    category: "\u4F20\u627F\u6B8B\u5377"
+    rarity: "\u7384\u9636"
+    description: "\u8BB0\u8F7D\u6B8B\u7834\u529F\u6CD5\u601D\u8DEF\u7684\u53E4\u7B80\uFF0C\u662F\u540E\u7EED\u7AE0\u8282\u7684\u91CD\u8981\u6750\u6599\u3002"
+    crystalValue: 4
+  - id: beast_core_shard
+    displayName: "\u5996\u4E39\u788E\u7247"
+    category: "\u5996\u517D\u6750\u6599"
+    rarity: "\u51E1\u9636"
+    description: "\u5996\u517D\u4F53\u5185\u6B8B\u7559\u7684\u7075\u6838\u788E\u7247\uFF0C\u53EF\u7528\u4E8E\u70BC\u4E39\u548C\u59D4\u6258\u3002"
+    crystalValue: 1
+  - id: beast_bone
+    displayName: "\u7075\u9AA8"
+    category: "\u5996\u517D\u6750\u6599"
+    rarity: "\u51E1\u9636"
+    description: "\u5E26\u5FAE\u5F31\u7075\u6027\u7684\u5996\u9AA8\uFF0C\u662F\u5E38\u89C1\u7684\u70BC\u5668\u5E95\u6750\u3002"
+    crystalValue: 1
+  - id: blood_talisman_page
+    displayName: "\u8840\u7B26\u6B8B\u9875"
+    category: "\u90AA\u4FEE\u6750\u6599"
+    rarity: "\u7075\u9636"
+    description: "\u6B8B\u5B58\u90AA\u610F\u7684\u7B26\u9875\uFF0C\u7814\u7A76\u4EF7\u503C\u9AD8\uFF0C\u4F46\u4E0D\u5B9C\u4E45\u7559\u3002"
+    crystalValue: 2
+  - id: evil_cult_notes
+    displayName: "\u593A\u7075\u624B\u672D"
+    category: "\u90AA\u4FEE\u6750\u6599"
+    rarity: "\u7075\u9636"
+    description: "\u90AA\u4FEE\u8BB0\u4E0B\u7684\u63A0\u593A\u5FC3\u5F97\uFF0C\u53EF\u4F5C\u4E3A\u4EFB\u52A1\u8BC1\u636E\u3002"
+    crystalValue: 2
+  - id: heart_mark_fragment
+    displayName: "\u5FC3\u5370\u6B8B\u7247"
+    category: "\u795E\u9B42\u6750\u6599"
+    rarity: "\u7075\u9636"
+    description: "\u51FB\u6E83\u5FC3\u9B54\u540E\u7559\u4E0B\u7684\u795E\u5FF5\u788E\u7247\uFF0C\u53EF\u5165\u836F\u4E5F\u53EF\u4EA4\u4ED8\u59D4\u6258\u3002"
+    crystalValue: 2
+  - id: corpse_core
+    displayName: "\u5C38\u6838"
+    category: "\u5C38\u5080\u6750\u6599"
+    rarity: "\u7075\u9636"
+    description: "\u5C38\u5080\u4F53\u5185\u7684\u9634\u715E\u51DD\u6838\uFF0C\u8BB8\u591A\u9A71\u5C38\u90AA\u4FEE\u4F1A\u9AD8\u4EF7\u6536\u8D2D\u3002"
+    crystalValue: 2
+  - id: yin_bone
+    displayName: "\u9634\u9AA8"
+    category: "\u5C38\u5080\u6750\u6599"
+    rarity: "\u51E1\u9636"
+    description: "\u9634\u6C14\u6D78\u900F\u7684\u9AA8\u7247\uFF0C\u662F\u5C38\u5080\u548C\u9634\u9635\u5E38\u89C1\u6750\u6599\u3002"
+    crystalValue: 1
+  - id: array_shard
+    displayName: "\u53E4\u9635\u6B8B\u7247"
+    category: "\u9057\u8FF9\u6750\u6599"
+    rarity: "\u7075\u9636"
+    description: "\u6B8B\u9635\u7834\u788E\u540E\u7559\u4E0B\u7684\u9635\u7EB9\u788E\u7247\uFF0C\u53EF\u7528\u4E8E\u9AD8\u9636\u59D4\u6258\u3002"
+    crystalValue: 2
+  - id: mind_cleansing_incense
+    displayName: "\u6E05\u5FC3\u9999\u7070"
+    category: "\u4FEE\u70BC\u8D44\u6E90"
+    rarity: "\u51E1\u9636"
+    description: "\u796D\u53F0\u4F59\u70EC\u4E2D\u7684\u9999\u7070\uFF0C\u5BF9\u7A33\u5B9A\u5FC3\u5883\u7565\u6709\u5E2E\u52A9\u3002"
+    crystalValue: 1

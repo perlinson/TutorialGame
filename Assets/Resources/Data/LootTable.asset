@@ -1,0 +1,104 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02009b67288a46f6b2a253e2f2ddbea5, type: 3}
+  m_Name: LootTable
+  m_EditorClassIdentifier: 
+  factionLoots:
+  - faction: 0
+    drops:
+    - itemId: green_spirit_sand
+      normalQuantity: 1
+      eliteQuantity: 1
+    - itemId: bandit_route_token
+      normalQuantity: 0
+      eliteQuantity: 1
+  - faction: 1
+    drops:
+    - itemId: blood_talisman_page
+      normalQuantity: 1
+      eliteQuantity: 1
+    - itemId: evil_cult_notes
+      normalQuantity: 0
+      eliteQuantity: 1
+  - faction: 2
+    drops:
+    - itemId: beast_core_shard
+      normalQuantity: 1
+      eliteQuantity: 1
+    - itemId: beast_bone
+      normalQuantity: 1
+      eliteQuantity: 2
+  - faction: 3
+    drops:
+    - itemId: heart_mark_fragment
+      normalQuantity: 1
+      eliteQuantity: 2
+  - faction: 4
+    drops:
+    - itemId: yin_bone
+      normalQuantity: 1
+      eliteQuantity: 2
+    - itemId: corpse_core
+      normalQuantity: 0
+      eliteQuantity: 1
+  roomLoots:
+  - roomKind: 0
+    drops:
+    - itemId: green_spirit_sand
+      normalQuantity: 1
+      eliteQuantity: 1
+  - roomKind: 3
+    drops:
+    - itemId: array_shard
+      normalQuantity: 1
+      eliteQuantity: 1
+  - roomKind: 5
+    drops:
+    - itemId: mind_cleansing_incense
+      normalQuantity: 1
+      eliteQuantity: 1
+  - roomKind: 6
+    drops:
+    - itemId: array_shard
+      normalQuantity: 1
+      eliteQuantity: 1
+  regionLoots:
+  - regionId: green_stone_gate
+    rareItemId: green_spirit_sand
+    herbItemId: green_spirit_sand
+    clearDrops: []
+  - regionId: misty_forest
+    rareItemId: mist_mushroom
+    herbItemId: mist_mushroom
+    clearDrops: []
+  - regionId: crimson_valley
+    rareItemId: crimson_ore
+    herbItemId: flame_jujube
+    clearDrops: []
+  - regionId: deep_springs
+    rareItemId: spring_jade_dew
+    herbItemId: cold_marrow_algae
+    clearDrops: []
+  - regionId: northern_pass
+    rareItemId: north_iron
+    herbItemId: north_iron
+    clearDrops:
+    - itemId: ancient_pass_order
+      normalQuantity: 1
+      eliteQuantity: 1
+  - regionId: celestial_ruins
+    rareItemId: starfall_crystal
+    herbItemId: starfall_crystal
+    clearDrops:
+    - itemId: void_script
+      normalQuantity: 1
+      eliteQuantity: 1

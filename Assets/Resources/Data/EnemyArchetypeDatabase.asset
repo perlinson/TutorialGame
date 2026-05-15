@@ -1,0 +1,209 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2b70d4883f9f4a7eaaf0ba99c7af5609, type: 3}
+  m_Name: EnemyArchetypeDatabase
+  m_EditorClassIdentifier: 
+  archetypes:
+  - id: bandit_blade
+    faction: 0
+    eliteOnly: 0
+    allowedRoomKinds: []
+    displayName: "\u5C71\u8D3C\u5200\u624B"
+    techniqueName: "\u63B7\u7070\u593A\u706F"
+    healthOffset: -1
+    damageOffset: 0
+    stressOffset: -2
+    armorOffset: -1
+    poisonResistance: 0
+    stunResistance: 0
+  - id: bandit_crossbow
+    faction: 0
+    eliteOnly: 0
+    allowedRoomKinds: []
+    displayName: "\u9ED1\u98CE\u5F29\u532A"
+    techniqueName: "\u63B7\u7070\u593A\u706F"
+    healthOffset: -1
+    damageOffset: 0
+    stressOffset: -2
+    armorOffset: -1
+    poisonResistance: 0
+    stunResistance: 0
+  - id: bandit_elite
+    faction: 0
+    eliteOnly: 1
+    allowedRoomKinds: []
+    displayName: "\u608D\u532A\u5934\u76EE"
+    techniqueName: "\u906E\u715E\u593A\u706F"
+    healthOffset: -1
+    damageOffset: 0
+    stressOffset: -2
+    armorOffset: -2
+    poisonResistance: 0
+    stunResistance: 0
+  - id: cult_drain
+    faction: 1
+    eliteOnly: 0
+    allowedRoomKinds: []
+    displayName: "\u593A\u7075\u90AA\u4FEE"
+    techniqueName: "\u90AA\u8BC0\u4FB5\u795E"
+    healthOffset: 0
+    damageOffset: 0
+    stressOffset: 0
+    armorOffset: 1
+    poisonResistance: 1
+    stunResistance: 0
+  - id: cult_blood
+    faction: 1
+    eliteOnly: 0
+    allowedRoomKinds: []
+    displayName: "\u8840\u7B26\u6563\u4FEE"
+    techniqueName: "\u90AA\u8BC0\u4FB5\u795E"
+    healthOffset: 0
+    damageOffset: 0
+    stressOffset: 0
+    armorOffset: 1
+    poisonResistance: 1
+    stunResistance: 0
+  - id: cult_elite
+    faction: 1
+    eliteOnly: 1
+    allowedRoomKinds: []
+    displayName: "\u9B54\u7130\u796D\u4F7F"
+    techniqueName: "\u9B54\u7130\u70BC\u795E"
+    healthOffset: 0
+    damageOffset: 0
+    stressOffset: 0
+    armorOffset: 1
+    poisonResistance: 1
+    stunResistance: 0
+  - id: beast_wolf
+    faction: 2
+    eliteOnly: 0
+    allowedRoomKinds: []
+    displayName: "\u88C2\u722A\u5996\u72FC"
+    techniqueName: "\u6251\u6740\u6495\u54AC"
+    healthOffset: 0
+    damageOffset: 1
+    stressOffset: -1
+    armorOffset: 0
+    poisonResistance: 1
+    stunResistance: 0
+  - id: beast_lizard
+    faction: 2
+    eliteOnly: 0
+    allowedRoomKinds: []
+    displayName: "\u6CBC\u9CDE\u8725\u5996"
+    techniqueName: "\u6251\u6740\u6495\u54AC"
+    healthOffset: 0
+    damageOffset: 1
+    stressOffset: -1
+    armorOffset: 0
+    poisonResistance: 1
+    stunResistance: 0
+  - id: beast_elite
+    faction: 2
+    eliteOnly: 1
+    allowedRoomKinds: []
+    displayName: "\u5C71\u9B48\u5934\u9886"
+    techniqueName: "\u72C2\u6298\u6495\u88C2"
+    healthOffset: 0
+    damageOffset: 1
+    stressOffset: -1
+    armorOffset: 0
+    poisonResistance: 1
+    stunResistance: 0
+  - id: heart_echo
+    faction: 3
+    eliteOnly: 0
+    allowedRoomKinds: []
+    displayName: "\u5FC3\u9B54\u6B8B\u5F71"
+    techniqueName: "\u5E7B\u5FF5\u4FB5\u5FC3"
+    healthOffset: 0
+    damageOffset: 0
+    stressOffset: 2
+    armorOffset: -1
+    poisonResistance: 2
+    stunResistance: 0
+  - id: heart_obsession
+    faction: 3
+    eliteOnly: 0
+    allowedRoomKinds: []
+    displayName: "\u6267\u5FF5\u5E7B\u8EAB"
+    techniqueName: "\u5E7B\u5FF5\u4FB5\u5FC3"
+    healthOffset: 0
+    damageOffset: 0
+    stressOffset: 2
+    armorOffset: -1
+    poisonResistance: 2
+    stunResistance: 0
+  - id: heart_elite
+    faction: 3
+    eliteOnly: 1
+    allowedRoomKinds:
+    - 2
+    displayName: "\u9B47\u5FC3\u4F7F"
+    techniqueName: "\u9B47\u5FF5\u88C2\u795E"
+    healthOffset: 1
+    damageOffset: 0
+    stressOffset: 2
+    armorOffset: -1
+    poisonResistance: 2
+    stunResistance: 0
+  - id: heart_boss
+    faction: 3
+    eliteOnly: 1
+    allowedRoomKinds:
+    - 7
+    displayName: "\u9B47\u5FF5\u9B54\u4E3B"
+    techniqueName: "\u9B47\u5FF5\u88C2\u795E"
+    healthOffset: 2
+    damageOffset: 0
+    stressOffset: 3
+    armorOffset: -1
+    poisonResistance: 2
+    stunResistance: 1
+  - id: corpse_armor
+    faction: 4
+    eliteOnly: 0
+    allowedRoomKinds: []
+    displayName: "\u8150\u7532\u5C38\u5080"
+    techniqueName: "\u5C38\u6BD2\u91CD\u51FB"
+    healthOffset: 2
+    damageOffset: 0
+    stressOffset: 0
+    armorOffset: 1
+    poisonResistance: 3
+    stunResistance: 1
+  - id: corpse_walker
+    faction: 4
+    eliteOnly: 0
+    allowedRoomKinds: []
+    displayName: "\u9634\u9AA8\u884C\u5C38"
+    techniqueName: "\u5C38\u6BD2\u91CD\u51FB"
+    healthOffset: 2
+    damageOffset: 0
+    stressOffset: 0
+    armorOffset: 1
+    poisonResistance: 3
+    stunResistance: 1
+  - id: corpse_elite
+    faction: 4
+    eliteOnly: 1
+    allowedRoomKinds: []
+    displayName: "\u5C38\u715E\u7763\u7EDF"
+    techniqueName: "\u5C38\u715E\u91CD\u7838"
+    healthOffset: 2
+    damageOffset: 0
+    stressOffset: 0
+    armorOffset: 1
+    poisonResistance: 3
+    stunResistance: 1

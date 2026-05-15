@@ -1,0 +1,79 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb6f80df35c64053ba07707e7ba050e0, type: 3}
+  m_Name: WorkshopRecipeDatabase
+  m_EditorClassIdentifier: 
+  recipes:
+  - Id: peiyuan_powder
+    Title: "\u57F9\u5143\u6563"
+    Discipline: "\u70BC\u4E39"
+    Description: "\u628A\u5996\u4E39\u788E\u7247\u548C\u7075\u7802\u78E8\u6210\u836F\u6563\uFF0C\u7528\u6765\u7A33\u56FA\u7EC3\u6C14\u671F\u6839\u57FA\u3002"
+    CostItems:
+    - itemId: green_spirit_sand
+      quantity: 2
+    - itemId: beast_core_shard
+      quantity: 2
+    RewardQi: 3
+    RewardCrystals: 0
+    RewardAttackLevel: 0
+    RewardVitalityLevel: 0
+    RewardBagCapacity: 0
+  - Id: nawu_pouch
+    Title: "\u7EB3\u7269\u7B26\u888B"
+    Discipline: "\u6742\u827A"
+    Description: "\u4EE5\u8DEF\u5F15\u7EB9\u3001\u9635\u7247\u548C\u7075\u9AA8\u7F1D\u5408\u65B0\u7684\u7EB3\u7269\u5939\u5C42\uFF0C\u6269\u5145\u50A8\u7269\u888B\u7A7A\u95F4\u3002"
+    CostItems:
+    - itemId: bandit_route_token
+      quantity: 1
+    - itemId: array_shard
+      quantity: 1
+    - itemId: beast_bone
+      quantity: 2
+    RewardQi: 0
+    RewardCrystals: 0
+    RewardAttackLevel: 0
+    RewardVitalityLevel: 0
+    RewardBagCapacity: 1
+  - Id: body_tempering_paste
+    Title: "\u6DEC\u4F53\u7075\u818F"
+    Discipline: "\u70BC\u4E39"
+    Description: "\u706B\u67A3\u3001\u5BD2\u9AD3\u85FB\u4E0E\u5C38\u6838\u76F8\u4E92\u8C03\u548C\uFF0C\u53EF\u903C\u51FA\u7B4B\u9AA8\u6F5C\u529B\u3002"
+    CostItems:
+    - itemId: flame_jujube
+      quantity: 1
+    - itemId: cold_marrow_algae
+      quantity: 1
+    - itemId: corpse_core
+      quantity: 1
+    RewardQi: 0
+    RewardCrystals: 0
+    RewardAttackLevel: 0
+    RewardVitalityLevel: 1
+    RewardBagCapacity: 0
+  - Id: artifact_refine
+    Title: "\u796D\u70BC\u653B\u4F10\u6CD5\u5668"
+    Discipline: "\u70BC\u5668"
+    Description: "\u4EE5\u77FF\u9AD3\u3001\u7384\u94C1\u3001\u90AA\u4FEE\u624B\u672D\u548C\u9635\u7247\u91CD\u70BC\u653B\u4F10\u6CD5\u5668\uFF0C\u8BA9\u672F\u6CD5\u66F4\u51CC\u5389\u3002"
+    CostItems:
+    - itemId: crimson_ore
+      quantity: 1
+    - itemId: north_iron
+      quantity: 1
+    - itemId: evil_cult_notes
+      quantity: 1
+    - itemId: array_shard
+      quantity: 1
+    RewardQi: 0
+    RewardCrystals: 0
+    RewardAttackLevel: 1
+    RewardVitalityLevel: 0
+    RewardBagCapacity: 0
