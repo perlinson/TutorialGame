@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using Text = TMPro.TMP_Text;
 
 public sealed class GameHudController : MonoBehaviour
 {

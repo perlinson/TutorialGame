@@ -5,6 +5,19 @@ using UnityEngine;
 [Serializable]
 public sealed class MainMenuSaveData
 {
+    private static readonly string[] FallbackRealmNames =
+    {
+        "练气初期",
+        "练气中期",
+        "练气后期",
+        "筑基初期",
+        "筑基中期",
+        "结丹前夕"
+    };
+
+    private const string FallbackStartingRegionId = "green_stone_gate";
+    private const string FallbackStartingRegionName = "青石山门";
+
     public string heroName;
     public string archetypeId;
     public string archetypeName;
@@ -43,6 +56,14 @@ public sealed class MainMenuSaveData
 
     public void EnsureDefaults()
     {
+        heroName = heroName ?? string.Empty;
+        archetypeId = archetypeId ?? string.Empty;
+        archetypeName = archetypeName ?? string.Empty;
+        origin = origin ?? string.Empty;
+        specialty = specialty ?? string.Empty;
+        description = description ?? string.Empty;
+        activeTaskId = activeTaskId ?? string.Empty;
+
         if (realmTier < 0)
         {
             realmTier = 0;
@@ -106,12 +127,14 @@ public sealed class MainMenuSaveData
             bagCapacity = 12;
         }
 
-        if (string.IsNullOrWhiteSpace(currentRegionId))
+        var regionWasMissing = string.IsNullOrWhiteSpace(currentRegionId);
+        if (regionWasMissing)
         {
-            currentRegionId = WorldRegionLibrary.StartingRegionId;
+            currentRegionId = FallbackStartingRegionId;
         }
 
-        if (unlockedRegionIds == null || unlockedRegionIds.Length == 0)
+        unlockedRegionIds = NormalizeRegions(unlockedRegionIds);
+        if (unlockedRegionIds.Length == 0)
         {
             unlockedRegionIds = new[] { currentRegionId };
         }
@@ -120,15 +143,8 @@ public sealed class MainMenuSaveData
             unlockedRegionIds = AddRegion(unlockedRegionIds, currentRegionId);
         }
 
-        if (clearedRegionIds == null)
-        {
-            clearedRegionIds = Array.Empty<string>();
-        }
-
-        if (storageItems == null)
-        {
-            storageItems = Array.Empty<SaveItemStack>();
-        }
+        clearedRegionIds = NormalizeRegions(clearedRegionIds);
+        storageItems = NormalizeStorageItems(storageItems);
 
         if (taskStates == null)
         {
@@ -169,15 +185,8 @@ public sealed class MainMenuSaveData
             afflictions = Array.Empty<SaveAfflictionState>();
         }
 
-        if (storyFlags == null)
-        {
-            storyFlags = Array.Empty<string>();
-        }
-
-        if (storyLog == null)
-        {
-            storyLog = Array.Empty<string>();
-        }
+        storyFlags = NormalizeStrings(storyFlags);
+        storyLog = NormalizeStrings(storyLog);
 
         if (settlementBuildCount < 0)
         {
@@ -205,11 +214,11 @@ public sealed class MainMenuSaveData
             isInSectResidence = false;
         }
 
-        realm = WorldRegionLibrary.GetRealmName(realmTier);
+        realm = ResolveFallbackRealmName(realmTier);
 
-        if (string.IsNullOrWhiteSpace(location))
+        if (regionWasMissing || string.IsNullOrWhiteSpace(location))
         {
-            location = WorldRegionLibrary.GetRegionDisplayName(currentRegionId);
+            location = ResolveFallbackRegionName(currentRegionId);
         }
 
         if (string.IsNullOrWhiteSpace(lastPlayed))
@@ -422,5 +431,65 @@ public sealed class MainMenuSaveData
         }
 
         return merged.ToArray();
+    }
+
+    private static string[] NormalizeRegions(string[] regions)
+    {
+        return NormalizeStrings(regions);
+    }
+
+    private static string[] NormalizeStrings(string[] values)
+    {
+        if (values == null || values.Length == 0)
+        {
+            return Array.Empty<string>();
+        }
+
+        var normalized = new List<string>(values.Length);
+        for (var i = 0; i < values.Length; i++)
+        {
+            var value = values[i];
+            if (string.IsNullOrWhiteSpace(value) || normalized.Contains(value))
+            {
+                continue;
+            }
+
+            normalized.Add(value);
+        }
+
+        return normalized.ToArray();
+    }
+
+    private static SaveItemStack[] NormalizeStorageItems(SaveItemStack[] items)
+    {
+        if (items == null || items.Length == 0)
+        {
+            return Array.Empty<SaveItemStack>();
+        }
+
+        var normalized = new List<SaveItemStack>(items.Length);
+        for (var i = 0; i < items.Length; i++)
+        {
+            var stack = items[i];
+            if (stack == null || string.IsNullOrWhiteSpace(stack.itemId) || stack.quantity <= 0)
+            {
+                continue;
+            }
+
+            normalized.Add(new SaveItemStack(stack.itemId, Mathf.Max(0, stack.quantity)));
+        }
+
+        return normalized.ToArray();
+    }
+
+    private static string ResolveFallbackRealmName(int tier)
+    {
+        var clampedTier = Mathf.Clamp(tier, 0, FallbackRealmNames.Length - 1);
+        return FallbackRealmNames[clampedTier];
+    }
+
+    private static string ResolveFallbackRegionName(string regionId)
+    {
+        return regionId == FallbackStartingRegionId ? FallbackStartingRegionName : "未知地域";
     }
 }

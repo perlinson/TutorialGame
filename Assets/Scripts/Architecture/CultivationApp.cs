@@ -1,9 +1,22 @@
 using QFramework;
+using UnityEngine;
 
 public sealed class CultivationApp : Architecture<CultivationApp>
 {
     protected override void Init()
     {
+        var resourceService = new GameResourceService();
+        var settingsService = new GameSettingsService();
+        var audioService = new GameAudioService();
+        var logService = new GameLogService();
+        var uiService = new GameUiService();
+
+        RegisterUtility<IGameResourceService>(resourceService);
+        RegisterUtility<IGameSettingsService>(settingsService);
+        RegisterUtility<IGameAudioService>(audioService);
+        RegisterUtility<IGameLogService>(logService);
+        RegisterUtility<IGameUiService>(uiService);
+
         RegisterModel(new CultivationArchiveModel());
         RegisterModel(new CultivationInventoryModel());
         RegisterModel(new CultivationTaskBoardModel());
@@ -28,6 +41,228 @@ public sealed class CultivationApp : Architecture<CultivationApp>
     public static void EnsureInitialized()
     {
         InitArchitecture();
+    }
+
+    public static T LoadResource<T>(string path) where T : UnityEngine.Object
+    {
+        EnsureInitialized();
+        return Interface.GetUtility<IGameResourceService>().Load<T>(path);
+    }
+
+    public static string GetResourceBackendName()
+    {
+        EnsureInitialized();
+        return Interface.GetUtility<IGameResourceService>().BackendName;
+    }
+
+    public static GameObject InstantiatePrefab(string path, Transform parent = null)
+    {
+        EnsureInitialized();
+        return Interface.GetUtility<IGameResourceService>().InstantiatePrefab(path, parent);
+    }
+
+    public static float GetMusicVolume()
+    {
+        EnsureInitialized();
+        return Interface.GetUtility<IGameSettingsService>().MusicVolume.Value;
+    }
+
+    public static float GetSfxVolume()
+    {
+        EnsureInitialized();
+        return Interface.GetUtility<IGameSettingsService>().SfxVolume.Value;
+    }
+
+    public static float GetVoiceVolume()
+    {
+        EnsureInitialized();
+        return Interface.GetUtility<IGameSettingsService>().VoiceVolume.Value;
+    }
+
+    public static bool IsFullscreen()
+    {
+        EnsureInitialized();
+        return Interface.GetUtility<IGameSettingsService>().Fullscreen.Value;
+    }
+
+    public static void ApplyUserSettings()
+    {
+        EnsureInitialized();
+        Interface.GetUtility<IGameSettingsService>().ApplyRuntimeSettings();
+    }
+
+    public static void SetMusicVolume(float value)
+    {
+        EnsureInitialized();
+        Interface.GetUtility<IGameSettingsService>().SetMusicVolume(value);
+    }
+
+    public static void SetSfxVolume(float value)
+    {
+        EnsureInitialized();
+        Interface.GetUtility<IGameSettingsService>().SetSfxVolume(value);
+    }
+
+    public static void SetVoiceVolume(float value)
+    {
+        EnsureInitialized();
+        Interface.GetUtility<IGameSettingsService>().SetVoiceVolume(value);
+    }
+
+    public static void SetFullscreen(bool fullscreen)
+    {
+        EnsureInitialized();
+        Interface.GetUtility<IGameSettingsService>().SetFullscreen(fullscreen);
+    }
+
+    public static void ResetUserSettings()
+    {
+        EnsureInitialized();
+        Interface.GetUtility<IGameSettingsService>().Reset();
+    }
+
+    public static void InitializeAudio()
+    {
+        EnsureInitialized();
+        Interface.GetUtility<IGameAudioService>().Initialize();
+    }
+
+    public static void PlayMusic(string resourcePath, bool loop = true, float volumeScale = 1f)
+    {
+        EnsureInitialized();
+        Interface.GetUtility<IGameAudioService>().PlayMusic(resourcePath, loop, volumeScale);
+    }
+
+    public static void PlayMusic(AudioClip clip, bool loop = true, float volumeScale = 1f)
+    {
+        EnsureInitialized();
+        Interface.GetUtility<IGameAudioService>().PlayMusic(clip, loop, volumeScale);
+    }
+
+    public static void StopMusic()
+    {
+        EnsureInitialized();
+        Interface.GetUtility<IGameAudioService>().StopMusic();
+    }
+
+    public static void PlayVoice(string resourcePath, bool loop = false, float volumeScale = 1f, bool duckMusic = true)
+    {
+        EnsureInitialized();
+        Interface.GetUtility<IGameAudioService>().PlayVoice(resourcePath, loop, volumeScale, duckMusic);
+    }
+
+    public static void PlayVoice(AudioClip clip, bool loop = false, float volumeScale = 1f, bool duckMusic = true)
+    {
+        EnsureInitialized();
+        Interface.GetUtility<IGameAudioService>().PlayVoice(clip, loop, volumeScale, duckMusic);
+    }
+
+    public static void StopVoice()
+    {
+        EnsureInitialized();
+        Interface.GetUtility<IGameAudioService>().StopVoice();
+    }
+
+    public static void PlaySfx(string resourcePath, float volumeScale = 1f)
+    {
+        EnsureInitialized();
+        Interface.GetUtility<IGameAudioService>().PlaySfx(resourcePath, volumeScale);
+    }
+
+    public static void PlaySfx(AudioClip clip, float volumeScale = 1f)
+    {
+        EnsureInitialized();
+        Interface.GetUtility<IGameAudioService>().PlaySfx(clip, volumeScale);
+    }
+
+    public static void SetMusicDuck(string reason, bool enabled, float duckDb = 8f)
+    {
+        EnsureInitialized();
+        Interface.GetUtility<IGameAudioService>().SetMusicDuck(reason, enabled, duckDb);
+    }
+
+    public static void LogInfo(string message)
+    {
+        EnsureInitialized();
+        Interface.GetUtility<IGameLogService>().Info(message);
+    }
+
+    public static void LogWarning(string message)
+    {
+        EnsureInitialized();
+        Interface.GetUtility<IGameLogService>().Warning(message);
+    }
+
+    public static void LogError(string message)
+    {
+        EnsureInitialized();
+        Interface.GetUtility<IGameLogService>().Error(message);
+    }
+
+    public static void InitializeUi()
+    {
+        EnsureInitialized();
+        Interface.GetUtility<IGameUiService>().Initialize();
+    }
+
+    public static MainMenuController OpenMainMenuPanel(MainMenuConfig config)
+    {
+        EnsureInitialized();
+        return Interface.SendCommand(new OpenMainMenuPanelCommand(config));
+    }
+
+    public static MainMenuSettingsPanel OpenMainMenuSettingsPanel(MainMenuController owner)
+    {
+        EnsureInitialized();
+        return Interface.SendCommand(new OpenMainMenuSettingsPanelCommand(owner));
+    }
+
+    public static MainMenuLoadPanel OpenMainMenuLoadPanel(MainMenuController owner)
+    {
+        EnsureInitialized();
+        return Interface.SendCommand(new OpenMainMenuLoadPanelCommand(owner));
+    }
+
+    public static MainMenuCharacterCreatePanel OpenMainMenuCharacterCreatePanel(MainMenuController owner)
+    {
+        EnsureInitialized();
+        return Interface.SendCommand(new OpenMainMenuCharacterCreatePanelCommand(owner));
+    }
+
+    public static WorldMapController OpenWorldMapPanel(string gameplaySceneName, string mainSceneName)
+    {
+        EnsureInitialized();
+        return Interface.SendCommand(new OpenWorldMapPanelCommand(gameplaySceneName, mainSceneName));
+    }
+
+    public static ExpeditionView OpenExpeditionPanel()
+    {
+        EnsureInitialized();
+        return Interface.SendCommand(new OpenExpeditionPanelCommand());
+    }
+
+    public static void CloseUiPanel(GameUiPanelId panelId)
+    {
+        EnsureInitialized();
+        Interface.SendCommand(new CloseGameUiPanelCommand(panelId));
+    }
+
+    public static void CloseAllGameUiPanels()
+    {
+        EnsureInitialized();
+        Interface.SendCommand(new CloseAllGameUiPanelsCommand());
+    }
+
+    public static void HideUiPanel(GameUiPanelId panelId)
+    {
+        EnsureInitialized();
+        Interface.SendCommand(new HideGameUiPanelCommand(panelId));
+    }
+
+    public static void ShowUiPanel(GameUiPanelId panelId)
+    {
+        EnsureInitialized();
+        Interface.SendCommand(new ShowGameUiPanelCommand(panelId));
     }
 
     public static CultivationArchiveSnapshot BootstrapCurrentArchive()

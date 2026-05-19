@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using Text = TMPro.TMP_Text;
 
 public sealed class ArchetypeCardView : MonoBehaviour
 {
@@ -40,21 +41,27 @@ public sealed class ArchetypeCardView : MonoBehaviour
 
         SetSelected(selected);
 
-        button.onClick.RemoveAllListeners();
-        button.onClick.AddListener(onClick);
+        CultivationAudio.BindButton(button, onClick);
     }
 
     public void SetSelected(bool selected)
     {
+        GeneratedUiSkinLibrary.ApplyArchetypeCardPanelSkin(background);
         background.color = selected
-            ? new Color(0.36f, 0.25f, 0.16f, 0.84f)
-            : new Color(0.13f, 0.14f, 0.16f, 0.78f);
+            ? new Color(1f, 0.97f, 0.9f, 1f)
+            : new Color(0.9f, 0.88f, 0.82f, 0.94f);
         accent.color = selected
             ? new Color(0.76f, 0.59f, 0.29f, 0.95f)
-            : new Color(0.34f, 0.31f, 0.26f, 0.85f);
+            : new Color(0.38f, 0.42f, 0.35f, 0.84f);
         titleText.color = selected
-            ? new Color(0.95f, 0.9f, 0.8f, 1f)
-            : new Color(0.84f, 0.82f, 0.76f, 0.96f);
+            ? new Color(0.25f, 0.17f, 0.08f, 1f)
+            : new Color(0.2f, 0.18f, 0.14f, 0.96f);
+        originText.color = new Color(0.34f, 0.3f, 0.22f, 0.96f);
+        specialtyText.color = selected
+            ? new Color(0.22f, 0.34f, 0.24f, 0.96f)
+            : new Color(0.24f, 0.32f, 0.26f, 0.9f);
+        descriptionText.color = new Color(0.26f, 0.23f, 0.18f, 0.92f);
+        traitText.color = new Color(0.3f, 0.25f, 0.16f, 0.92f);
     }
 
     public int Index => index;

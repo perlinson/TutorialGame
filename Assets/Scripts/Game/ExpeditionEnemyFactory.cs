@@ -37,6 +37,36 @@ public static class ExpeditionEnemyFactory
         return enemies;
     }
 
+    public static ExpeditionEnemyState Restore(PersistentExpeditionEnemySnapshot snapshot)
+    {
+        if (snapshot == null)
+        {
+            return null;
+        }
+
+        snapshot.EnsureDefaults();
+        var portrait = ResolvePortrait(snapshot);
+        var enemy = new ExpeditionEnemyState(
+            snapshot.faction,
+            snapshot.name,
+            snapshot.techniqueName,
+            portrait,
+            snapshot.maxHealth,
+            snapshot.damage,
+            snapshot.stressDamage,
+            snapshot.isElite,
+            snapshot.armor,
+            snapshot.poisonResistance,
+            snapshot.stunResistance,
+            snapshot.position);
+        enemy.CurrentHealth = snapshot.currentHealth;
+        enemy.PoisonStacks = snapshot.poisonStacks;
+        enemy.ExposedTurns = snapshot.exposedTurns;
+        enemy.StunnedTurns = snapshot.stunnedTurns;
+        enemy.Armor = snapshot.armor;
+        return enemy;
+    }
+
     private static ExpeditionEnemyState CreateEnemy(WorldRegionDefinition region, ExpeditionRoomState room, ExpeditionEnemyFaction faction, bool isElite, int index)
     {
         var maxHealth = 7 + region.DangerRank * 2 + (isElite ? 5 : 0) + index;
@@ -70,11 +100,17 @@ public static class ExpeditionEnemyFactory
         stressDamage = Mathf.Max(1, stressDamage);
         armor = Mathf.Max(0, armor);
 
+        var portrait = archetype != null ? archetype.portraitImage : null;
+        if (portrait == null)
+        {
+            portrait = GeneratedArtLibrary.GetEnemyPortrait(faction, isElite);
+        }
+
         return new ExpeditionEnemyState(
             faction,
             name,
             techniqueName,
-            archetype != null ? archetype.portraitImage : null,
+            portrait,
             maxHealth,
             damage,
             stressDamage,
@@ -142,6 +178,31 @@ public static class ExpeditionEnemyFactory
         return candidates.Count > 0 ? candidates[Mathf.Abs(seed) % candidates.Count] : null;
     }
 
+    private static Sprite ResolvePortrait(PersistentExpeditionEnemySnapshot snapshot)
+    {
+        var database = GetEnemyDatabase();
+        if (database == null || database.archetypes == null)
+        {
+            return GeneratedArtLibrary.GetEnemyPortrait(snapshot.faction, snapshot.isElite);
+        }
+
+        for (var i = 0; i < database.archetypes.Length; i++)
+        {
+            var archetype = database.archetypes[i];
+            if (archetype == null
+                || archetype.faction != (int)snapshot.faction
+                || archetype.displayName != snapshot.name
+                || archetype.techniqueName != snapshot.techniqueName)
+            {
+                continue;
+            }
+
+            return archetype.portraitImage;
+        }
+
+        return GeneratedArtLibrary.GetEnemyPortrait(snapshot.faction, snapshot.isElite);
+    }
+
     private static bool HasEliteCandidate(EnemyArchetypeDatabaseAsset database, ExpeditionEnemyFaction faction, ExpeditionRoomKind roomKind)
     {
         if (database == null || database.archetypes == null)
@@ -183,7 +244,7 @@ public static class ExpeditionEnemyFactory
     {
         if (cachedEnemyDatabase == null)
         {
-            cachedEnemyDatabase = Resources.Load<EnemyArchetypeDatabaseAsset>("Data/EnemyArchetypeDatabase");
+            cachedEnemyDatabase = CultivationApp.LoadResource<EnemyArchetypeDatabaseAsset>("Data/EnemyArchetypeDatabase");
         }
 
         return cachedEnemyDatabase;
@@ -193,7 +254,7 @@ public static class ExpeditionEnemyFactory
     {
         if (cachedEncounterDatabase == null)
         {
-            cachedEncounterDatabase = Resources.Load<RegionEncounterDatabaseAsset>("Data/RegionEncounterDatabase");
+            cachedEncounterDatabase = CultivationApp.LoadResource<RegionEncounterDatabaseAsset>("Data/RegionEncounterDatabase");
         }
 
         return cachedEncounterDatabase;

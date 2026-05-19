@@ -19,6 +19,7 @@ public sealed class CultivationExpeditionSystem : AbstractSystem
     public void Clear()
     {
         expeditionModel.Clear();
+        MainMenuSaveStore.ClearExpeditionRuntime();
     }
 
     public ExpeditionTraversalResult EnterRoom(ExpeditionTraversalContext context)

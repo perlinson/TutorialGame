@@ -1,17 +1,29 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using TMPro;
+using Text = TMPro.TextMeshProUGUI;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 public sealed class GameSceneBootstrap : MonoBehaviour
 {
+#if UNITY_EDITOR
+    private const string PrimaryButtonArtPath = "Assets/GameArt/UI/Buttons/ui_btn_primary_gold.png";
+    private const string RoomNodeArtPath = "Assets/GameArt/UI/Buttons/ui_node_room_gold.png";
+#endif
+
     private void Awake()
     {
-        CultivationApp.EnsureInitialized();
+        AppRoot.EnsureCreated();
+        SceneFlow.SyncActiveSceneState(SceneFlow.GameplaySceneName);
+        CultivationApp.CloseAllGameUiPanels();
 
         var snapshot = CultivationApp.BootstrapCurrentArchive();
         if (snapshot == null || snapshot.SaveData == null)
         {
-            SceneManager.LoadScene("Main");
+            SceneFlow.RequestScene("Main");
             return;
         }
 
@@ -27,7 +39,21 @@ public sealed class GameSceneBootstrap : MonoBehaviour
             CultivationApp.SyncArchiveState(slotIndex, saveData);
         }
 
+        PersistentExpeditionRuntimeSnapshot runtimeSnapshot = null;
+        if (MainMenuSaveStore.TryLoadExpeditionRuntime(out var storedSnapshot))
+        {
+            if (IsCompatibleSnapshot(storedSnapshot, slotIndex, saveData, region))
+            {
+                runtimeSnapshot = storedSnapshot;
+            }
+            else
+            {
+                MainMenuSaveStore.ClearExpeditionRuntime();
+            }
+        }
+
         ConfigureCamera(region);
+        CultivationAudio.PlayExpeditionMusic(region);
 
         var controller = GetComponent<GameController>();
         if (controller == null)
@@ -35,12 +61,43 @@ public sealed class GameSceneBootstrap : MonoBehaviour
             controller = gameObject.AddComponent<GameController>();
         }
 
-        controller.Initialize(slotIndex, saveData, region);
-        var view = BuildRuntimeView(region, controller.RoomCount);
-        var arena = GameArenaBuilder.Build(region);
+        if (runtimeSnapshot != null)
+        {
+            controller.InitializeFromSnapshot(slotIndex, saveData, region, runtimeSnapshot);
+        }
+        else
+        {
+            controller.Initialize(slotIndex, saveData, region);
+        }
+
+        var view = CultivationApp.OpenExpeditionPanel();
+        if (view == null)
+        {
+            CultivationApp.LogError("Expedition UI prefab is required but missing or invalid: UI/Game/ExpeditionRoot");
+            SceneFlow.RequestScene("Main");
+            return;
+        }
+
+        var arena = GameArenaBuilder.Build(region, saveData);
         controller.AttachArena(arena);
-        AttachCameraFollow(arena);
+        AttachCameraFollow(controller, arena);
         controller.SetView(view);
+    }
+
+    private static bool IsCompatibleSnapshot(PersistentExpeditionRuntimeSnapshot snapshot, int slotIndex, MainMenuSaveData saveData, WorldRegionDefinition region)
+    {
+        if (snapshot == null || saveData == null || region == null)
+        {
+            return false;
+        }
+
+        snapshot.EnsureDefaults();
+        return snapshot.IsUsable()
+               && snapshot.slotIndex == slotIndex
+               && snapshot.regionId == region.Id
+               && snapshot.heroName == saveData.heroName
+               && snapshot.archetypeId == saveData.archetypeId
+               && snapshot.saveRealmTier == saveData.realmTier;
     }
 
     private void ConfigureCamera(WorldRegionDefinition region)
@@ -57,7 +114,7 @@ public sealed class GameSceneBootstrap : MonoBehaviour
         sceneCamera.orthographicSize = 6.4f;
     }
 
-    private void AttachCameraFollow(GameArenaRuntimeBindings arena)
+    private void AttachCameraFollow(GameController controller, GameArenaRuntimeBindings arena)
     {
         if (arena == null || arena.Player == null)
         {
@@ -76,10 +133,21 @@ public sealed class GameSceneBootstrap : MonoBehaviour
             follow = sceneCamera.gameObject.AddComponent<CameraFollow2D>();
         }
 
+        var hitStop = sceneCamera.GetComponent<CombatHitStop>();
+        if (hitStop == null)
+        {
+            hitStop = sceneCamera.gameObject.AddComponent<CombatHitStop>();
+        }
+
         follow.SetTarget(arena.Player.transform);
+        if (controller != null)
+        {
+            controller.AttachCombatPresentation(follow, hitStop);
+        }
     }
 
-    private ExpeditionView BuildRuntimeView(WorldRegionDefinition region, int roomCount)
+#if UNITY_EDITOR
+    public static ExpeditionView BuildPrefabExportView(WorldRegionDefinition region, int roomCount)
     {
         var canvasRoot = new GameObject("ExpeditionCanvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
         canvasRoot.layer = 5;
@@ -107,8 +175,7 @@ public sealed class GameSceneBootstrap : MonoBehaviour
         var heroNameText = CreateText("HeroName", header, new Vector2(24f, -52f), new Vector2(420f, 26f), 20, FontStyle.Bold, TextAnchor.MiddleLeft);
         var heroStatsText = CreateText("HeroStats", header, new Vector2(24f, -82f), new Vector2(820f, 24f), 19, FontStyle.Normal, TextAnchor.MiddleLeft);
         var expeditionStatsText = CreateText("ExpeditionStats", header, new Vector2(878f, -52f), new Vector2(760f, 56f), 20, FontStyle.Bold, TextAnchor.UpperLeft);
-        expeditionStatsText.horizontalOverflow = HorizontalWrapMode.Wrap;
-        expeditionStatsText.verticalOverflow = VerticalWrapMode.Overflow;
+        EnableWrapping(expeditionStatsText);
         var phaseText = CreateText("Phase", header, new Vector2(1646f, -42f), new Vector2(150f, 34f), 24, FontStyle.Bold, TextAnchor.MiddleRight);
 
         var trackPanel = CreatePanel("TrackPanel", root, new Vector2(46f, -200f), new Vector2(1828f, 110f), new Color(0.08f, 0.09f, 0.1f, 0.78f));
@@ -141,11 +208,9 @@ public sealed class GameSceneBootstrap : MonoBehaviour
         roomPreview.GetComponent<Image>().sprite = GameSpriteLibrary.WhiteSquareSprite;
         var roomPreviewLabel = CreateText("RoomPreviewLabel", roomPreview, new Vector2(0f, 0f), new Vector2(926f, 128f), 22, FontStyle.Bold, TextAnchor.MiddleCenter);
         var roomDescriptionText = CreateText("RoomDescription", contentLeft, new Vector2(24f, -208f), new Vector2(900f, 72f), 20, FontStyle.Normal, TextAnchor.UpperLeft);
-        roomDescriptionText.horizontalOverflow = HorizontalWrapMode.Wrap;
-        roomDescriptionText.verticalOverflow = VerticalWrapMode.Overflow;
+        EnableWrapping(roomDescriptionText);
         var loadoutText = CreateText("LoadoutText", contentLeft, new Vector2(24f, -286f), new Vector2(900f, 62f), 17, FontStyle.Bold, TextAnchor.UpperLeft);
-        loadoutText.horizontalOverflow = HorizontalWrapMode.Wrap;
-        loadoutText.verticalOverflow = VerticalWrapMode.Overflow;
+        EnableWrapping(loadoutText);
 
         var heroBanner = CreatePanel("HeroBanner", contentLeft, new Vector2(26f, -364f), new Vector2(280f, 180f), Color.Lerp(region.AccentColor, new Color(0.16f, 0.12f, 0.09f, 1f), 0.58f));
         SetTopLeft(heroBanner);
@@ -157,8 +222,7 @@ public sealed class GameSceneBootstrap : MonoBehaviour
         enemyBanner.GetComponent<Image>().sprite = GameSpriteLibrary.WhiteSquareSprite;
         var enemyPreviewLabel = CreateText("EnemyPreviewLabel", enemyBanner, new Vector2(0f, 0f), new Vector2(592f, 48f), 24, FontStyle.Bold, TextAnchor.MiddleCenter);
         var enemyStatusText = CreateText("EnemyStatus", enemyBanner, new Vector2(20f, -54f), new Vector2(550f, 118f), 18, FontStyle.Normal, TextAnchor.UpperLeft);
-        enemyStatusText.horizontalOverflow = HorizontalWrapMode.Wrap;
-        enemyStatusText.verticalOverflow = VerticalWrapMode.Overflow;
+        EnableWrapping(enemyStatusText);
 
         var contentRight = CreatePanel("ContentRight", root, new Vector2(1060f, -338f), new Vector2(814f, 560f), new Color(0.09f, 0.1f, 0.11f, 0.84f));
         SetTopLeft(contentRight);
@@ -166,20 +230,17 @@ public sealed class GameSceneBootstrap : MonoBehaviour
 
         CreateText("LogLabel", contentRight, new Vector2(24f, -18f), new Vector2(220f, 26f), 22, FontStyle.Bold, TextAnchor.MiddleLeft).text = "远征记录";
         var logText = CreateText("LogText", contentRight, new Vector2(24f, -56f), new Vector2(766f, 228f), 19, FontStyle.Normal, TextAnchor.UpperLeft);
-        logText.horizontalOverflow = HorizontalWrapMode.Wrap;
-        logText.verticalOverflow = VerticalWrapMode.Overflow;
+        EnableWrapping(logText);
 
         var skillPanel = CreatePanel("SkillPanel", contentRight, new Vector2(24f, -304f), new Vector2(766f, 132f), new Color(0.08f, 0.09f, 0.1f, 0.84f));
         SetTopLeft(skillPanel);
         var skillText = CreateText("SkillText", skillPanel, new Vector2(16f, -12f), new Vector2(734f, 104f), 16, FontStyle.Normal, TextAnchor.UpperLeft);
-        skillText.horizontalOverflow = HorizontalWrapMode.Wrap;
-        skillText.verticalOverflow = VerticalWrapMode.Overflow;
+        EnableWrapping(skillText);
 
         var hintPanel = CreatePanel("HintPanel", contentRight, new Vector2(24f, -452f), new Vector2(766f, 66f), new Color(0.08f, 0.09f, 0.09f, 0.86f));
         SetTopLeft(hintPanel);
         var hintText = CreateText("HintText", hintPanel, new Vector2(18f, -10f), new Vector2(730f, 42f), 17, FontStyle.Bold, TextAnchor.UpperLeft);
-        hintText.horizontalOverflow = HorizontalWrapMode.Wrap;
-        hintText.verticalOverflow = VerticalWrapMode.Overflow;
+        EnableWrapping(hintText);
 
         var actionPanel = CreatePanel("ActionPanel", root, new Vector2(46f, -928f), new Vector2(1828f, 116f), new Color(0.07f, 0.08f, 0.09f, 0.9f));
         SetTopLeft(actionPanel);
@@ -200,6 +261,7 @@ public sealed class GameSceneBootstrap : MonoBehaviour
             iconRect.GetComponent<Image>().sprite = GameSpriteLibrary.WhiteSquareSprite;
             var iconLabel = CreateText("IconLabel", iconRect, Vector2.zero, new Vector2(52f, 52f), 16, FontStyle.Bold, TextAnchor.MiddleCenter);
             var labelRect = CreateText("Label", buttonRect, new Vector2(76f, 0f), new Vector2(196f, 72f), 18, FontStyle.Bold, TextAnchor.MiddleLeft);
+            ApplyOptionalSprite(buttonImage, PrimaryButtonArtPath);
 
             buttons[i] = button;
             buttonIcons[i] = iconRect.GetComponent<Image>();
@@ -208,6 +270,11 @@ public sealed class GameSceneBootstrap : MonoBehaviour
             buttonLabels[i].text = "待命";
             button.targetGraphic = buttonImage;
         }
+
+        var eventOverlayBlocker = CreatePanel("EventOverlayBlocker", root, Vector2.zero, Vector2.zero, new Color(0.02f, 0.03f, 0.04f, 0.72f));
+        Stretch(eventOverlayBlocker);
+        eventOverlayBlocker.gameObject.AddComponent<Button>().transition = Selectable.Transition.None;
+        eventOverlayBlocker.gameObject.SetActive(false);
 
         var eventOverlay = CreatePanel("EventOverlay", root, new Vector2(400f, -170f), new Vector2(1120f, 700f), new Color(0.05f, 0.05f, 0.06f, 0.96f));
         SetTopLeft(eventOverlay);
@@ -222,12 +289,10 @@ public sealed class GameSceneBootstrap : MonoBehaviour
         var eventPreviewLabel = CreateText("EventPreviewLabel", eventPreview, Vector2.zero, new Vector2(1068f, 180f), 24, FontStyle.Bold, TextAnchor.MiddleCenter);
 
         var eventBody = CreateText("EventBody", eventOverlay, new Vector2(26f, -304f), new Vector2(1068f, 120f), 21, FontStyle.Normal, TextAnchor.UpperLeft);
-        eventBody.horizontalOverflow = HorizontalWrapMode.Wrap;
-        eventBody.verticalOverflow = VerticalWrapMode.Overflow;
+        EnableWrapping(eventBody);
 
         var eventResultText = CreateText("EventResultText", eventOverlay, new Vector2(26f, -440f), new Vector2(1068f, 88f), 18, FontStyle.Bold, TextAnchor.UpperLeft);
-        eventResultText.horizontalOverflow = HorizontalWrapMode.Wrap;
-        eventResultText.verticalOverflow = VerticalWrapMode.Overflow;
+        EnableWrapping(eventResultText);
         eventResultText.color = new Color(0.87f, 0.82f, 0.68f, 0.98f);
 
         var eventOptionButtons = new Button[4];
@@ -241,13 +306,13 @@ public sealed class GameSceneBootstrap : MonoBehaviour
             var optionImage = optionRect.GetComponent<Image>();
             var optionButton = optionRect.gameObject.AddComponent<Button>();
             optionButton.targetGraphic = optionImage;
+            ApplyOptionalSprite(optionImage, PrimaryButtonArtPath);
             var optionBadge = CreateText("Badge", optionRect, new Vector2(12f, -8f), new Vector2(140f, 18f), 14, FontStyle.Bold, TextAnchor.MiddleLeft);
             optionBadge.color = new Color(0.87f, 0.76f, 0.45f, 0.98f);
             var optionLabel = CreateText("Label", optionRect, new Vector2(12f, -26f), new Vector2(486f, 20f), 18, FontStyle.Bold, TextAnchor.MiddleLeft);
             var optionRequirement = CreateText("Requirement", optionRect, new Vector2(12f, -44f), new Vector2(486f, 16f), 13, FontStyle.Normal, TextAnchor.MiddleLeft);
             optionRequirement.color = new Color(0.77f, 0.66f, 0.56f, 0.96f);
-            optionRequirement.horizontalOverflow = HorizontalWrapMode.Wrap;
-            optionRequirement.verticalOverflow = VerticalWrapMode.Overflow;
+            EnableWrapping(optionRequirement);
 
             eventOptionButtons[i] = optionButton;
             eventOptionLabelTexts[i] = optionLabel;
@@ -260,6 +325,7 @@ public sealed class GameSceneBootstrap : MonoBehaviour
         var confirmImage = confirmRect.GetComponent<Image>();
         var confirmButton = confirmRect.gameObject.AddComponent<Button>();
         confirmButton.targetGraphic = confirmImage;
+        ApplyOptionalSprite(confirmImage, PrimaryButtonArtPath);
         confirmRect.gameObject.SetActive(false);
         var confirmLabel = CreateText("EventConfirmLabel", confirmRect, Vector2.zero, new Vector2(302f, 48f), 18, FontStyle.Bold, TextAnchor.MiddleCenter);
         confirmLabel.text = "收拢结果";
@@ -288,6 +354,7 @@ public sealed class GameSceneBootstrap : MonoBehaviour
         expeditionView.actionIconImages = buttonIcons;
         expeditionView.actionIconLabelTexts = buttonIconLabels;
         expeditionView.roomNodes = nodes;
+        expeditionView.eventOverlayBlocker = eventOverlayBlocker.gameObject;
         expeditionView.eventOverlayRoot = eventOverlay.gameObject;
         expeditionView.eventBadgeText = eventBadge;
         expeditionView.eventTitleText = eventTitle;
@@ -315,6 +382,7 @@ public sealed class GameSceneBootstrap : MonoBehaviour
         rect.sizeDelta = new Vector2(126f, 44f);
         SetTopLeft(rect);
         root.GetComponent<Image>().color = new Color(0.18f, 0.17f, 0.15f, 0.94f);
+        ApplyOptionalSprite(root.GetComponent<Image>(), RoomNodeArtPath);
 
         var icon = CreateText("Icon", rect, new Vector2(10f, -8f), new Vector2(32f, 28f), 18, FontStyle.Bold, TextAnchor.MiddleCenter);
         var label = CreateText("Label", rect, new Vector2(46f, -10f), new Vector2(70f, 24f), 16, FontStyle.Bold, TextAnchor.MiddleLeft);
@@ -353,14 +421,90 @@ public sealed class GameSceneBootstrap : MonoBehaviour
         SetTopLeft(rect);
 
         var text = textObject.GetComponent<Text>();
-        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        if (TMP_Settings.defaultFontAsset != null)
+        {
+            text.font = TMP_Settings.defaultFontAsset;
+        }
+
         text.fontSize = fontSize;
-        text.fontStyle = fontStyle;
+        text.fontStyle = ConvertFontStyle(fontStyle);
         text.color = new Color(0.9f, 0.86f, 0.78f, 0.98f);
-        text.alignment = alignment;
-        text.horizontalOverflow = HorizontalWrapMode.Overflow;
-        text.verticalOverflow = VerticalWrapMode.Overflow;
+        text.alignment = ConvertAlignment(alignment);
+        text.enableWordWrapping = false;
+        text.overflowMode = TextOverflowModes.Overflow;
+        text.raycastTarget = false;
         return text;
+    }
+
+    private static void EnableWrapping(Text text)
+    {
+        if (text == null)
+        {
+            return;
+        }
+
+        text.enableWordWrapping = true;
+        text.overflowMode = TextOverflowModes.Overflow;
+    }
+
+    private static FontStyles ConvertFontStyle(FontStyle style)
+    {
+        switch (style)
+        {
+            case FontStyle.Bold:
+                return FontStyles.Bold;
+            case FontStyle.Italic:
+                return FontStyles.Italic;
+            case FontStyle.BoldAndItalic:
+                return FontStyles.Bold | FontStyles.Italic;
+            default:
+                return FontStyles.Normal;
+        }
+    }
+
+    private static TextAlignmentOptions ConvertAlignment(TextAnchor alignment)
+    {
+        switch (alignment)
+        {
+            case TextAnchor.UpperLeft:
+                return TextAlignmentOptions.TopLeft;
+            case TextAnchor.UpperCenter:
+                return TextAlignmentOptions.Top;
+            case TextAnchor.UpperRight:
+                return TextAlignmentOptions.TopRight;
+            case TextAnchor.MiddleLeft:
+                return TextAlignmentOptions.MidlineLeft;
+            case TextAnchor.MiddleCenter:
+                return TextAlignmentOptions.Center;
+            case TextAnchor.MiddleRight:
+                return TextAlignmentOptions.MidlineRight;
+            case TextAnchor.LowerLeft:
+                return TextAlignmentOptions.BottomLeft;
+            case TextAnchor.LowerCenter:
+                return TextAlignmentOptions.Bottom;
+            case TextAnchor.LowerRight:
+                return TextAlignmentOptions.BottomRight;
+            default:
+                return TextAlignmentOptions.TopLeft;
+        }
+    }
+
+    private static void ApplyOptionalSprite(Image image, string assetPath, bool preserveAspect = false)
+    {
+        if (image == null || string.IsNullOrWhiteSpace(assetPath))
+        {
+            return;
+        }
+
+        var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
+        if (sprite == null)
+        {
+            return;
+        }
+
+        image.sprite = sprite;
+        image.color = Color.white;
+        image.preserveAspect = preserveAspect;
     }
 
     private static void AddOutline(RectTransform rect, Color color)
@@ -400,4 +544,5 @@ public sealed class GameSceneBootstrap : MonoBehaviour
         rect.anchorMax = new Vector2(0f, 1f);
         rect.pivot = new Vector2(0f, 1f);
     }
+#endif
 }

@@ -1,36 +1,30 @@
 #if UNITY_EDITOR
+using TMPro;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
+using InputField = TMPro.TMP_InputField;
+using Text = TMPro.TextMeshProUGUI;
 
 public static class MainMenuPrefabGenerator
 {
     private const string RootFolder = "Assets/Resources/UI/MainMenu";
     private const string MainMenuPrefabPath = RootFolder + "/MainMenuRoot.prefab";
+    private const string MainMenuSettingsPanelPrefabPath = RootFolder + "/MainMenuSettingsPanel.prefab";
+    private const string MainMenuLoadPanelPrefabPath = RootFolder + "/MainMenuLoadPanel.prefab";
+    private const string MainMenuCharacterCreatePanelPrefabPath = RootFolder + "/MainMenuCharacterCreatePanel.prefab";
     private const string LoadSlotPrefabPath = RootFolder + "/LoadSlotItem.prefab";
     private const string CharacterSlotPrefabPath = RootFolder + "/CharacterSlotItem.prefab";
     private const string ArchetypeCardPrefabPath = RootFolder + "/ArchetypeCard.prefab";
-
-    [InitializeOnLoadMethod]
-    private static void EnsurePrefabs()
-    {
-        EditorApplication.delayCall += EnsurePrefabsAfterReload;
-    }
-
-    private static void EnsurePrefabsAfterReload()
-    {
-        if (EditorApplication.isCompiling || EditorApplication.isUpdating)
-        {
-            EditorApplication.delayCall += EnsurePrefabsAfterReload;
-            return;
-        }
-
-        EnsurePrefabAssets(true);
-        AssetDatabase.SaveAssets();
-    }
+    private const string MainMenuBackdropArtPath = "Assets/GameArt/Backgrounds/MainMenu/bg_mainmenu_mountain_gate.png";
+    private const string PrimaryButtonArtPath = "Assets/GameArt/UI/Buttons/ui_btn_primary_gold.png";
+    private const string SecondaryButtonArtPath = "Assets/GameArt/UI/Buttons/ui_btn_secondary_jade.png";
+    private const string DangerButtonArtPath = "Assets/GameArt/UI/Buttons/ui_btn_danger_red.png";
+    private const string SaveSlotPanelArtPath = "Assets/GameArt/UI/Panels/panel_save_slot_ink.png";
+    private const string ArchetypeCardPanelArtPath = "Assets/GameArt/UI/Panels/panel_archetype_card_ink.png";
 
     [MenuItem("Tools/TutorialGame/Regenerate Main Menu Prefabs")]
-    private static void RegeneratePrefabs()
+    public static void RegeneratePrefabs()
     {
         EnsurePrefabAssets(true);
         AssetDatabase.SaveAssets();
@@ -47,7 +41,11 @@ public static class MainMenuPrefabGenerator
         var loadSlotPrefab = CreateLoadSlotPrefab(overwrite);
         var characterSlotPrefab = CreateCharacterSlotPrefab(overwrite);
         var archetypeCardPrefab = CreateArchetypeCardPrefab(overwrite);
-        CreateMainMenuRootPrefab(loadSlotPrefab, characterSlotPrefab, archetypeCardPrefab, overwrite);
+
+        CreateMainMenuRootPrefab(overwrite);
+        CreateSettingsPanelPrefab(overwrite);
+        CreateLoadPanelPrefab(loadSlotPrefab, overwrite);
+        CreateCharacterCreatePanelPrefab(characterSlotPrefab, archetypeCardPrefab, overwrite);
     }
 
     private static SaveSlotView CreateLoadSlotPrefab(bool overwrite)
@@ -67,6 +65,7 @@ public static class MainMenuPrefabGenerator
 
         var image = root.AddComponent<Image>();
         image.color = new Color(0.13f, 0.14f, 0.16f, 0.82f);
+        ApplyOptionalSprite(image, SaveSlotPanelArtPath);
         var button = root.AddComponent<Button>();
         var layout = root.AddComponent<LayoutElement>();
         layout.preferredHeight = 118f;
@@ -108,6 +107,7 @@ public static class MainMenuPrefabGenerator
 
         var image = root.AddComponent<Image>();
         image.color = new Color(0.16f, 0.15f, 0.14f, 0.82f);
+        ApplyOptionalSprite(image, SaveSlotPanelArtPath);
         var button = root.AddComponent<Button>();
 
         var accent = CreateImage("Accent", root.transform, new Color(0.76f, 0.59f, 0.29f, 0.95f));
@@ -146,6 +146,7 @@ public static class MainMenuPrefabGenerator
 
         var image = root.AddComponent<Image>();
         image.color = new Color(0.13f, 0.14f, 0.16f, 0.78f);
+        ApplyOptionalSprite(image, ArchetypeCardPanelArtPath);
         root.AddComponent<RectMask2D>();
         var button = root.AddComponent<Button>();
 
@@ -174,10 +175,8 @@ public static class MainMenuPrefabGenerator
         var description = CreateText("Description", root.transform, new Vector2(22f, -264f), new Vector2(240f, 100f), 20, FontStyle.Normal, TextAnchor.UpperLeft);
         var trait = CreateText("Trait", root.transform, new Vector2(22f, -410f), new Vector2(240f, 168f), 18, FontStyle.Normal, TextAnchor.UpperLeft);
 
-        description.horizontalOverflow = HorizontalWrapMode.Wrap;
-        description.verticalOverflow = VerticalWrapMode.Overflow;
-        trait.horizontalOverflow = HorizontalWrapMode.Wrap;
-        trait.verticalOverflow = VerticalWrapMode.Overflow;
+        EnableWrapping(description);
+        EnableWrapping(trait);
 
         var view = root.AddComponent<ArchetypeCardView>();
         view.background = image;
@@ -194,7 +193,7 @@ public static class MainMenuPrefabGenerator
         return SaveAsPrefab(root, ArchetypeCardPrefabPath, overwrite).GetComponent<ArchetypeCardView>();
     }
 
-    private static void CreateMainMenuRootPrefab(SaveSlotView loadSlotPrefab, SaveSlotView characterSlotPrefab, ArchetypeCardView archetypeCardPrefab, bool overwrite)
+    private static void CreateMainMenuRootPrefab(bool overwrite)
     {
         if (!overwrite)
         {
@@ -208,9 +207,7 @@ public static class MainMenuPrefabGenerator
         var root = CreateUiObject("MainMenuRoot", null);
         root.layer = 5;
         Stretch(root.GetComponent<RectTransform>());
-
-        var canvas = root.AddComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        root.AddComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
         root.AddComponent<GraphicRaycaster>();
         var scaler = root.AddComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
@@ -222,14 +219,14 @@ public static class MainMenuPrefabGenerator
 
         var backdrop = CreateImage("Backdrop", root.transform, new Color(0.055f, 0.07f, 0.09f, 1f));
         Stretch(backdrop);
+        ApplyOptionalSprite(backdrop.GetComponent<Image>(), MainMenuBackdropArtPath, true);
 
         var header = CreatePanel("Header", root.transform, new Vector2(110f, -88f), new Vector2(920f, 316f), new Color(0.08f, 0.09f, 0.1f, 0.82f));
         SetAnchors(header, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f));
         var title = CreateText("Title", header, new Vector2(34f, -72f), new Vector2(680f, 66f), 72, FontStyle.Bold, TextAnchor.UpperLeft);
         var subtitle = CreateText("Subtitle", header, new Vector2(42f, -160f), new Vector2(420f, 30f), 26, FontStyle.Bold, TextAnchor.MiddleLeft);
         var description = CreateText("Description", header, new Vector2(42f, -206f), new Vector2(780f, 70f), 22, FontStyle.Normal, TextAnchor.UpperLeft);
-        description.horizontalOverflow = HorizontalWrapMode.Wrap;
-        description.verticalOverflow = VerticalWrapMode.Overflow;
+        EnableWrapping(description);
 
         var menu = CreatePanel("MenuPanel", root.transform, new Vector2(110f, 122f), new Vector2(450f, 420f), new Color(0f, 0f, 0f, 0f));
         SetAnchors(menu, new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(0f, 0f));
@@ -249,35 +246,108 @@ public static class MainMenuPrefabGenerator
         var info = CreatePanel("InfoPanel", root.transform, new Vector2(-116f, -102f), new Vector2(760f, 836f), new Color(0.08f, 0.09f, 0.1f, 0.76f));
         SetAnchors(info, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(1f, 1f));
         var infoFlavor = CreateText("InfoFlavor", info, new Vector2(42f, -120f), new Vector2(620f, 110f), 22, FontStyle.Normal, TextAnchor.UpperLeft);
-        infoFlavor.horizontalOverflow = HorizontalWrapMode.Wrap;
-        infoFlavor.verticalOverflow = VerticalWrapMode.Overflow;
+        EnableWrapping(infoFlavor);
         var recentSave = CreateText("RecentSave", info, new Vector2(42f, -310f), new Vector2(620f, 120f), 22, FontStyle.Normal, TextAnchor.UpperLeft);
-        recentSave.horizontalOverflow = HorizontalWrapMode.Wrap;
-        recentSave.verticalOverflow = VerticalWrapMode.Overflow;
+        EnableWrapping(recentSave);
 
         var footer = CreatePanel("FooterPanel", root.transform, new Vector2(110f, 46f), new Vector2(820f, 48f), new Color(0.07f, 0.08f, 0.09f, 0.82f));
         SetAnchors(footer, new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(0f, 0f));
         var status = CreateText("Status", footer, new Vector2(18f, 0f), new Vector2(780f, 48f), 18, FontStyle.Bold, TextAnchor.MiddleLeft);
 
-        var settingsPanel = CreateOverlay("SettingsPanel", root.transform, new Color(0.02f, 0.02f, 0.03f, 0.68f));
-        var settingsWindow = CreatePanel("Window", settingsPanel.transform, Vector2.zero, new Vector2(760f, 430f), new Color(0.1f, 0.12f, 0.14f, 0.95f));
-        SetAnchors(settingsWindow, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-        CreateText("Title", settingsWindow, new Vector2(40f, -34f), new Vector2(260f, 36f), 34, FontStyle.Bold, TextAnchor.MiddleLeft).text = "洞府设置";
-        CreateText("VolumeLabel", settingsWindow, new Vector2(40f, -126f), new Vector2(180f, 28f), 24, FontStyle.Bold, TextAnchor.MiddleLeft).text = "主音量";
-        var volumeDown = CreateInlineButton("-", settingsWindow, new Vector2(300f, -114f), new Vector2(64f, 44f));
-        var volumeValue = CreateText("VolumeValue", settingsWindow, new Vector2(374f, -114f), new Vector2(96f, 44f), 22, FontStyle.Bold, TextAnchor.MiddleCenter);
-        var volumeUp = CreateInlineButton("+", settingsWindow, new Vector2(480f, -114f), new Vector2(64f, 44f));
-        CreateText("FullscreenLabel", settingsWindow, new Vector2(40f, -202f), new Vector2(180f, 28f), 24, FontStyle.Bold, TextAnchor.MiddleLeft).text = "显示模式";
-        var fullscreenToggle = CreateInlineButton("切换", settingsWindow, new Vector2(300f, -190f), new Vector2(244f, 44f));
-        var fullscreenValue = CreateText("FullscreenValue", settingsWindow, new Vector2(554f, -190f), new Vector2(120f, 44f), 22, FontStyle.Bold, TextAnchor.MiddleLeft);
-        var resetSettings = CreateInlineButton("恢复默认", settingsWindow, new Vector2(40f, -292f), new Vector2(220f, 52f));
-        var closeSettings = CreateInlineButton("关闭", settingsWindow, new Vector2(494f, -330f), new Vector2(180f, 52f));
+        controller.titleText = title;
+        controller.subtitleText = subtitle;
+        controller.descriptionText = description;
+        controller.statusText = status;
+        controller.infoFlavorText = infoFlavor;
+        controller.recentSaveText = recentSave;
+        controller.newGameButton = newGameButton;
+        controller.continueButton = continueButton;
+        controller.loadButton = loadButton;
+        controller.settingsButton = settingsButton;
+        controller.quitButton = quitButton;
 
-        var loadPanel = CreateOverlay("LoadPanel", root.transform, new Color(0.02f, 0.02f, 0.03f, 0.74f));
-        var loadWindow = CreatePanel("Window", loadPanel.transform, Vector2.zero, new Vector2(1380f, 760f), new Color(0.1f, 0.12f, 0.14f, 0.95f));
-        SetAnchors(loadWindow, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-        CreateText("Title", loadWindow, new Vector2(42f, -34f), new Vector2(260f, 36f), 36, FontStyle.Bold, TextAnchor.MiddleLeft).text = "加载存档";
-        var loadSlotsParent = CreatePanel("Slots", loadWindow.transform, new Vector2(42f, -146f), new Vector2(520f, 520f), new Color(0f, 0f, 0f, 0f));
+        SaveAsPrefab(root, MainMenuPrefabPath, overwrite);
+    }
+
+    private static void CreateSettingsPanelPrefab(bool overwrite)
+    {
+        if (!overwrite)
+        {
+            var existing = AssetDatabase.LoadAssetAtPath<GameObject>(MainMenuSettingsPanelPrefabPath);
+            if (existing != null)
+            {
+                return;
+            }
+        }
+
+        var root = CreateOverlayRoot("MainMenuSettingsPanel");
+        var controller = root.AddComponent<MainMenuSettingsPanel>();
+        var blocker = root.GetComponent<Button>();
+
+        var window = CreatePanel("Window", root.transform, Vector2.zero, new Vector2(1380f, 760f), new Color(0.1f, 0.12f, 0.14f, 0.95f));
+        SetAnchors(window, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+
+        CreateText("Title", window, new Vector2(40f, -34f), new Vector2(260f, 36f), 34, FontStyle.Bold, TextAnchor.MiddleLeft).text = "洞府设置";
+        CreateText("MusicVolumeLabel", window, new Vector2(40f, -116f), new Vector2(180f, 28f), 24, FontStyle.Bold, TextAnchor.MiddleLeft).text = "背景音乐";
+        var musicVolumeDown = CreateInlineButton("-", window, new Vector2(300f, -104f), new Vector2(64f, 44f));
+        var musicVolumeValue = CreateText("MusicVolumeValue", window, new Vector2(374f, -104f), new Vector2(96f, 44f), 22, FontStyle.Bold, TextAnchor.MiddleCenter);
+        var musicVolumeUp = CreateInlineButton("+", window, new Vector2(480f, -104f), new Vector2(64f, 44f));
+
+        CreateText("SfxVolumeLabel", window, new Vector2(40f, -178f), new Vector2(180f, 28f), 24, FontStyle.Bold, TextAnchor.MiddleLeft).text = "操作音效";
+        var sfxVolumeDown = CreateInlineButton("-", window, new Vector2(300f, -166f), new Vector2(64f, 44f));
+        var sfxVolumeValue = CreateText("SfxVolumeValue", window, new Vector2(374f, -166f), new Vector2(96f, 44f), 22, FontStyle.Bold, TextAnchor.MiddleCenter);
+        var sfxVolumeUp = CreateInlineButton("+", window, new Vector2(480f, -166f), new Vector2(64f, 44f));
+
+        CreateText("VoiceVolumeLabel", window, new Vector2(40f, -240f), new Vector2(180f, 28f), 24, FontStyle.Bold, TextAnchor.MiddleLeft).text = "角色语音";
+        var voiceVolumeDown = CreateInlineButton("-", window, new Vector2(300f, -228f), new Vector2(64f, 44f));
+        var voiceVolumeValue = CreateText("VoiceVolumeValue", window, new Vector2(374f, -228f), new Vector2(96f, 44f), 22, FontStyle.Bold, TextAnchor.MiddleCenter);
+        var voiceVolumeUp = CreateInlineButton("+", window, new Vector2(480f, -228f), new Vector2(64f, 44f));
+
+        CreateText("FullscreenLabel", window, new Vector2(40f, -316f), new Vector2(180f, 28f), 24, FontStyle.Bold, TextAnchor.MiddleLeft).text = "显示模式";
+        var fullscreenToggle = CreateInlineButton("切换", window, new Vector2(300f, -304f), new Vector2(244f, 44f));
+        var fullscreenValue = CreateText("FullscreenValue", window, new Vector2(554f, -304f), new Vector2(120f, 44f), 22, FontStyle.Bold, TextAnchor.MiddleLeft);
+        var resetSettings = CreateInlineButton("恢复默认", window, new Vector2(40f, -408f), new Vector2(220f, 52f));
+        var closeSettings = CreateInlineButton("关闭", window, new Vector2(494f, -446f), new Vector2(180f, 52f));
+
+        controller.blockerButton = blocker;
+        controller.musicVolumeDownButton = musicVolumeDown;
+        controller.musicVolumeUpButton = musicVolumeUp;
+        controller.sfxVolumeDownButton = sfxVolumeDown;
+        controller.sfxVolumeUpButton = sfxVolumeUp;
+        controller.voiceVolumeDownButton = voiceVolumeDown;
+        controller.voiceVolumeUpButton = voiceVolumeUp;
+        controller.fullscreenToggleButton = fullscreenToggle;
+        controller.resetSettingsButton = resetSettings;
+        controller.closeButton = closeSettings;
+        controller.musicVolumeValueText = musicVolumeValue;
+        controller.sfxVolumeValueText = sfxVolumeValue;
+        controller.voiceVolumeValueText = voiceVolumeValue;
+        controller.fullscreenValueText = fullscreenValue;
+        controller.windowRect = window;
+
+        SaveAsPrefab(root, MainMenuSettingsPanelPrefabPath, overwrite);
+    }
+
+    private static void CreateLoadPanelPrefab(SaveSlotView loadSlotPrefab, bool overwrite)
+    {
+        if (!overwrite)
+        {
+            var existing = AssetDatabase.LoadAssetAtPath<GameObject>(MainMenuLoadPanelPrefabPath);
+            if (existing != null)
+            {
+                return;
+            }
+        }
+
+        var root = CreateOverlayRoot("MainMenuLoadPanel");
+        var controller = root.AddComponent<MainMenuLoadPanel>();
+        var blocker = root.GetComponent<Button>();
+
+        var window = CreatePanel("Window", root.transform, Vector2.zero, new Vector2(1540f, 860f), new Color(0.1f, 0.12f, 0.14f, 0.95f));
+        SetAnchors(window, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+        CreateText("Title", window, new Vector2(42f, -34f), new Vector2(260f, 36f), 36, FontStyle.Bold, TextAnchor.MiddleLeft).text = "加载存档";
+
+        var loadSlotsParent = CreatePanel("Slots", window.transform, new Vector2(42f, -146f), new Vector2(520f, 520f), new Color(0f, 0f, 0f, 0f));
         SetAnchors(loadSlotsParent, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f));
         var loadSlotsLayout = loadSlotsParent.gameObject.AddComponent<VerticalLayoutGroup>();
         loadSlotsLayout.spacing = 16f;
@@ -286,20 +356,49 @@ public static class MainMenuPrefabGenerator
         loadSlotsLayout.childControlHeight = false;
         loadSlotsLayout.childForceExpandHeight = false;
         loadSlotsParent.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-        var loadDetailTitle = CreateText("DetailTitle", loadWindow, new Vector2(640f, -146f), new Vector2(520f, 34f), 28, FontStyle.Bold, TextAnchor.MiddleLeft);
-        var loadDetailBody = CreateText("DetailBody", loadWindow, new Vector2(640f, -204f), new Vector2(600f, 250f), 22, FontStyle.Normal, TextAnchor.UpperLeft);
-        loadDetailBody.horizontalOverflow = HorizontalWrapMode.Wrap;
-        loadDetailBody.verticalOverflow = VerticalWrapMode.Overflow;
-        var loadAction = CreateText("Action", loadWindow, new Vector2(640f, -488f), new Vector2(600f, 30f), 18, FontStyle.Bold, TextAnchor.MiddleLeft);
-        var loadSelected = CreateInlineButton("载入此档", loadWindow, new Vector2(640f, -536f), new Vector2(204f, 56f));
-        var deleteSelected = CreateInlineButton("删除此档", loadWindow, new Vector2(860f, -536f), new Vector2(204f, 56f));
-        var closeLoad = CreateInlineButton("关闭", loadWindow, new Vector2(1080f, -536f), new Vector2(160f, 56f));
 
-        var characterPanel = CreateOverlay("CharacterPanel", root.transform, new Color(0.02f, 0.02f, 0.03f, 0.78f));
-        var characterWindow = CreatePanel("Window", characterPanel.transform, Vector2.zero, new Vector2(1540f, 860f), new Color(0.1f, 0.12f, 0.14f, 0.95f));
-        SetAnchors(characterWindow, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-        CreateText("Title", characterWindow, new Vector2(42f, -34f), new Vector2(360f, 38f), 38, FontStyle.Bold, TextAnchor.MiddleLeft).text = "择道入世";
-        var archetypeParent = CreatePanel("Archetypes", characterWindow.transform, new Vector2(42f, -150f), new Vector2(1020f, 620f), new Color(0f, 0f, 0f, 0f));
+        var loadDetailTitle = CreateText("DetailTitle", window, new Vector2(640f, -146f), new Vector2(520f, 34f), 28, FontStyle.Bold, TextAnchor.MiddleLeft);
+        var loadDetailBody = CreateText("DetailBody", window, new Vector2(640f, -204f), new Vector2(600f, 250f), 22, FontStyle.Normal, TextAnchor.UpperLeft);
+        EnableWrapping(loadDetailBody);
+        var loadAction = CreateText("Action", window, new Vector2(640f, -488f), new Vector2(600f, 30f), 18, FontStyle.Bold, TextAnchor.MiddleLeft);
+        var loadSelected = CreateInlineButton("载入此档", window, new Vector2(640f, -536f), new Vector2(204f, 56f));
+        var deleteSelected = CreateInlineButton("删除此档", window, new Vector2(860f, -536f), new Vector2(204f, 56f));
+        var closeLoad = CreateInlineButton("关闭", window, new Vector2(1080f, -536f), new Vector2(160f, 56f));
+
+        controller.blockerButton = blocker;
+        controller.loadSelectedButton = loadSelected;
+        controller.deleteSelectedButton = deleteSelected;
+        controller.closeButton = closeLoad;
+        controller.loadDetailTitleText = loadDetailTitle;
+        controller.loadDetailBodyText = loadDetailBody;
+        controller.loadActionText = loadAction;
+        controller.windowRect = window;
+        controller.loadSlotsParent = loadSlotsParent;
+        controller.loadSlotPrefab = loadSlotPrefab;
+
+        SaveAsPrefab(root, MainMenuLoadPanelPrefabPath, overwrite);
+    }
+
+    private static void CreateCharacterCreatePanelPrefab(SaveSlotView characterSlotPrefab, ArchetypeCardView archetypeCardPrefab, bool overwrite)
+    {
+        if (!overwrite)
+        {
+            var existing = AssetDatabase.LoadAssetAtPath<GameObject>(MainMenuCharacterCreatePanelPrefabPath);
+            if (existing != null)
+            {
+                return;
+            }
+        }
+
+        var root = CreateOverlayRoot("MainMenuCharacterCreatePanel");
+        var controller = root.AddComponent<MainMenuCharacterCreatePanel>();
+        var blocker = root.GetComponent<Button>();
+
+        var window = CreatePanel("Window", root.transform, Vector2.zero, new Vector2(1540f, 860f), new Color(0.1f, 0.12f, 0.14f, 0.95f));
+        SetAnchors(window, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+        CreateText("Title", window, new Vector2(42f, -34f), new Vector2(360f, 38f), 38, FontStyle.Bold, TextAnchor.MiddleLeft).text = "择道入世";
+
+        var archetypeParent = CreatePanel("Archetypes", window.transform, new Vector2(42f, -150f), new Vector2(1020f, 620f), new Color(0f, 0f, 0f, 0f));
         SetAnchors(archetypeParent, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f));
         var archetypeLayout = archetypeParent.gameObject.AddComponent<HorizontalLayoutGroup>();
         archetypeLayout.spacing = 18f;
@@ -307,13 +406,14 @@ public static class MainMenuPrefabGenerator
         archetypeLayout.childControlHeight = false;
         archetypeLayout.childForceExpandWidth = false;
         archetypeLayout.childForceExpandHeight = false;
-        var characterSummaryTitle = CreateText("SummaryTitle", characterWindow, new Vector2(1120f, -170f), new Vector2(300f, 34f), 30, FontStyle.Bold, TextAnchor.MiddleLeft);
-        var characterSummaryBody = CreateText("SummaryBody", characterWindow, new Vector2(1120f, -226f), new Vector2(340f, 220f), 20, FontStyle.Normal, TextAnchor.UpperLeft);
-        characterSummaryBody.horizontalOverflow = HorizontalWrapMode.Wrap;
-        characterSummaryBody.verticalOverflow = VerticalWrapMode.Overflow;
-        CreateText("HeroNameLabel", characterWindow, new Vector2(1120f, -480f), new Vector2(140f, 24f), 18, FontStyle.Bold, TextAnchor.MiddleLeft).text = "修士名号";
-        var heroNameInput = CreateInputField(characterWindow.transform, new Vector2(1120f, -514f), new Vector2(320f, 48f));
-        var characterSlotsParent = CreatePanel("CharacterSlots", characterWindow.transform, new Vector2(1120f, -594f), new Vector2(340f, 80f), new Color(0f, 0f, 0f, 0f));
+
+        var characterSummaryTitle = CreateText("SummaryTitle", window, new Vector2(1120f, -170f), new Vector2(300f, 34f), 30, FontStyle.Bold, TextAnchor.MiddleLeft);
+        var characterSummaryBody = CreateText("SummaryBody", window, new Vector2(1120f, -226f), new Vector2(340f, 220f), 20, FontStyle.Normal, TextAnchor.UpperLeft);
+        EnableWrapping(characterSummaryBody);
+        CreateText("HeroNameLabel", window, new Vector2(1120f, -480f), new Vector2(140f, 24f), 18, FontStyle.Bold, TextAnchor.MiddleLeft).text = "修士名号";
+        var heroNameInput = CreateInputField(window.transform, new Vector2(1120f, -514f), new Vector2(320f, 48f));
+
+        var characterSlotsParent = CreatePanel("CharacterSlots", window.transform, new Vector2(1120f, -594f), new Vector2(340f, 80f), new Color(0f, 0f, 0f, 0f));
         SetAnchors(characterSlotsParent, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f));
         var characterSlotsLayout = characterSlotsParent.gameObject.AddComponent<HorizontalLayoutGroup>();
         characterSlotsLayout.spacing = 12f;
@@ -321,53 +421,23 @@ public static class MainMenuPrefabGenerator
         characterSlotsLayout.childControlHeight = false;
         characterSlotsLayout.childForceExpandWidth = false;
         characterSlotsLayout.childForceExpandHeight = false;
-        var startNew = CreateInlineButton("踏入仙途", characterWindow, new Vector2(1120f, -710f), new Vector2(150f, 54f));
-        var closeCharacter = CreateInlineButton("返回", characterWindow, new Vector2(1290f, -710f), new Vector2(150f, 54f));
 
-        controller.titleText = title;
-        controller.subtitleText = subtitle;
-        controller.descriptionText = description;
-        controller.statusText = status;
-        controller.infoFlavorText = infoFlavor;
-        controller.recentSaveText = recentSave;
-        controller.volumeValueText = volumeValue;
-        controller.fullscreenValueText = fullscreenValue;
-        controller.loadDetailTitleText = loadDetailTitle;
-        controller.loadDetailBodyText = loadDetailBody;
-        controller.loadActionText = loadAction;
+        var startNew = CreateInlineButton("踏入仙途", window, new Vector2(1120f, -710f), new Vector2(150f, 54f));
+        var closeCharacter = CreateInlineButton("返回", window, new Vector2(1290f, -710f), new Vector2(150f, 54f));
+
+        controller.blockerButton = blocker;
+        controller.startNewGameButton = startNew;
+        controller.closeButton = closeCharacter;
+        controller.heroNameInput = heroNameInput;
         controller.characterSummaryTitleText = characterSummaryTitle;
         controller.characterSummaryBodyText = characterSummaryBody;
-        controller.newGameButton = newGameButton;
-        controller.continueButton = continueButton;
-        controller.loadButton = loadButton;
-        controller.settingsButton = settingsButton;
-        controller.quitButton = quitButton;
-        controller.volumeDownButton = volumeDown;
-        controller.volumeUpButton = volumeUp;
-        controller.fullscreenToggleButton = fullscreenToggle;
-        controller.resetSettingsButton = resetSettings;
-        controller.closeSettingsButton = closeSettings;
-        controller.loadSelectedButton = loadSelected;
-        controller.deleteSelectedButton = deleteSelected;
-        controller.closeLoadPanelButton = closeLoad;
-        controller.startNewGameButton = startNew;
-        controller.closeCharacterPanelButton = closeCharacter;
-        controller.heroNameInput = heroNameInput;
-        controller.settingsPanel = settingsPanel.gameObject;
-        controller.loadPanel = loadPanel.gameObject;
-        controller.characterPanel = characterPanel.gameObject;
-        controller.loadSlotsParent = loadSlotsParent;
+        controller.windowRect = window;
         controller.characterSlotsParent = characterSlotsParent;
         controller.archetypeCardsParent = archetypeParent;
-        controller.loadSlotPrefab = loadSlotPrefab;
         controller.characterSlotPrefab = characterSlotPrefab;
         controller.archetypeCardPrefab = archetypeCardPrefab;
 
-        settingsPanel.gameObject.SetActive(false);
-        loadPanel.gameObject.SetActive(false);
-        characterPanel.gameObject.SetActive(false);
-
-        SaveAsPrefab(root, MainMenuPrefabPath, overwrite);
+        SaveAsPrefab(root, MainMenuCharacterCreatePanelPrefabPath, overwrite);
     }
 
     private static Button CreateMenuButton(string label, Transform parent)
@@ -375,6 +445,7 @@ public static class MainMenuPrefabGenerator
         var root = CreateUiObject(label + "Button", parent);
         var image = root.AddComponent<Image>();
         image.color = new Color(0.11f, 0.12f, 0.13f, 0.92f);
+        ApplyOptionalSprite(image, ResolveMenuButtonArtPath(label));
         var button = root.AddComponent<Button>();
         var layout = root.AddComponent<LayoutElement>();
         layout.preferredHeight = 76f;
@@ -402,6 +473,7 @@ public static class MainMenuPrefabGenerator
 
         var image = root.AddComponent<Image>();
         image.color = new Color(0.17f, 0.13f, 0.11f, 0.95f);
+        ApplyOptionalSprite(image, ResolveInlineButtonArtPath(label));
         var button = root.AddComponent<Button>();
 
         var accent = CreateImage("Accent", root.transform, new Color(0.76f, 0.59f, 0.29f, 0.95f));
@@ -462,13 +534,16 @@ public static class MainMenuPrefabGenerator
         return rect;
     }
 
-    private static RectTransform CreateOverlay(string name, Transform parent, Color color)
+    private static GameObject CreateOverlayRoot(string name)
     {
-        var overlay = CreateUiObject(name, parent);
-        var rect = overlay.GetComponent<RectTransform>();
-        Stretch(rect);
-        overlay.AddComponent<Image>().color = color;
-        return rect;
+        var root = CreateUiObject(name, null);
+        root.layer = 5;
+        Stretch(root.GetComponent<RectTransform>());
+        var image = root.AddComponent<Image>();
+        image.color = new Color(0.02f, 0.02f, 0.03f, 0.74f);
+        var button = root.AddComponent<Button>();
+        button.transition = Selectable.Transition.None;
+        return root;
     }
 
     private static RectTransform CreateImage(string name, Transform parent, Color color)
@@ -487,14 +562,121 @@ public static class MainMenuPrefabGenerator
         SetAnchors(rect, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f));
 
         var text = textObject.AddComponent<Text>();
-        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        if (TMP_Settings.defaultFontAsset != null)
+        {
+            text.font = TMP_Settings.defaultFontAsset;
+        }
+
         text.fontSize = fontSize;
-        text.fontStyle = fontStyle;
+        text.fontStyle = ConvertFontStyle(fontStyle);
         text.color = new Color(0.88f, 0.84f, 0.76f, 0.96f);
-        text.alignment = alignment;
-        text.horizontalOverflow = HorizontalWrapMode.Overflow;
-        text.verticalOverflow = VerticalWrapMode.Overflow;
+        text.alignment = ConvertAlignment(alignment);
+        text.enableWordWrapping = false;
+        text.overflowMode = TextOverflowModes.Overflow;
+        text.raycastTarget = false;
         return text;
+    }
+
+    private static void EnableWrapping(Text text)
+    {
+        if (text == null)
+        {
+            return;
+        }
+
+        text.enableWordWrapping = true;
+        text.overflowMode = TextOverflowModes.Overflow;
+    }
+
+    private static FontStyles ConvertFontStyle(FontStyle style)
+    {
+        switch (style)
+        {
+            case FontStyle.Bold:
+                return FontStyles.Bold;
+            case FontStyle.Italic:
+                return FontStyles.Italic;
+            case FontStyle.BoldAndItalic:
+                return FontStyles.Bold | FontStyles.Italic;
+            default:
+                return FontStyles.Normal;
+        }
+    }
+
+    private static TextAlignmentOptions ConvertAlignment(TextAnchor alignment)
+    {
+        switch (alignment)
+        {
+            case TextAnchor.UpperLeft:
+                return TextAlignmentOptions.TopLeft;
+            case TextAnchor.UpperCenter:
+                return TextAlignmentOptions.Top;
+            case TextAnchor.UpperRight:
+                return TextAlignmentOptions.TopRight;
+            case TextAnchor.MiddleLeft:
+                return TextAlignmentOptions.MidlineLeft;
+            case TextAnchor.MiddleCenter:
+                return TextAlignmentOptions.Center;
+            case TextAnchor.MiddleRight:
+                return TextAlignmentOptions.MidlineRight;
+            case TextAnchor.LowerLeft:
+                return TextAlignmentOptions.BottomLeft;
+            case TextAnchor.LowerCenter:
+                return TextAlignmentOptions.Bottom;
+            case TextAnchor.LowerRight:
+                return TextAlignmentOptions.BottomRight;
+            default:
+                return TextAlignmentOptions.TopLeft;
+        }
+    }
+
+    private static string ResolveMenuButtonArtPath(string label)
+    {
+        switch (label)
+        {
+            case "离开游戏":
+                return DangerButtonArtPath;
+            case "加载存档":
+            case "设置":
+                return SecondaryButtonArtPath;
+            default:
+                return PrimaryButtonArtPath;
+        }
+    }
+
+    private static string ResolveInlineButtonArtPath(string label)
+    {
+        switch (label)
+        {
+            case "删除此档":
+                return DangerButtonArtPath;
+            case "关闭":
+            case "返回":
+            case "切换":
+            case "+":
+            case "-":
+                return SecondaryButtonArtPath;
+            default:
+                return PrimaryButtonArtPath;
+        }
+    }
+
+    private static void ApplyOptionalSprite(Image image, string assetPath, bool preserveAspect = false)
+    {
+        if (image == null || string.IsNullOrWhiteSpace(assetPath))
+        {
+            return;
+        }
+
+        var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
+        if (sprite == null)
+        {
+            return;
+        }
+
+        image.sprite = sprite;
+        image.color = Color.white;
+        image.preserveAspect = preserveAspect;
     }
 
     private static GameObject CreateUiObject(string name, Transform parent)
@@ -516,7 +698,7 @@ public static class MainMenuPrefabGenerator
 
     private static GameObject SaveAsPrefab(GameObject temporaryObject, string path, bool overwrite)
     {
-        EnsureFolder(System.IO.Path.GetDirectoryName(path).Replace("\\", "/"));
+        EnsureFolder(System.IO.Path.GetDirectoryName(path)?.Replace("\\", "/"));
 
         GameObject prefab;
         if (overwrite || AssetDatabase.LoadAssetAtPath<GameObject>(path) == null)
@@ -534,12 +716,12 @@ public static class MainMenuPrefabGenerator
 
     private static void EnsureFolder(string path)
     {
-        if (AssetDatabase.IsValidFolder(path))
+        if (string.IsNullOrWhiteSpace(path) || AssetDatabase.IsValidFolder(path))
         {
             return;
         }
 
-        var parent = System.IO.Path.GetDirectoryName(path).Replace("\\", "/");
+        var parent = System.IO.Path.GetDirectoryName(path)?.Replace("\\", "/");
         if (!string.IsNullOrEmpty(parent) && !AssetDatabase.IsValidFolder(parent))
         {
             EnsureFolder(parent);

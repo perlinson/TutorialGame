@@ -147,7 +147,7 @@ public static class InventoryLibrary
         }
 
         definitions = new Dictionary<string, InventoryItemDefinition>();
-        var database = Resources.Load<InventoryDatabaseAsset>("Data/InventoryDatabase");
+        var database = CultivationApp.LoadResource<InventoryDatabaseAsset>("Data/InventoryDatabase");
         if (database != null && database.items != null)
         {
             for (var i = 0; i < database.items.Length; i++)
@@ -158,7 +158,8 @@ public static class InventoryLibrary
                     continue;
                 }
 
-                definitions[item.id] = new InventoryItemDefinition(item.id, item.displayName, item.category, item.rarity, item.description, item.iconImage, item.crystalValue);
+                var iconImage = item.iconImage != null ? item.iconImage : GeneratedArtLibrary.GetItemIcon(item.id);
+                definitions[item.id] = new InventoryItemDefinition(item.id, item.displayName, item.category, item.rarity, item.description, iconImage, item.crystalValue);
             }
         }
 
@@ -195,6 +196,6 @@ public static class InventoryLibrary
 
     private static void AddFallback(string id, string displayName, string category, string rarity, string description, int crystalValue)
     {
-        definitions[id] = new InventoryItemDefinition(id, displayName, category, rarity, description, null, crystalValue);
+        definitions[id] = new InventoryItemDefinition(id, displayName, category, rarity, description, GeneratedArtLibrary.GetItemIcon(id), crystalValue);
     }
 }

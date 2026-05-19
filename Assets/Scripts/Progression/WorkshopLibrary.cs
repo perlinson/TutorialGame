@@ -12,7 +12,7 @@ public static class WorkshopLibrary
             return recipes;
         }
 
-        var database = Resources.Load<WorkshopRecipeDatabaseAsset>("Data/WorkshopRecipeDatabase");
+        var database = CultivationApp.LoadResource<WorkshopRecipeDatabaseAsset>("Data/WorkshopRecipeDatabase");
         if (database != null && database.recipes != null && database.recipes.Length > 0)
         {
             recipes = database.recipes;

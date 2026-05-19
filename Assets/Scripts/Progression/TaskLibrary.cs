@@ -11,7 +11,7 @@ public static class TaskLibrary
             return definitions;
         }
 
-        var database = Resources.Load<TaskDatabaseAsset>("Data/TaskDatabase");
+        var database = CultivationApp.LoadResource<TaskDatabaseAsset>("Data/TaskDatabase");
         if (database != null && database.tasks != null && database.tasks.Length > 0)
         {
             definitions = database.tasks;

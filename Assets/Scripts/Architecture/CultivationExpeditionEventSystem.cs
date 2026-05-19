@@ -403,7 +403,7 @@ public sealed class CultivationExpeditionEventSystem : AbstractSystem
             return cachedEvents;
         }
 
-        var database = Resources.Load<ExpeditionEventDatabaseAsset>("Data/ExpeditionEventDatabase");
+        var database = CultivationApp.LoadResource<ExpeditionEventDatabaseAsset>("Data/ExpeditionEventDatabase");
         if (database != null && database.events != null && database.events.Length > 0)
         {
             cachedEvents = database.events;

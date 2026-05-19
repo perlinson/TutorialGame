@@ -1,5 +1,143 @@
 using QFramework;
 
+public sealed class OpenMainMenuPanelCommand : AbstractCommand<MainMenuController>
+{
+    private readonly MainMenuConfig config;
+
+    public OpenMainMenuPanelCommand(MainMenuConfig config)
+    {
+        this.config = config;
+    }
+
+    protected override MainMenuController OnExecute()
+    {
+        return this.GetUtility<IGameUiService>().OpenMainMenu(config);
+    }
+}
+
+public sealed class OpenMainMenuSettingsPanelCommand : AbstractCommand<MainMenuSettingsPanel>
+{
+    private readonly MainMenuController owner;
+
+    public OpenMainMenuSettingsPanelCommand(MainMenuController owner)
+    {
+        this.owner = owner;
+    }
+
+    protected override MainMenuSettingsPanel OnExecute()
+    {
+        return this.GetUtility<IGameUiService>().OpenMainMenuSettings(owner);
+    }
+}
+
+public sealed class OpenMainMenuLoadPanelCommand : AbstractCommand<MainMenuLoadPanel>
+{
+    private readonly MainMenuController owner;
+
+    public OpenMainMenuLoadPanelCommand(MainMenuController owner)
+    {
+        this.owner = owner;
+    }
+
+    protected override MainMenuLoadPanel OnExecute()
+    {
+        return this.GetUtility<IGameUiService>().OpenMainMenuLoad(owner);
+    }
+}
+
+public sealed class OpenMainMenuCharacterCreatePanelCommand : AbstractCommand<MainMenuCharacterCreatePanel>
+{
+    private readonly MainMenuController owner;
+
+    public OpenMainMenuCharacterCreatePanelCommand(MainMenuController owner)
+    {
+        this.owner = owner;
+    }
+
+    protected override MainMenuCharacterCreatePanel OnExecute()
+    {
+        return this.GetUtility<IGameUiService>().OpenMainMenuCharacterCreate(owner);
+    }
+}
+
+public sealed class OpenWorldMapPanelCommand : AbstractCommand<WorldMapController>
+{
+    private readonly string gameplaySceneName;
+    private readonly string mainSceneName;
+
+    public OpenWorldMapPanelCommand(string gameplaySceneName, string mainSceneName)
+    {
+        this.gameplaySceneName = gameplaySceneName;
+        this.mainSceneName = mainSceneName;
+    }
+
+    protected override WorldMapController OnExecute()
+    {
+        return this.GetUtility<IGameUiService>().OpenWorldMap(gameplaySceneName, mainSceneName);
+    }
+}
+
+public sealed class OpenExpeditionPanelCommand : AbstractCommand<ExpeditionView>
+{
+    protected override ExpeditionView OnExecute()
+    {
+        return this.GetUtility<IGameUiService>().OpenExpedition();
+    }
+}
+
+public sealed class CloseGameUiPanelCommand : AbstractCommand
+{
+    private readonly GameUiPanelId panelId;
+
+    public CloseGameUiPanelCommand(GameUiPanelId panelId)
+    {
+        this.panelId = panelId;
+    }
+
+    protected override void OnExecute()
+    {
+        this.GetUtility<IGameUiService>().ClosePanel(panelId);
+    }
+}
+
+public sealed class CloseAllGameUiPanelsCommand : AbstractCommand
+{
+    protected override void OnExecute()
+    {
+        this.GetUtility<IGameUiService>().CloseAllPanels();
+    }
+}
+
+public sealed class HideGameUiPanelCommand : AbstractCommand
+{
+    private readonly GameUiPanelId panelId;
+
+    public HideGameUiPanelCommand(GameUiPanelId panelId)
+    {
+        this.panelId = panelId;
+    }
+
+    protected override void OnExecute()
+    {
+        this.GetUtility<IGameUiService>().HidePanel(panelId);
+    }
+}
+
+public sealed class ShowGameUiPanelCommand : AbstractCommand
+{
+    private readonly GameUiPanelId panelId;
+
+    public ShowGameUiPanelCommand(GameUiPanelId panelId)
+    {
+        this.panelId = panelId;
+    }
+
+    protected override void OnExecute()
+    {
+        this.GetUtility<IGameUiService>().ShowPanel(panelId);
+    }
+}
+
 public sealed class BootstrapCurrentArchiveCommand : AbstractCommand<CultivationArchiveSnapshot>
 {
     protected override CultivationArchiveSnapshot OnExecute()

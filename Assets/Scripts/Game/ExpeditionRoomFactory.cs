@@ -51,6 +51,48 @@ public static class ExpeditionRoomFactory
         return rooms;
     }
 
+    public static ExpeditionRoomState Restore(PersistentExpeditionRoomSnapshot snapshot, WorldRegionDefinition region)
+    {
+        if (snapshot == null)
+        {
+            return null;
+        }
+
+        snapshot.EnsureDefaults();
+        var room = new ExpeditionRoomState
+        {
+            Index = snapshot.index,
+            Kind = snapshot.kind,
+            Title = snapshot.title,
+            Description = snapshot.description,
+            Seed = snapshot.seed,
+            Visited = snapshot.visited,
+            Resolved = snapshot.resolved
+        };
+
+        var visualTemplate = new ExpeditionRoomState
+        {
+            Index = snapshot.index,
+            Kind = snapshot.kind
+        };
+        ApplyVisualCopy(visualTemplate);
+        room.IllustrationImage = visualTemplate.IllustrationImage != null
+            ? visualTemplate.IllustrationImage
+            : region != null ? region.IllustrationImage : null;
+
+        if (string.IsNullOrWhiteSpace(room.Title))
+        {
+            room.Title = visualTemplate.Title;
+        }
+
+        if (string.IsNullOrWhiteSpace(room.Description))
+        {
+            room.Description = visualTemplate.Description;
+        }
+
+        return room;
+    }
+
     private static ExpeditionRoomKind PickIntermediateRoomKind(WorldRegionDefinition region, MainMenuSaveData saveData, System.Random random, int index)
     {
         saveData.EnsureDefaults();
@@ -172,9 +214,28 @@ public static class ExpeditionRoomFactory
     {
         if (cachedRoomEventTable == null)
         {
-            cachedRoomEventTable = Resources.Load<RoomEventTableAsset>("Data/RoomEventTable");
+            cachedRoomEventTable = CultivationApp.LoadResource<RoomEventTableAsset>("Data/RoomEventTable");
         }
 
         return cachedRoomEventTable;
+    }
+
+    private static void ApplyVisualCopy(ExpeditionRoomState room)
+    {
+        switch (room.Kind)
+        {
+            case ExpeditionRoomKind.Scout:
+                ApplyStartScoutCopy(room);
+                break;
+            case ExpeditionRoomKind.Elite:
+                ApplyEliteCopy(room);
+                break;
+            case ExpeditionRoomKind.Boss:
+                ApplyBossCopy(room);
+                break;
+            default:
+                ApplyRoomCopy(room);
+                break;
+        }
     }
 }

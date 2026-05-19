@@ -176,7 +176,7 @@ public static class WorldRegionLibrary
         }
 
         regions = new List<WorldRegionDefinition>();
-        var database = Resources.Load<WorldRegionDatabaseAsset>("Data/WorldRegionDatabase");
+        var database = CultivationApp.LoadResource<WorldRegionDatabaseAsset>("Data/WorldRegionDatabase");
         if (database != null)
         {
             if (database.regions != null && database.regions.Length > 0)

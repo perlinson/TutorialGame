@@ -1,72 +1,129 @@
+using System;
+using System.IO;
 using UnityEngine;
 
 public static class MainMenuSaveStore
 {
-    public const int SaveSlotCount = 3;
-
-    private const string VolumeKey = "main_menu.master_volume";
-    private const string FullscreenKey = "main_menu.fullscreen";
-    private const string CurrentSlotKey = "main_menu.current_slot";
-    private const string SelectedArchetypeKey = "main_menu.selected_archetype";
-    private const string SaveSlotKeyPrefix = "main_menu.save_slot_";
-
-    public static float LoadVolume()
+    [Serializable]
+    private sealed class MainMenuLocalStoreData
     {
-        return PlayerPrefs.GetFloat(VolumeKey, 0.8f);
+        public bool audioSettingsConfigured;
+        public float musicVolume = 0.8f;
+        public float sfxVolume = 0.8f;
+        public float voiceVolume = 0.8f;
+        public bool fullscreen = true;
+        public int currentSlot = -1;
+        public int selectedArchetype;
+        public MainMenuSaveData[] saveSlots = new MainMenuSaveData[SaveSlotCount];
+        public PersistentExpeditionRuntimeSnapshot expeditionRuntime;
     }
 
-    public static void SaveVolume(float value)
+    public const int SaveSlotCount = 3;
+
+    private const string SaveFolderName = "Saves";
+    private const string SaveFileName = "main_menu_store.json";
+    private const string BackupFileName = "main_menu_store.bak.json";
+
+    private static MainMenuLocalStoreData cachedStore;
+    private static bool storeLoaded;
+
+    public static float LoadMusicVolume()
     {
-        PlayerPrefs.SetFloat(VolumeKey, value);
-        PlayerPrefs.Save();
+        return Mathf.Clamp(GetStore().musicVolume, 0f, 1f);
+    }
+
+    public static void SaveMusicVolume(float value)
+    {
+        var store = GetStore();
+        store.audioSettingsConfigured = true;
+        store.musicVolume = Mathf.Clamp01(value);
+        PersistStore(store, true);
+    }
+
+    public static float LoadSfxVolume()
+    {
+        return Mathf.Clamp(GetStore().sfxVolume, 0f, 1f);
+    }
+
+    public static void SaveSfxVolume(float value)
+    {
+        var store = GetStore();
+        store.audioSettingsConfigured = true;
+        store.sfxVolume = Mathf.Clamp01(value);
+        PersistStore(store, true);
+    }
+
+    public static float LoadVoiceVolume()
+    {
+        return Mathf.Clamp(GetStore().voiceVolume, 0f, 1f);
+    }
+
+    public static void SaveVoiceVolume(float value)
+    {
+        var store = GetStore();
+        store.audioSettingsConfigured = true;
+        store.voiceVolume = Mathf.Clamp01(value);
+        PersistStore(store, true);
     }
 
     public static bool LoadFullscreen()
     {
-        return PlayerPrefs.GetInt(FullscreenKey, 1) == 1;
+        return GetStore().fullscreen;
     }
 
     public static void SaveFullscreen(bool fullscreen)
     {
-        PlayerPrefs.SetInt(FullscreenKey, fullscreen ? 1 : 0);
-        PlayerPrefs.Save();
+        var store = GetStore();
+        store.fullscreen = fullscreen;
+        PersistStore(store, true);
     }
 
     public static int LoadSelectedArchetype()
     {
-        return PlayerPrefs.GetInt(SelectedArchetypeKey, 0);
+        return Mathf.Max(0, GetStore().selectedArchetype);
     }
 
     public static void SaveSelectedArchetype(int index)
     {
-        PlayerPrefs.SetInt(SelectedArchetypeKey, index);
-        PlayerPrefs.Save();
+        var store = GetStore();
+        store.selectedArchetype = Mathf.Max(0, index);
+        PersistStore(store, true);
     }
 
     public static void SaveSlot(int slotIndex, MainMenuSaveData data)
     {
+        var store = GetStore();
         var clampedIndex = Mathf.Clamp(slotIndex, 0, SaveSlotCount - 1);
+
         if (data != null)
         {
             data.EnsureDefaults();
         }
 
-        PlayerPrefs.SetString(GetSaveSlotKey(clampedIndex), JsonUtility.ToJson(data));
-        PlayerPrefs.SetInt(CurrentSlotKey, clampedIndex);
-        PlayerPrefs.Save();
+        EnsureSlotArray(store);
+        store.saveSlots[clampedIndex] = CloneSaveData(data);
+        store.currentSlot = clampedIndex;
+        PersistStore(store, true);
     }
 
     public static void DeleteSlot(int slotIndex)
     {
+        var store = GetStore();
         var clampedIndex = Mathf.Clamp(slotIndex, 0, SaveSlotCount - 1);
-        PlayerPrefs.DeleteKey(GetSaveSlotKey(clampedIndex));
 
-        if (PlayerPrefs.GetInt(CurrentSlotKey, -1) == clampedIndex)
+        EnsureSlotArray(store);
+        store.saveSlots[clampedIndex] = null;
+        if (store.expeditionRuntime != null && store.expeditionRuntime.slotIndex == clampedIndex)
         {
-            PlayerPrefs.DeleteKey(CurrentSlotKey);
+            store.expeditionRuntime = null;
         }
 
-        PlayerPrefs.Save();
+        if (store.currentSlot == clampedIndex)
+        {
+            store.currentSlot = -1;
+        }
+
+        PersistStore(store, true);
     }
 
     public static bool TryLoadSlot(int slotIndex, out MainMenuSaveData data)
@@ -77,24 +134,23 @@ public static class MainMenuSaveStore
             return false;
         }
 
-        var json = PlayerPrefs.GetString(GetSaveSlotKey(slotIndex), string.Empty);
-        if (string.IsNullOrEmpty(json))
+        var store = GetStore();
+        EnsureSlotArray(store);
+
+        var source = store.saveSlots[slotIndex];
+        if (source == null)
         {
             return false;
         }
 
-        data = JsonUtility.FromJson<MainMenuSaveData>(json);
-        if (data != null)
-        {
-            data.EnsureDefaults();
-        }
-
+        data = CloneSaveData(source);
         return data != null && !string.IsNullOrWhiteSpace(data.heroName);
     }
 
     public static bool TryGetCurrentSave(out int slotIndex, out MainMenuSaveData data)
     {
-        slotIndex = PlayerPrefs.GetInt(CurrentSlotKey, -1);
+        var store = GetStore();
+        slotIndex = store.currentSlot;
         if (slotIndex >= 0 && slotIndex < SaveSlotCount && TryLoadSlot(slotIndex, out data))
         {
             return true;
@@ -168,8 +224,268 @@ public static class MainMenuSaveStore
         return TryGetCurrentSave(out _, out data);
     }
 
-    private static string GetSaveSlotKey(int slotIndex)
+    public static void SaveExpeditionRuntime(PersistentExpeditionRuntimeSnapshot snapshot)
     {
-        return SaveSlotKeyPrefix + slotIndex;
+        if (snapshot == null)
+        {
+            return;
+        }
+
+        snapshot.EnsureDefaults();
+        if (!snapshot.IsUsable())
+        {
+            return;
+        }
+
+        var store = GetStore();
+        store.expeditionRuntime = CloneSnapshot(snapshot);
+        PersistStore(store, true);
+    }
+
+    public static bool TryLoadExpeditionRuntime(out PersistentExpeditionRuntimeSnapshot snapshot)
+    {
+        snapshot = CloneSnapshot(GetStore().expeditionRuntime);
+        return snapshot != null && snapshot.IsUsable();
+    }
+
+    public static void ClearExpeditionRuntime()
+    {
+        var store = GetStore();
+        if (store.expeditionRuntime == null)
+        {
+            return;
+        }
+
+        store.expeditionRuntime = null;
+        PersistStore(store, true);
+    }
+
+    private static MainMenuLocalStoreData GetStore()
+    {
+        if (storeLoaded)
+        {
+            return cachedStore;
+        }
+
+        cachedStore = LoadStore();
+        storeLoaded = true;
+        return cachedStore;
+    }
+
+    private static MainMenuLocalStoreData LoadStore()
+    {
+        var path = GetSaveFilePath();
+        var store = TryReadStore(path);
+        if (store != null)
+        {
+            PersistStore(store, false);
+            return store;
+        }
+
+        var backup = TryReadStore(GetBackupFilePath());
+        if (backup != null)
+        {
+            PersistStore(backup, false);
+            return backup;
+        }
+
+        store = CreateEmptyStore();
+        PersistStore(store, false);
+        return store;
+    }
+
+    private static MainMenuLocalStoreData TryReadStore(string path)
+    {
+        if (!File.Exists(path))
+        {
+            return null;
+        }
+
+        try
+        {
+            var json = File.ReadAllText(path);
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                return null;
+            }
+
+            var store = JsonUtility.FromJson<MainMenuLocalStoreData>(json);
+            return NormalizeStore(store);
+        }
+        catch (Exception exception)
+        {
+            Debug.LogWarning("Failed to read main menu save store: " + path + "\n" + exception.Message);
+            return null;
+        }
+    }
+
+    private static MainMenuLocalStoreData NormalizeStore(MainMenuLocalStoreData store)
+    {
+        store = store ?? CreateEmptyStore();
+        if (!store.audioSettingsConfigured)
+        {
+            store.musicVolume = 0.8f;
+            store.sfxVolume = 0.8f;
+            store.voiceVolume = 0.8f;
+            store.audioSettingsConfigured = true;
+        }
+
+        store.musicVolume = Mathf.Clamp01(store.musicVolume);
+        store.sfxVolume = Mathf.Clamp01(store.sfxVolume);
+        store.voiceVolume = Mathf.Clamp01(store.voiceVolume);
+        store.selectedArchetype = Mathf.Max(0, store.selectedArchetype);
+        store.expeditionRuntime = NormalizeSnapshot(store.expeditionRuntime);
+        EnsureSlotArray(store);
+
+        for (var i = 0; i < store.saveSlots.Length; i++)
+        {
+            if (store.saveSlots[i] == null)
+            {
+                continue;
+            }
+
+            store.saveSlots[i].EnsureDefaults();
+            if (string.IsNullOrWhiteSpace(store.saveSlots[i].heroName))
+            {
+                store.saveSlots[i] = null;
+            }
+        }
+
+        if (store.currentSlot < 0 || store.currentSlot >= SaveSlotCount || store.saveSlots[store.currentSlot] == null)
+        {
+            store.currentSlot = ResolveFirstOccupiedSlot(store.saveSlots);
+        }
+
+        return store;
+    }
+
+    private static MainMenuLocalStoreData CreateEmptyStore()
+    {
+        return new MainMenuLocalStoreData
+        {
+            saveSlots = new MainMenuSaveData[SaveSlotCount]
+        };
+    }
+
+    private static void EnsureSlotArray(MainMenuLocalStoreData store)
+    {
+        if (store.saveSlots == null || store.saveSlots.Length != SaveSlotCount)
+        {
+            var resized = new MainMenuSaveData[SaveSlotCount];
+            if (store.saveSlots != null)
+            {
+                Array.Copy(store.saveSlots, resized, Mathf.Min(store.saveSlots.Length, SaveSlotCount));
+            }
+
+            store.saveSlots = resized;
+        }
+    }
+
+    private static int ResolveFirstOccupiedSlot(MainMenuSaveData[] saveSlots)
+    {
+        if (saveSlots == null)
+        {
+            return -1;
+        }
+
+        for (var i = 0; i < saveSlots.Length; i++)
+        {
+            var slot = saveSlots[i];
+            if (slot != null && !string.IsNullOrWhiteSpace(slot.heroName))
+            {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    private static void PersistStore(MainMenuLocalStoreData store, bool createBackup)
+    {
+        store = NormalizeStore(store);
+
+        var folderPath = GetSaveFolderPath();
+        var filePath = GetSaveFilePath();
+        var backupPath = GetBackupFilePath();
+
+        try
+        {
+            Directory.CreateDirectory(folderPath);
+            if (createBackup && File.Exists(filePath))
+            {
+                File.Copy(filePath, backupPath, true);
+            }
+
+            var json = JsonUtility.ToJson(store, true);
+            File.WriteAllText(filePath, json);
+            cachedStore = store;
+            storeLoaded = true;
+        }
+        catch (Exception exception)
+        {
+            Debug.LogError("Failed to persist main menu save store: " + exception.Message);
+        }
+    }
+
+    private static MainMenuSaveData CloneSaveData(MainMenuSaveData data)
+    {
+        if (data == null)
+        {
+            return null;
+        }
+
+        data.EnsureDefaults();
+        var json = JsonUtility.ToJson(data);
+        var clone = JsonUtility.FromJson<MainMenuSaveData>(json);
+        if (clone != null)
+        {
+            clone.EnsureDefaults();
+        }
+
+        return clone;
+    }
+
+    private static PersistentExpeditionRuntimeSnapshot NormalizeSnapshot(PersistentExpeditionRuntimeSnapshot snapshot)
+    {
+        if (snapshot == null)
+        {
+            return null;
+        }
+
+        snapshot.EnsureDefaults();
+        return snapshot.IsUsable() ? snapshot : null;
+    }
+
+    private static PersistentExpeditionRuntimeSnapshot CloneSnapshot(PersistentExpeditionRuntimeSnapshot snapshot)
+    {
+        if (snapshot == null)
+        {
+            return null;
+        }
+
+        snapshot.EnsureDefaults();
+        var json = JsonUtility.ToJson(snapshot);
+        var clone = JsonUtility.FromJson<PersistentExpeditionRuntimeSnapshot>(json);
+        if (clone != null)
+        {
+            clone.EnsureDefaults();
+        }
+
+        return clone;
+    }
+
+    private static string GetSaveFolderPath()
+    {
+        return Path.Combine(Application.persistentDataPath, SaveFolderName);
+    }
+
+    private static string GetSaveFilePath()
+    {
+        return Path.Combine(GetSaveFolderPath(), SaveFileName);
+    }
+
+    private static string GetBackupFilePath()
+    {
+        return Path.Combine(GetSaveFolderPath(), BackupFileName);
     }
 }

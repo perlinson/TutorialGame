@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using Text = TMPro.TMP_Text;
 
 public sealed class SaveSlotView : MonoBehaviour
 {
@@ -18,19 +19,25 @@ public sealed class SaveSlotView : MonoBehaviour
         titleText.text = title;
         detailText.text = detail;
         footerText.text = footer;
+        GeneratedUiSkinLibrary.ApplySaveSlotPanelSkin(background);
 
         background.color = selected
-            ? new Color(0.39f, 0.25f, 0.15f, 0.9f)
-            : new Color(0.13f, 0.14f, 0.16f, 0.82f);
+            ? new Color(1f, 0.97f, 0.9f, 1f)
+            : new Color(0.92f, 0.9f, 0.84f, 0.94f);
         accent.color = occupied
             ? new Color(0.76f, 0.59f, 0.29f, 0.95f)
-            : new Color(0.3f, 0.3f, 0.3f, 0.58f);
+            : new Color(0.45f, 0.44f, 0.4f, 0.58f);
         titleText.color = selected
-            ? new Color(0.95f, 0.9f, 0.8f, 1f)
-            : new Color(0.84f, 0.82f, 0.76f, 0.96f);
+            ? new Color(0.25f, 0.17f, 0.08f, 1f)
+            : new Color(0.2f, 0.18f, 0.14f, 0.96f);
+        detailText.color = selected
+            ? new Color(0.32f, 0.24f, 0.14f, 0.96f)
+            : new Color(0.28f, 0.25f, 0.2f, 0.9f);
+        footerText.color = occupied
+            ? new Color(0.44f, 0.33f, 0.16f, 0.96f)
+            : new Color(0.36f, 0.34f, 0.32f, 0.86f);
 
-        button.onClick.RemoveAllListeners();
-        button.onClick.AddListener(onClick);
+        CultivationAudio.BindButton(button, onClick);
     }
 
     public int SlotIndex => slotIndex;

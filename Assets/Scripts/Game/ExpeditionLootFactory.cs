@@ -72,7 +72,7 @@ public static class ExpeditionLootFactory
     {
         if (cachedTable == null)
         {
-            cachedTable = Resources.Load<LootTableAsset>("Data/LootTable");
+            cachedTable = CultivationApp.LoadResource<LootTableAsset>("Data/LootTable");
         }
 
         return cachedTable;

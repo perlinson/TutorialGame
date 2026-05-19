@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using Text = TMPro.TMP_Text;
 
 public sealed class WorldRegionNodeView : MonoBehaviour
 {
@@ -17,6 +18,7 @@ public sealed class WorldRegionNodeView : MonoBehaviour
     {
         regionId = region.Id;
         titleText.text = region.DisplayName;
+        GeneratedUiSkinLibrary.ApplyRegionNodeSkin(background);
 
         if (!unlocked)
         {
@@ -36,14 +38,14 @@ public sealed class WorldRegionNodeView : MonoBehaviour
         }
 
         background.color = !unlocked
-            ? new Color(0.16f, 0.17f, 0.2f, 0.82f)
+            ? new Color(0.52f, 0.54f, 0.58f, 0.78f)
             : selected
-                ? new Color(0.55f, 0.41f, 0.18f, 0.92f)
+                ? new Color(1f, 0.96f, 0.88f, 1f)
                 : cleared
-                    ? new Color(0.18f, 0.36f, 0.31f, 0.92f)
+                    ? new Color(0.82f, 0.94f, 0.86f, 0.96f)
                     : accessible
-                        ? new Color(0.24f, 0.26f, 0.22f, 0.92f)
-                        : new Color(0.23f, 0.2f, 0.17f, 0.88f);
+                        ? new Color(0.94f, 0.94f, 0.92f, 0.96f)
+                        : new Color(0.84f, 0.8f, 0.75f, 0.9f);
 
         border.color = selected
             ? new Color(0.92f, 0.82f, 0.46f, 1f)
@@ -51,7 +53,13 @@ public sealed class WorldRegionNodeView : MonoBehaviour
                 ? new Color(0.62f, 0.55f, 0.34f, 0.9f)
                 : new Color(0.32f, 0.33f, 0.39f, 0.9f);
 
-        button.onClick.RemoveAllListeners();
-        button.onClick.AddListener(onClick);
+        titleText.color = selected
+            ? new Color(0.23f, 0.18f, 0.08f, 1f)
+            : new Color(0.9f, 0.86f, 0.78f, 1f);
+        subtitleText.color = unlocked
+            ? new Color(0.84f, 0.8f, 0.72f, 0.96f)
+            : new Color(0.7f, 0.72f, 0.76f, 0.94f);
+
+        CultivationAudio.BindButton(button, onClick);
     }
 }

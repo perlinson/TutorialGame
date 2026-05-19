@@ -1,9 +1,13 @@
+using QFramework;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using Text = TMPro.TMP_Text;
 
-public sealed class ExpeditionView : MonoBehaviour
+public sealed class ExpeditionView : UIPanel
 {
+    private const string OverlayMusicDuckReason = "ExpeditionOverlay";
+
     public Text titleText;
     public Text heroNameText;
     public Text heroStatsText;
@@ -27,6 +31,7 @@ public sealed class ExpeditionView : MonoBehaviour
     public Image[] actionIconImages;
     public Text[] actionIconLabelTexts;
     public ExpeditionRoomNodeView[] roomNodes;
+    public GameObject eventOverlayBlocker;
     public GameObject eventOverlayRoot;
     public Text eventBadgeText;
     public Text eventTitleText;
@@ -40,8 +45,31 @@ public sealed class ExpeditionView : MonoBehaviour
     public Text eventResultText;
     public Button eventConfirmButton;
     public Text eventConfirmLabelText;
+    public GameObject pauseOverlayBlocker;
+    public GameObject pauseOverlayRoot;
+    public Text pauseTitleText;
+    public Text pauseBodyText;
+    public Button pauseResumeButton;
+    public Text pauseResumeLabelText;
+    public Button pauseRetreatButton;
+    public Text pauseRetreatLabelText;
+    public Button pauseMainMenuButton;
+    public Text pauseMainMenuLabelText;
 
     public bool IsEventOverlayVisible => eventOverlayRoot != null && eventOverlayRoot.activeSelf;
+    public bool IsPauseOverlayVisible => pauseOverlayRoot != null && pauseOverlayRoot.activeSelf;
+
+    protected override void OnOpen(IUIData uiData = null)
+    {
+        HideEventOverlay();
+        HidePauseOverlay();
+    }
+
+    protected override void OnClose()
+    {
+        HideEventOverlay();
+        HidePauseOverlay();
+    }
 
     public void SetHeader(string title, string heroName, string heroStats, string expeditionStats, string phase)
     {
@@ -65,9 +93,9 @@ public sealed class ExpeditionView : MonoBehaviour
 
     public void SetVisuals(Sprite roomSprite, string roomLabel, Sprite heroSprite, string heroLabel, Sprite enemySprite, string enemyLabel)
     {
-        GameSpriteLibrary.BindSpriteOrPlaceholder(roomPreviewImage, roomPreviewLabelText, roomSprite, roomLabel, new Color(0.23f, 0.2f, 0.16f, 1f));
-        GameSpriteLibrary.BindSpriteOrPlaceholder(heroPreviewImage, heroPreviewLabelText, heroSprite, heroLabel, new Color(0.22f, 0.18f, 0.14f, 1f));
-        GameSpriteLibrary.BindSpriteOrPlaceholder(enemyPreviewImage, enemyPreviewLabelText, enemySprite, enemyLabel, new Color(0.22f, 0.14f, 0.14f, 1f));
+        GameSpriteLibrary.BindSpriteOrPlaceholder(roomPreviewImage, roomPreviewLabelText, roomSprite, roomLabel, new Color(0.23f, 0.2f, 0.16f, 1f), false);
+        GameSpriteLibrary.BindSpriteOrPlaceholder(heroPreviewImage, heroPreviewLabelText, heroSprite, heroLabel, new Color(0.22f, 0.18f, 0.14f, 1f), false);
+        GameSpriteLibrary.BindSpriteOrPlaceholder(enemyPreviewImage, enemyPreviewLabelText, enemySprite, enemyLabel, new Color(0.22f, 0.14f, 0.14f, 1f), false);
     }
 
     public void SetTrack(System.Collections.Generic.IReadOnlyList<ExpeditionRoomState> rooms, int currentRoomIndex)
@@ -105,10 +133,13 @@ public sealed class ExpeditionView : MonoBehaviour
 
         actionLabels[index].text = label;
         actionButtons[index].interactable = enabled;
-        actionButtons[index].onClick.RemoveAllListeners();
         if (action != null)
         {
-            actionButtons[index].onClick.AddListener(action);
+            CultivationAudio.BindButton(actionButtons[index], action, CultivationButtonSound.Confirm);
+        }
+        else
+        {
+            actionButtons[index].onClick.RemoveAllListeners();
         }
 
         if (actionIconImages != null && index < actionIconImages.Length)
@@ -126,10 +157,60 @@ public sealed class ExpeditionView : MonoBehaviour
 
     public void HideEventOverlay()
     {
+        CultivationApp.SetMusicDuck(OverlayMusicDuckReason, false);
+        if (eventOverlayBlocker != null)
+        {
+            eventOverlayBlocker.SetActive(false);
+        }
+
         if (eventOverlayRoot != null)
         {
             eventOverlayRoot.SetActive(false);
         }
+    }
+
+    public void HidePauseOverlay()
+    {
+        CultivationApp.SetMusicDuck(OverlayMusicDuckReason, false);
+        if (pauseOverlayBlocker != null)
+        {
+            pauseOverlayBlocker.SetActive(false);
+        }
+
+        if (pauseOverlayRoot != null)
+        {
+            pauseOverlayRoot.SetActive(false);
+        }
+    }
+
+    public void ShowPauseOverlay(string title, string body, UnityAction onResume, UnityAction onRetreat, UnityAction onMainMenu)
+    {
+        if (pauseOverlayRoot == null)
+        {
+            return;
+        }
+
+        CultivationApp.SetMusicDuck(OverlayMusicDuckReason, true, 8f);
+        if (pauseOverlayBlocker != null)
+        {
+            pauseOverlayBlocker.SetActive(true);
+        }
+
+        pauseOverlayRoot.SetActive(true);
+
+        if (pauseTitleText != null)
+        {
+            pauseTitleText.text = string.IsNullOrWhiteSpace(title) ? "历练暂停" : title;
+        }
+
+        if (pauseBodyText != null)
+        {
+            pauseBodyText.text = string.IsNullOrWhiteSpace(body) ? "当前历练已暂停。" : body;
+        }
+
+        BindPauseButton(pauseResumeButton, pauseResumeLabelText, "继续历练", onResume, CultivationButtonSound.Confirm);
+        BindPauseButton(pauseRetreatButton, pauseRetreatLabelText, "提前撤离", onRetreat, CultivationButtonSound.Cancel);
+        BindPauseButton(pauseMainMenuButton, pauseMainMenuLabelText, "返回主菜单", onMainMenu, CultivationButtonSound.Cancel);
     }
 
     public void ShowEventCard(ExpeditionEventCardResult card, System.Action<string> onOptionSelected)
@@ -137,6 +218,12 @@ public sealed class ExpeditionView : MonoBehaviour
         if (card == null || eventOverlayRoot == null)
         {
             return;
+        }
+
+        CultivationApp.SetMusicDuck(OverlayMusicDuckReason, true, 8f);
+        if (eventOverlayBlocker != null)
+        {
+            eventOverlayBlocker.SetActive(true);
         }
 
         eventOverlayRoot.SetActive(true);
@@ -155,7 +242,7 @@ public sealed class ExpeditionView : MonoBehaviour
             eventBodyText.text = card.Body;
         }
 
-        GameSpriteLibrary.BindSpriteOrPlaceholder(eventPreviewImage, eventPreviewLabelText, card.IllustrationImage, card.Title, new Color(0.23f, 0.2f, 0.16f, 1f));
+        GameSpriteLibrary.BindSpriteOrPlaceholder(eventPreviewImage, eventPreviewLabelText, card.IllustrationImage, card.Title, new Color(0.23f, 0.2f, 0.16f, 1f), false);
         if (eventResultText != null)
         {
             eventResultText.text = string.Empty;
@@ -177,9 +264,9 @@ public sealed class ExpeditionView : MonoBehaviour
 
             var hasOption = card.Options != null && i < card.Options.Length && card.Options[i] != null;
             button.gameObject.SetActive(hasOption);
-            button.onClick.RemoveAllListeners();
             if (!hasOption)
             {
+                button.onClick.RemoveAllListeners();
                 continue;
             }
 
@@ -203,7 +290,11 @@ public sealed class ExpeditionView : MonoBehaviour
             var optionId = option.OptionId;
             if (option.IsAvailable && onOptionSelected != null)
             {
-                button.onClick.AddListener(() => onOptionSelected(optionId));
+                CultivationAudio.BindButton(button, () => onOptionSelected(optionId), CultivationButtonSound.Confirm);
+            }
+            else
+            {
+                button.onClick.RemoveAllListeners();
             }
         }
     }
@@ -213,6 +304,12 @@ public sealed class ExpeditionView : MonoBehaviour
         if (card == null || result == null || eventOverlayRoot == null)
         {
             return;
+        }
+
+        CultivationApp.SetMusicDuck(OverlayMusicDuckReason, true, 8f);
+        if (eventOverlayBlocker != null)
+        {
+            eventOverlayBlocker.SetActive(true);
         }
 
         eventOverlayRoot.SetActive(true);
@@ -247,10 +344,13 @@ public sealed class ExpeditionView : MonoBehaviour
         if (eventConfirmButton != null)
         {
             eventConfirmButton.gameObject.SetActive(true);
-            eventConfirmButton.onClick.RemoveAllListeners();
             if (onConfirm != null)
             {
-                eventConfirmButton.onClick.AddListener(onConfirm);
+                CultivationAudio.BindButton(eventConfirmButton, onConfirm, CultivationButtonSound.Confirm);
+            }
+            else
+            {
+                eventConfirmButton.onClick.RemoveAllListeners();
             }
         }
 
@@ -273,5 +373,33 @@ public sealed class ExpeditionView : MonoBehaviour
         }
 
         return label.Length <= 2 ? label : label.Substring(0, 2);
+    }
+
+    private static void BindPauseButton(Button button, Text labelText, string label, UnityAction action, CultivationButtonSound sound)
+    {
+        if (labelText != null)
+        {
+            labelText.text = label;
+        }
+
+        if (button == null)
+        {
+            return;
+        }
+
+        button.interactable = action != null;
+        if (action != null)
+        {
+            CultivationAudio.BindButton(button, action, sound);
+        }
+        else
+        {
+            button.onClick.RemoveAllListeners();
+        }
+    }
+
+    private void OnDestroy()
+    {
+        CultivationApp.SetMusicDuck(OverlayMusicDuckReason, false);
     }
 }

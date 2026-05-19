@@ -1,9 +1,10 @@
 using System.Collections.Generic;
+using QFramework;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Text = TMPro.TMP_Text;
 
-public sealed class MainMenuController : MonoBehaviour
+public sealed partial class MainMenuController : UIPanel
 {
     public Text titleText;
     public Text subtitleText;
@@ -11,13 +12,6 @@ public sealed class MainMenuController : MonoBehaviour
     public Text statusText;
     public Text infoFlavorText;
     public Text recentSaveText;
-    public Text volumeValueText;
-    public Text fullscreenValueText;
-    public Text loadDetailTitleText;
-    public Text loadDetailBodyText;
-    public Text loadActionText;
-    public Text characterSummaryTitleText;
-    public Text characterSummaryBodyText;
 
     public Button newGameButton;
     public Button continueButton;
@@ -25,82 +19,63 @@ public sealed class MainMenuController : MonoBehaviour
     public Button settingsButton;
     public Button quitButton;
 
-    public Button volumeDownButton;
-    public Button volumeUpButton;
-    public Button fullscreenToggleButton;
-    public Button resetSettingsButton;
-    public Button closeSettingsButton;
-
-    public Button loadSelectedButton;
-    public Button deleteSelectedButton;
-    public Button closeLoadPanelButton;
-
-    public Button startNewGameButton;
-    public Button closeCharacterPanelButton;
-
-    public InputField heroNameInput;
-
-    public GameObject settingsPanel;
-    public GameObject loadPanel;
-    public GameObject characterPanel;
-
-    public Transform loadSlotsParent;
-    public Transform characterSlotsParent;
-    public Transform archetypeCardsParent;
-
-    public SaveSlotView loadSlotPrefab;
-    public SaveSlotView characterSlotPrefab;
-    public ArchetypeCardView archetypeCardPrefab;
-
-    private readonly List<SaveSlotView> loadSlotViews = new List<SaveSlotView>();
-    private readonly List<SaveSlotView> characterSlotViews = new List<SaveSlotView>();
-    private readonly List<ArchetypeCardView> archetypeViews = new List<ArchetypeCardView>();
     private readonly List<MainMenuArchetype> archetypes = new List<MainMenuArchetype>();
 
     private MainMenuConfig config;
+    private RectTransform rootRect;
+    private RectTransform menuPanelRect;
+    private RectTransform infoPanelRect;
+    private RectTransform footerPanelRect;
     private bool isInitialized;
     private int selectedLoadSlotIndex = -1;
     private int selectedCharacterSlotIndex = -1;
     private int selectedArchetypeIndex;
-    private float masterVolume;
+    private int lastLayoutWidth = -1;
+    private int lastLayoutHeight = -1;
+    private float musicVolume;
+    private float sfxVolume;
+    private float voiceVolume;
     private bool isFullscreen;
+    private string pendingHeroName = string.Empty;
+
+    private sealed class LoadDetailSnapshot
+    {
+        public string Title;
+        public string Body;
+        public string Action;
+        public bool CanLoad;
+        public bool CanDelete;
+    }
 
     public void Initialize(MainMenuConfig newConfig)
     {
         config = newConfig;
         EnsureArchetypes();
-        EnsureDynamicViews();
-        WireButtons();
+
+        if (!isInitialized)
+        {
+            ResolveLayoutReferences();
+            WireButtons();
+            isInitialized = true;
+        }
+
         LoadPreferences();
         ApplyCopy();
+        RefreshResponsiveLayout(true);
         RefreshAll();
+        ResetUiStateMachine(MainMenuUiState.Home);
         SetStatus("主界面已就绪");
-        isInitialized = true;
     }
 
     private void Update()
     {
-        if (!isInitialized || !Input.GetKeyDown(KeyCode.Escape))
+        RefreshResponsiveLayout(false);
+        if (!isInitialized)
         {
             return;
         }
 
-        if (characterPanel.activeSelf)
-        {
-            CloseCharacterPanel();
-            return;
-        }
-
-        if (loadPanel.activeSelf)
-        {
-            CloseLoadPanel();
-            return;
-        }
-
-        if (settingsPanel.activeSelf)
-        {
-            CloseSettings();
-        }
+        uiStateMachine.Update();
     }
 
     private void EnsureArchetypes()
@@ -110,7 +85,7 @@ public sealed class MainMenuController : MonoBehaviour
             return;
         }
 
-        var database = Resources.Load<HeroArchetypeDatabaseAsset>("Data/HeroArchetypeDatabase");
+        var database = CultivationApp.LoadResource<HeroArchetypeDatabaseAsset>("Data/HeroArchetypeDatabase");
         if (database != null && database.archetypes != null && database.archetypes.Length > 0)
         {
             for (var i = 0; i < database.archetypes.Length; i++)
@@ -181,7 +156,7 @@ public sealed class MainMenuController : MonoBehaviour
 
     private static Sprite LoadArchetypePortrait(string archetypeId)
     {
-        var database = Resources.Load<HeroArchetypeDatabaseAsset>("Data/HeroArchetypeDatabase");
+        var database = CultivationApp.LoadResource<HeroArchetypeDatabaseAsset>("Data/HeroArchetypeDatabase");
         if (database == null || database.archetypes == null)
         {
             return null;
@@ -199,30 +174,6 @@ public sealed class MainMenuController : MonoBehaviour
         return GeneratedArtLibrary.GetHeroPortrait(archetypeId);
     }
 
-    private void EnsureDynamicViews()
-    {
-        if (loadSlotViews.Count == 0)
-        {
-            for (var i = 0; i < MainMenuSaveStore.SaveSlotCount; i++)
-            {
-                loadSlotViews.Add(Instantiate(loadSlotPrefab, loadSlotsParent));
-            }
-        }
-
-        if (characterSlotViews.Count == 0)
-        {
-            for (var i = 0; i < MainMenuSaveStore.SaveSlotCount; i++)
-            {
-                characterSlotViews.Add(Instantiate(characterSlotPrefab, characterSlotsParent));
-            }
-        }
-
-        while (archetypeViews.Count < archetypes.Count)
-        {
-            archetypeViews.Add(Instantiate(archetypeCardPrefab, archetypeCardsParent));
-        }
-    }
-
     private void WireButtons()
     {
         BindButton(newGameButton, OpenCharacterPanel);
@@ -230,66 +181,65 @@ public sealed class MainMenuController : MonoBehaviour
         BindButton(loadButton, OpenLoadPanel);
         BindButton(settingsButton, OpenSettings);
         BindButton(quitButton, QuitGame);
-
-        BindButton(volumeDownButton, () => ChangeVolume(-0.1f));
-        BindButton(volumeUpButton, () => ChangeVolume(0.1f));
-        BindButton(fullscreenToggleButton, ToggleFullscreenMode);
-        BindButton(resetSettingsButton, ResetSettings);
-        BindButton(closeSettingsButton, CloseSettings);
-
-        BindButton(loadSelectedButton, LoadSelectedSave);
-        BindButton(deleteSelectedButton, DeleteSelectedSave);
-        BindButton(closeLoadPanelButton, CloseLoadPanel);
-
-        BindButton(startNewGameButton, StartNewGame);
-        BindButton(closeCharacterPanelButton, CloseCharacterPanel);
     }
 
     private void ApplyCopy()
     {
-        titleText.text = config.Title;
-        subtitleText.text = config.Subtitle;
-        descriptionText.text = config.Description;
+        if (titleText != null) titleText.text = config.Title;
+        if (subtitleText != null) subtitleText.text = config.Subtitle;
+        if (descriptionText != null) descriptionText.text = config.Description;
     }
 
     private void LoadPreferences()
     {
-        masterVolume = MainMenuSaveStore.LoadVolume();
-        isFullscreen = MainMenuSaveStore.LoadFullscreen();
+        musicVolume = CultivationApp.GetMusicVolume();
+        sfxVolume = CultivationApp.GetSfxVolume();
+        voiceVolume = CultivationApp.GetVoiceVolume();
+        isFullscreen = CultivationApp.IsFullscreen();
         selectedArchetypeIndex = Mathf.Clamp(MainMenuSaveStore.LoadSelectedArchetype(), 0, archetypes.Count - 1);
         selectedLoadSlotIndex = MainMenuSaveStore.GetPreferredLoadSlot();
         selectedCharacterSlotIndex = MainMenuSaveStore.GetPreferredNewGameSlot();
+        pendingHeroName = ResolveDefaultHeroName();
 
-        AudioListener.volume = masterVolume;
-        Screen.fullScreen = isFullscreen;
+        CultivationApp.ApplyUserSettings();
     }
 
     private void RefreshAll()
     {
-        RefreshSettingsLabels();
         RefreshMainButtons();
         RefreshInfoPanel();
-        RefreshLoadSlots();
-        RefreshLoadDetails();
-        RefreshCharacterSlots();
-        RefreshArchetypes();
-        RefreshCharacterSummary();
     }
 
     private void RefreshMainButtons()
     {
-        continueButton.interactable = MainMenuSaveStore.HasAnySave();
+        if (continueButton != null)
+        {
+            continueButton.interactable = MainMenuSaveStore.HasAnySave();
+        }
     }
 
-    private void RefreshSettingsLabels()
+    public MainMenuSettingsSnapshot BuildSettingsSnapshot()
     {
-        volumeValueText.text = Mathf.RoundToInt(masterVolume * 100f) + "%";
-        fullscreenValueText.text = isFullscreen ? "全屏" : "窗口";
+        return new MainMenuSettingsSnapshot
+        {
+            MusicVolume = musicVolume,
+            SfxVolume = sfxVolume,
+            VoiceVolume = voiceVolume,
+            IsFullscreen = isFullscreen
+        };
     }
 
     private void RefreshInfoPanel()
     {
-        infoFlavorText.text = "主界面改成 prefab 驱动后，结构会更稳定：重复的档位项和角色卡都由独立预制体生成，后续你可以直接在 prefab 上迭代样式。";
+        if (infoFlavorText != null)
+        {
+            infoFlavorText.text = "主界面改成 prefab 驱动后，结构会更稳定：窗口改为独立面板后，后续可以直接按 prefab 维护层级与显示。";
+        }
+
+        if (recentSaveText == null)
+        {
+            return;
+        }
 
         if (MainMenuSaveStore.TryGetCurrentSave(out var slotIndex, out var data))
         {
@@ -305,144 +255,150 @@ public sealed class MainMenuController : MonoBehaviour
         }
     }
 
-    private void RefreshLoadSlots()
+    public MainMenuLoadSnapshot BuildLoadSnapshot()
     {
-        for (var i = 0; i < loadSlotViews.Count; i++)
+        var slots = new MainMenuSlotSnapshot[MainMenuSaveStore.SaveSlotCount];
+        for (var i = 0; i < slots.Length; i++)
         {
-            var slotIndex = i;
             var occupied = MainMenuSaveStore.TryLoadSlot(i, out var data);
-            var detail = occupied ? data.heroName + " / " + data.archetypeName : "暂无存档";
-            var footer = occupied ? data.realm + " · " + data.location : "等待开辟";
-
-            loadSlotViews[i].Bind(
-                i,
-                "第 " + (i + 1) + " 档",
-                detail,
-                footer,
-                i == selectedLoadSlotIndex,
-                occupied,
-                () => SelectLoadSlot(slotIndex));
+            slots[i] = new MainMenuSlotSnapshot
+            {
+                SlotIndex = i,
+                Title = "第 " + (i + 1) + " 档",
+                Detail = occupied ? data.heroName + " / " + data.archetypeName : "暂无存档",
+                Footer = occupied ? data.realm + " · " + data.location : "等待开辟",
+                Selected = i == selectedLoadSlotIndex,
+                Occupied = occupied
+            };
         }
+
+        var detail = BuildLoadDetailSnapshot();
+        return new MainMenuLoadSnapshot
+        {
+            Slots = slots,
+            DetailTitle = detail.Title,
+            DetailBody = detail.Body,
+            ActionText = detail.Action,
+            CanLoad = detail.CanLoad,
+            CanDelete = detail.CanDelete
+        };
     }
 
-    private void RefreshLoadDetails()
+    private LoadDetailSnapshot BuildLoadDetailSnapshot()
     {
         if (MainMenuSaveStore.TryLoadSlot(selectedLoadSlotIndex, out var data))
         {
-            loadDetailTitleText.text = data.heroName + " / " + data.archetypeName;
-            loadDetailBodyText.text = "出身：" + data.origin + "\n" +
-                                      "路线：" + data.specialty + "\n" +
-                                      "门派：" + data.sectName + "\n" +
-                                      "境界：" + data.realm + "\n" +
-                                      "位置：" + data.location + "\n" +
-                                      "灵石：" + data.spiritCrystals + " · " + CultivationLoadoutLibrary.BuildCompactProgressSummary(data) + "\n" +
-                                      "上次游历：" + data.lastPlayed + "\n\n" +
-                                      CultivationLoadoutLibrary.BuildEquipmentOverview(data) + "\n\n" +
-                                      data.description;
-            loadActionText.text = "可直接载入，或先删除后重新开局。";
+            return new LoadDetailSnapshot
+            {
+                Title = data.heroName + " / " + data.archetypeName,
+                Body = "出身：" + data.origin + "\n" +
+                       "路线：" + data.specialty + "\n" +
+                       "门派：" + data.sectName + "\n" +
+                       "境界：" + data.realm + "\n" +
+                       "位置：" + data.location + "\n" +
+                       "灵石：" + data.spiritCrystals + " · " + CultivationLoadoutLibrary.BuildCompactProgressSummary(data) + "\n" +
+                       "上次游历：" + data.lastPlayed + "\n\n" +
+                       CultivationLoadoutLibrary.BuildEquipmentOverview(data) + "\n\n" +
+                       data.description,
+                Action = "可直接载入，或先删除后重新开局。",
+                CanLoad = true,
+                CanDelete = true
+            };
         }
-        else
+
+        return new LoadDetailSnapshot
         {
-            loadDetailTitleText.text = "空白档位";
-            loadDetailBodyText.text = "此档位尚未记录任何修士。\n\n可以先返回主菜单，点击“新游戏”后在角色选择中将新的修士写入这个档位。";
-            loadActionText.text = "当前没有内容可载入。";
-        }
+            Title = "空白档位",
+            Body = "此档位尚未记录任何修士。\n\n可以先返回主菜单，点击“新游戏”后在角色选择中将新的修士写入这个档位。",
+            Action = "当前没有内容可载入。",
+            CanLoad = false,
+            CanDelete = false
+        };
     }
 
-    private void RefreshCharacterSlots()
+    public MainMenuCharacterSnapshot BuildCharacterSnapshot()
     {
-        for (var i = 0; i < characterSlotViews.Count; i++)
+        var slots = new MainMenuSlotSnapshot[MainMenuSaveStore.SaveSlotCount];
+        for (var i = 0; i < slots.Length; i++)
         {
-            var slotIndex = i;
             var occupied = MainMenuSaveStore.TryLoadSlot(i, out var data);
-            characterSlotViews[i].Bind(
-                i,
-                "档 " + (i + 1),
-                occupied ? data.heroName : "空",
-                occupied ? "将覆盖" : "新建",
-                i == selectedCharacterSlotIndex,
-                occupied,
-                () => SelectCharacterSlot(slotIndex));
+            slots[i] = new MainMenuSlotSnapshot
+            {
+                SlotIndex = i,
+                Title = "档 " + (i + 1),
+                Detail = occupied ? data.heroName : "空",
+                Footer = occupied ? "将覆盖" : "新建",
+                Selected = i == selectedCharacterSlotIndex,
+                Occupied = occupied
+            };
         }
+
+        return new MainMenuCharacterSnapshot
+        {
+            Slots = slots,
+            Archetypes = archetypes.ToArray(),
+            SelectedArchetypeIndex = Mathf.Clamp(selectedArchetypeIndex, 0, archetypes.Count - 1),
+            SummaryTitle = BuildCharacterSummaryTitle(),
+            SummaryBody = BuildCharacterSummaryBody(),
+            HeroName = GetPendingHeroName()
+        };
     }
 
-    private void RefreshArchetypes()
+    private string BuildCharacterSummaryTitle()
     {
-        for (var i = 0; i < archetypeViews.Count; i++)
-        {
-            var index = i;
-            archetypeViews[i].Bind(i, archetypes[i], i == selectedArchetypeIndex, () => SelectArchetype(index));
-        }
-
-        var currentName = heroNameInput.text.Trim();
-        if (string.IsNullOrEmpty(currentName) || MatchesAnyDefaultName(currentName))
-        {
-            heroNameInput.text = archetypes[selectedArchetypeIndex].defaultHeroName;
-        }
+        return archetypes.Count > 0 ? archetypes[selectedArchetypeIndex].name : "未定道脉";
     }
 
-    private void RefreshCharacterSummary()
+    private string BuildCharacterSummaryBody()
     {
+        if (archetypes.Count == 0)
+        {
+            return "当前没有可用流派数据。";
+        }
+
         var archetype = archetypes[selectedArchetypeIndex];
-        var slotIndex = selectedCharacterSlotIndex;
-        if (slotIndex < 0)
-        {
-            slotIndex = 0;
-        }
-
+        var slotIndex = Mathf.Max(0, selectedCharacterSlotIndex);
         var slotSummary = MainMenuSaveStore.TryLoadSlot(slotIndex, out var existingSave)
             ? "档位状态：第 " + (slotIndex + 1) + " 档将覆盖现有存档 " + existingSave.heroName
             : "档位状态：第 " + (slotIndex + 1) + " 档为空，将新建修士";
 
-        characterSummaryTitleText.text = archetype.name;
-        characterSummaryBodyText.text = "出身：" + archetype.origin + "\n" +
-                                        "路线：" + archetype.specialty + "\n\n" +
-                                        "开局位置：" + (archetype.id == "wanderer" ? "散修无门派，直接出现在山海大地图" : "拜入青玄山门，先进入门派驻地") + "\n\n" +
-                                        archetype.description + "\n" +
-                                        archetype.trait + "\n\n" +
-                                        archetype.recommendation + "\n\n" +
-                                        slotSummary;
+        return "出身：" + archetype.origin + "\n" +
+               "路线：" + archetype.specialty + "\n\n" +
+               "开局位置：" + (archetype.id == "wanderer" ? "散修无门派，直接出现在山海大地图" : "拜入青玄山门，先进入门派驻地") + "\n\n" +
+               archetype.description + "\n" +
+               archetype.trait + "\n\n" +
+               archetype.recommendation + "\n\n" +
+               slotSummary;
     }
 
     public void OpenCharacterPanel()
     {
-        CloseAllPanels();
-        characterPanel.SetActive(true);
-        selectedCharacterSlotIndex = MainMenuSaveStore.GetPreferredNewGameSlot();
-        selectedArchetypeIndex = Mathf.Clamp(MainMenuSaveStore.LoadSelectedArchetype(), 0, archetypes.Count - 1);
-        RefreshAll();
-        SetStatus("选择一条修途与存档档位");
+        ChangeUiState(MainMenuUiState.CharacterCreate);
     }
 
     public void CloseCharacterPanel()
     {
-        characterPanel.SetActive(false);
+        ChangeUiState(MainMenuUiState.Home);
     }
 
     public void OpenLoadPanel()
     {
-        CloseAllPanels();
-        loadPanel.SetActive(true);
-        selectedLoadSlotIndex = MainMenuSaveStore.GetPreferredLoadSlot();
-        RefreshAll();
-        SetStatus("已展开存档卷轴");
+        ChangeUiState(MainMenuUiState.Load);
     }
 
     public void CloseLoadPanel()
     {
-        loadPanel.SetActive(false);
+        ChangeUiState(MainMenuUiState.Home);
     }
 
     public void OpenSettings()
     {
-        CloseAllPanels();
-        settingsPanel.SetActive(true);
-        SetStatus("已打开洞府设置");
+        ChangeUiState(MainMenuUiState.Settings);
     }
 
     public void CloseSettings()
     {
-        settingsPanel.SetActive(false);
+        ChangeUiState(MainMenuUiState.Home);
     }
 
     public void ContinueGame()
@@ -459,13 +415,19 @@ public sealed class MainMenuController : MonoBehaviour
 
     public void StartNewGame()
     {
+        StartNewGame(pendingHeroName);
+    }
+
+    public void StartNewGame(string heroName)
+    {
         var archetype = archetypes[selectedArchetypeIndex];
-        var heroName = heroNameInput.text.Trim();
+        heroName = (heroName ?? string.Empty).Trim();
         if (string.IsNullOrEmpty(heroName))
         {
             heroName = archetype.defaultHeroName;
         }
 
+        pendingHeroName = heroName;
         var isSectDisciple = archetype.id != "wanderer";
         var sectId = isSectDisciple ? "qingxuan_sect" : "rogue";
         var sectName = isSectDisciple ? "青玄山门" : "散修";
@@ -536,33 +498,41 @@ public sealed class MainMenuController : MonoBehaviour
         SetStatus("已删除存档：" + saveData.heroName);
     }
 
-    public void ChangeVolume(float delta)
+    public void ChangeMusicVolume(float delta)
     {
-        masterVolume = Mathf.Clamp01(masterVolume + delta);
-        AudioListener.volume = masterVolume;
-        MainMenuSaveStore.SaveVolume(masterVolume);
-        RefreshSettingsLabels();
-        SetStatus("主音量已调整为 " + Mathf.RoundToInt(masterVolume * 100f) + "%");
+        musicVolume = Mathf.Clamp01(musicVolume + delta);
+        CultivationApp.SetMusicVolume(musicVolume);
+        SetStatus("背景音乐音量已调整为 " + Mathf.RoundToInt(musicVolume * 100f) + "%");
+    }
+
+    public void ChangeSfxVolume(float delta)
+    {
+        sfxVolume = Mathf.Clamp01(sfxVolume + delta);
+        CultivationApp.SetSfxVolume(sfxVolume);
+        SetStatus("音效音量已调整为 " + Mathf.RoundToInt(sfxVolume * 100f) + "%");
+    }
+
+    public void ChangeVoiceVolume(float delta)
+    {
+        voiceVolume = Mathf.Clamp01(voiceVolume + delta);
+        CultivationApp.SetVoiceVolume(voiceVolume);
+        SetStatus("语音音量已调整为 " + Mathf.RoundToInt(voiceVolume * 100f) + "%");
     }
 
     public void ToggleFullscreenMode()
     {
         isFullscreen = !isFullscreen;
-        Screen.fullScreen = isFullscreen;
-        MainMenuSaveStore.SaveFullscreen(isFullscreen);
-        RefreshSettingsLabels();
+        CultivationApp.SetFullscreen(isFullscreen);
         SetStatus(isFullscreen ? "已切换为全屏" : "已切换为窗口模式");
     }
 
     public void ResetSettings()
     {
-        masterVolume = 0.8f;
+        musicVolume = 0.8f;
+        sfxVolume = 0.8f;
+        voiceVolume = 0.8f;
         isFullscreen = true;
-        AudioListener.volume = masterVolume;
-        Screen.fullScreen = isFullscreen;
-        MainMenuSaveStore.SaveVolume(masterVolume);
-        MainMenuSaveStore.SaveFullscreen(isFullscreen);
-        RefreshSettingsLabels();
+        CultivationApp.ResetUserSettings();
         SetStatus("设置已恢复默认");
     }
 
@@ -575,26 +545,39 @@ public sealed class MainMenuController : MonoBehaviour
 #endif
     }
 
-    private void SelectLoadSlot(int slotIndex)
+    public void SelectLoadSlot(int slotIndex)
     {
         selectedLoadSlotIndex = Mathf.Clamp(slotIndex, 0, MainMenuSaveStore.SaveSlotCount - 1);
-        RefreshLoadSlots();
-        RefreshLoadDetails();
     }
 
-    private void SelectCharacterSlot(int slotIndex)
+    public void SelectCharacterSlot(int slotIndex)
     {
         selectedCharacterSlotIndex = Mathf.Clamp(slotIndex, 0, MainMenuSaveStore.SaveSlotCount - 1);
-        RefreshCharacterSlots();
-        RefreshCharacterSummary();
     }
 
-    private void SelectArchetype(int archetypeIndex)
+    public void SelectArchetype(int archetypeIndex)
     {
         selectedArchetypeIndex = Mathf.Clamp(archetypeIndex, 0, archetypes.Count - 1);
         MainMenuSaveStore.SaveSelectedArchetype(selectedArchetypeIndex);
-        RefreshArchetypes();
-        RefreshCharacterSummary();
+        if (string.IsNullOrWhiteSpace(pendingHeroName) || MatchesAnyDefaultName(pendingHeroName))
+        {
+            pendingHeroName = ResolveDefaultHeroName();
+        }
+    }
+
+    public string GetPendingHeroName()
+    {
+        return string.IsNullOrWhiteSpace(pendingHeroName) ? ResolveDefaultHeroName() : pendingHeroName;
+    }
+
+    public void SetPendingHeroName(string heroName)
+    {
+        pendingHeroName = (heroName ?? string.Empty).Trim();
+    }
+
+    private string ResolveDefaultHeroName()
+    {
+        return archetypes.Count > 0 ? archetypes[Mathf.Clamp(selectedArchetypeIndex, 0, archetypes.Count - 1)].defaultHeroName : "无名修士";
     }
 
     private void EnterGameplay(int slotIndex, MainMenuSaveData saveData, string source)
@@ -615,19 +598,22 @@ public sealed class MainMenuController : MonoBehaviour
             return;
         }
 
-        SceneManager.LoadScene(config.GameplaySceneName);
+        SceneFlow.RequestScene(config.GameplaySceneName);
     }
 
     private void CloseAllPanels()
     {
-        settingsPanel.SetActive(false);
-        loadPanel.SetActive(false);
-        characterPanel.SetActive(false);
+        CultivationApp.CloseUiPanel(GameUiPanelId.MainMenuSettings);
+        CultivationApp.CloseUiPanel(GameUiPanelId.MainMenuLoad);
+        CultivationApp.CloseUiPanel(GameUiPanelId.MainMenuCharacterCreate);
     }
 
     private void SetStatus(string message)
     {
-        statusText.text = "山门告示 / " + message;
+        if (statusText != null)
+        {
+            statusText.text = "山门告示 / " + message;
+        }
     }
 
     private bool MatchesAnyDefaultName(string value)
@@ -643,9 +629,106 @@ public sealed class MainMenuController : MonoBehaviour
         return false;
     }
 
-    private static void BindButton(Button button, UnityEngine.Events.UnityAction action)
+    private static void BindButton(Button button, UnityEngine.Events.UnityAction action, CultivationButtonSound sound = CultivationButtonSound.Click)
     {
-        button.onClick.RemoveAllListeners();
-        button.onClick.AddListener(action);
+        CultivationAudio.BindButton(button, action, sound);
+    }
+
+    private void ResolveLayoutReferences()
+    {
+        rootRect = transform as RectTransform;
+        menuPanelRect = FindChildRect("MenuPanel");
+        infoPanelRect = FindChildRect("InfoPanel");
+        footerPanelRect = FindChildRect("FooterPanel");
+    }
+
+    private void CloseActiveModal()
+    {
+        ChangeUiState(MainMenuUiState.Home);
+    }
+
+    private void RefreshResponsiveLayout(bool force)
+    {
+        if (rootRect == null)
+        {
+            rootRect = transform as RectTransform;
+            if (rootRect == null)
+            {
+                return;
+            }
+        }
+
+        var rect = rootRect.rect;
+        if (rect.width < 1f || rect.height < 1f)
+        {
+            return;
+        }
+
+        var layoutWidth = Mathf.RoundToInt(rect.width);
+        var layoutHeight = Mathf.RoundToInt(rect.height);
+        if (!force && layoutWidth == lastLayoutWidth && layoutHeight == lastLayoutHeight)
+        {
+            return;
+        }
+
+        lastLayoutWidth = layoutWidth;
+        lastLayoutHeight = layoutHeight;
+        ApplyMainLayout(rect.width, rect.height);
+    }
+
+    private void ApplyMainLayout(float width, float height)
+    {
+        if (menuPanelRect == null || infoPanelRect == null || footerPanelRect == null)
+        {
+            return;
+        }
+
+        var widthT = Mathf.InverseLerp(1366f, 1920f, width);
+        var sideMargin = Mathf.Lerp(72f, 110f, widthT);
+        var panelGap = Mathf.Lerp(24f, 42f, widthT);
+        var topMargin = Mathf.Lerp(74f, 102f, widthT);
+        var menuBottom = Mathf.Lerp(102f, 122f, widthT);
+        var footerBottom = Mathf.Lerp(34f, 46f, widthT);
+        var footerWidth = Mathf.Min(width - sideMargin * 2f, 820f);
+
+        var menuWidth = Mathf.Clamp(width * 0.235f, 360f, 450f);
+        var infoWidth = width - sideMargin * 2f - panelGap - menuWidth;
+        if (infoWidth < 560f)
+        {
+            menuWidth = Mathf.Max(320f, menuWidth - (560f - infoWidth));
+            infoWidth = width - sideMargin * 2f - panelGap - menuWidth;
+        }
+
+        infoWidth = Mathf.Max(560f, infoWidth);
+        var menuHeight = Mathf.Clamp(height - menuBottom - 220f, 320f, 420f);
+        var infoHeight = Mathf.Clamp(height - topMargin - 142f, 520f, 836f);
+
+        SetBottomLeftRect(menuPanelRect, sideMargin, menuBottom, menuWidth, menuHeight);
+        SetTopRightRect(infoPanelRect, sideMargin, topMargin, infoWidth, infoHeight);
+        SetBottomLeftRect(footerPanelRect, sideMargin, footerBottom, footerWidth, 48f);
+    }
+
+    private RectTransform FindChildRect(string childName)
+    {
+        var child = transform.Find(childName);
+        return child != null ? child as RectTransform : null;
+    }
+
+    private static void SetBottomLeftRect(RectTransform rect, float x, float y, float width, float height)
+    {
+        rect.anchorMin = Vector2.zero;
+        rect.anchorMax = Vector2.zero;
+        rect.pivot = Vector2.zero;
+        rect.anchoredPosition = new Vector2(x, y);
+        rect.sizeDelta = new Vector2(width, height);
+    }
+
+    private static void SetTopRightRect(RectTransform rect, float right, float top, float width, float height)
+    {
+        rect.anchorMin = Vector2.one;
+        rect.anchorMax = Vector2.one;
+        rect.pivot = Vector2.one;
+        rect.anchoredPosition = new Vector2(-right, -top);
+        rect.sizeDelta = new Vector2(width, height);
     }
 }

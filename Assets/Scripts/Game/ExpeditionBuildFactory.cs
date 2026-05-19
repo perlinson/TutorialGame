@@ -100,7 +100,10 @@ public static class ExpeditionBuildFactory
                     continue;
                 }
 
-                hero.Skills.Add(new ExpeditionSkillDefinition(record.skills[i].id, record.skills[i].name, record.skills[i].description, record.skills[i].iconImage));
+                var iconImage = record.skills[i].iconImage != null
+                    ? record.skills[i].iconImage
+                    : GeneratedArtLibrary.GetSkillIcon(record.skills[i].id);
+                hero.Skills.Add(new ExpeditionSkillDefinition(record.skills[i].id, record.skills[i].name, record.skills[i].description, iconImage));
             }
 
             return;
@@ -133,7 +136,7 @@ public static class ExpeditionBuildFactory
     {
         if (cachedDatabase == null)
         {
-            cachedDatabase = Resources.Load<HeroArchetypeDatabaseAsset>("Data/HeroArchetypeDatabase");
+            cachedDatabase = CultivationApp.LoadResource<HeroArchetypeDatabaseAsset>("Data/HeroArchetypeDatabase");
         }
 
         return cachedDatabase;
@@ -202,22 +205,22 @@ public static class ExpeditionBuildFactory
         switch (hero.ArchetypeId)
         {
             case "alchemist":
-                hero.Skills.Add(new ExpeditionSkillDefinition("alchemist_fireburst", "离火丹爆", "丹火爆开，压制前两名敌手并灼烧心神。"));
-                hero.Skills.Add(new ExpeditionSkillDefinition("alchemist_restore", "回春丹雾", "以药雾回稳气血，同时安抚心境。"));
-                hero.Skills.Add(new ExpeditionSkillDefinition("alchemist_poison", "蚀骨毒焰", "给单体叠加毒焰，适合拖死精英。"));
-                hero.Skills.Add(new ExpeditionSkillDefinition("alchemist_barrier", "炉火护身", "以丹火成罩，降低下轮承伤并提灯。"));
+                hero.Skills.Add(new ExpeditionSkillDefinition("alchemist_fireburst", "离火丹爆", "丹火爆开，压制前两名敌手并灼烧心神。", GeneratedArtLibrary.GetSkillIcon("alchemist_fireburst")));
+                hero.Skills.Add(new ExpeditionSkillDefinition("alchemist_restore", "回春丹雾", "以药雾回稳气血，同时安抚心境。", GeneratedArtLibrary.GetSkillIcon("alchemist_restore")));
+                hero.Skills.Add(new ExpeditionSkillDefinition("alchemist_poison", "蚀骨毒焰", "给单体叠加毒焰，适合拖死精英。", GeneratedArtLibrary.GetSkillIcon("alchemist_poison")));
+                hero.Skills.Add(new ExpeditionSkillDefinition("alchemist_barrier", "炉火护身", "以丹火成罩，降低下轮承伤并提灯。", GeneratedArtLibrary.GetSkillIcon("alchemist_barrier")));
                 break;
             case "wanderer":
-                hero.Skills.Add(new ExpeditionSkillDefinition("wanderer_bind", "缚灵符", "封锁前列敌人，使其短暂失衡。"));
-                hero.Skills.Add(new ExpeditionSkillDefinition("wanderer_drain", "摄气诀", "抽取敌方灵息，转为自身回复。"));
-                hero.Skills.Add(new ExpeditionSkillDefinition("wanderer_mist", "迷踪换影", "藏身符雾，降低承伤并稳住心境。"));
-                hero.Skills.Add(new ExpeditionSkillDefinition("wanderer_counter", "借势反击", "以退为进，等待敌人露出破绽。"));
+                hero.Skills.Add(new ExpeditionSkillDefinition("wanderer_bind", "缚灵符", "封锁前列敌人，使其短暂失衡。", GeneratedArtLibrary.GetSkillIcon("wanderer_bind")));
+                hero.Skills.Add(new ExpeditionSkillDefinition("wanderer_drain", "摄气诀", "抽取敌方灵息，转为自身回复。", GeneratedArtLibrary.GetSkillIcon("wanderer_drain")));
+                hero.Skills.Add(new ExpeditionSkillDefinition("wanderer_mist", "迷踪换影", "藏身符雾，降低承伤并稳住心境。", GeneratedArtLibrary.GetSkillIcon("wanderer_mist")));
+                hero.Skills.Add(new ExpeditionSkillDefinition("wanderer_counter", "借势反击", "以退为进，等待敌人露出破绽。", GeneratedArtLibrary.GetSkillIcon("wanderer_counter")));
                 break;
             default:
-                hero.Skills.Add(new ExpeditionSkillDefinition("sword_strike", "御剑斩", "稳定斩杀前列敌人，是最可靠的正面术。"));
-                hero.Skills.Add(new ExpeditionSkillDefinition("sword_cleave", "踏云回锋", "步法回旋，连续扫击前两名敌手。"));
-                hero.Skills.Add(new ExpeditionSkillDefinition("sword_break", "庚金裂罡", "专破护体与甲胄，适合打开精英缺口。"));
-                hero.Skills.Add(new ExpeditionSkillDefinition("sword_calm", "心剑澄明", "收剑照心，恢复少量气血并压低心境。"));
+                hero.Skills.Add(new ExpeditionSkillDefinition("sword_strike", "御剑斩", "稳定斩杀前列敌人，是最可靠的正面术。", GeneratedArtLibrary.GetSkillIcon("sword_strike")));
+                hero.Skills.Add(new ExpeditionSkillDefinition("sword_cleave", "踏云回锋", "步法回旋，连续扫击前两名敌手。", GeneratedArtLibrary.GetSkillIcon("sword_cleave")));
+                hero.Skills.Add(new ExpeditionSkillDefinition("sword_break", "庚金裂罡", "专破护体与甲胄，适合打开精英缺口。", GeneratedArtLibrary.GetSkillIcon("sword_break")));
+                hero.Skills.Add(new ExpeditionSkillDefinition("sword_calm", "心剑澄明", "收剑照心，恢复少量气血并压低心境。", GeneratedArtLibrary.GetSkillIcon("sword_calm")));
                 break;
         }
     }
