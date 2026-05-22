@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public sealed partial class GameController : MonoBehaviour
+public sealed partial class GameController : CultivationController
 {
     private sealed class EnemyActorBinding
     {
@@ -79,7 +79,7 @@ public sealed partial class GameController : MonoBehaviour
         shouldResumeOnViewAttach = false;
 
         rooms.Clear();
-        rooms.AddRange(CultivationApp.BuildExpeditionRooms(region, saveData, random));
+        rooms.AddRange(BuildExpeditionRooms(region, saveData, random));
         SyncExpeditionRuntime();
     }
 
@@ -166,7 +166,7 @@ public sealed partial class GameController : MonoBehaviour
                 SpawnAttackEffect(origin, missTarget, new Color(0.9f, 0.88f, 0.84f, 0.9f), false);
             }
 
-            CultivationAudio.PlayCombatMiss();
+            PlaySound(SoundType.CombatMiss);
             SpawnCombatText(new Vector3(origin.x, origin.y + 1.1f, 0f), "落空", new Color(0.84f, 0.84f, 0.84f, 1f), false);
             logMessage = "你挥出近身法器，但没能逼到敌方身前。";
             RefreshView();
@@ -180,7 +180,7 @@ public sealed partial class GameController : MonoBehaviour
         }
 
         var visualSnapshot = CaptureCombatVisualSnapshot();
-        var result = CultivationApp.ResolveDirectAttackTurn(
+        var result = ResolveDirectAttackTurn(
             CreateCombatTurnContext(),
             targetBinding.State,
             damage + TorchAttackBonus(),
@@ -190,7 +190,7 @@ public sealed partial class GameController : MonoBehaviour
 
     public void OnSpiritCollected(SpiritNode node, int qiAmount)
     {
-        CultivationAudio.PlayPickup();
+        PlaySound(SoundType.Pickup);
         pendingQiGain += Mathf.Max(1, qiAmount);
         torchlight = Mathf.Min(100, torchlight + 2);
         SyncExpeditionRuntime();
@@ -200,7 +200,7 @@ public sealed partial class GameController : MonoBehaviour
 
     public void OnHerbCollected(SpiritHerb herb, int healAmount, int qiAmount)
     {
-        CultivationAudio.PlayPickup();
+        PlaySound(SoundType.Pickup);
         if (livePlayer != null)
         {
             livePlayer.Heal(healAmount);
@@ -219,7 +219,7 @@ public sealed partial class GameController : MonoBehaviour
 
     public void OnRelicRecovered(TrialRelic relic, int crystalAmount)
     {
-        CultivationAudio.PlayPickup();
+        PlaySound(SoundType.Pickup);
         pendingCrystalGain += Mathf.Max(1, crystalAmount);
         SyncExpeditionRuntime();
         logMessage = "你从残损遗物中剥离出灵石 +" + Mathf.Max(1, crystalAmount) + "。";
@@ -290,7 +290,7 @@ public sealed partial class GameController : MonoBehaviour
 
     private void EnterRoom(int index)
     {
-        ApplyTraversalResult(CultivationApp.EnterRoom(CreateTraversalContext(index)));
+        ApplyTraversalResult(EnterExpeditionRoom(CreateTraversalContext(index)));
     }
 
     private CombatTurnContext CreateCombatTurnContext()
@@ -325,7 +325,7 @@ public sealed partial class GameController : MonoBehaviour
             return;
         }
 
-        var result = CultivationApp.CompleteExpedition(
+        var result = CompleteExpedition(
             currentSlotIndex,
             saveData,
             region,
@@ -340,7 +340,7 @@ public sealed partial class GameController : MonoBehaviour
         ClearEventOverlayState();
         ClearPauseOverlayState();
         ClearRoomContent();
-        CultivationApp.ClearExpeditionRuntime();
+        ClearExpeditionRuntime();
         ChangeFlowState(ExpeditionFlowPhase.Completed);
     }
 
@@ -352,7 +352,7 @@ public sealed partial class GameController : MonoBehaviour
             return;
         }
 
-        var result = CultivationApp.RetreatExpedition(
+        var result = RetreatExpedition(
             currentSlotIndex,
             saveData,
             region,
@@ -365,7 +365,7 @@ public sealed partial class GameController : MonoBehaviour
         ClearEventOverlayState();
         ClearPauseOverlayState();
         ClearRoomContent();
-        CultivationApp.ClearExpeditionRuntime();
+        ClearExpeditionRuntime();
         ChangeFlowState(ExpeditionFlowPhase.Retreated);
     }
 
@@ -374,12 +374,12 @@ public sealed partial class GameController : MonoBehaviour
         currentEncounterSnapshot.Clear();
         ClearEventOverlayState();
         ClearPauseOverlayState();
-        var result = CultivationApp.FailExpedition(currentSlotIndex, saveData, region, reason, pendingItemRewards);
+        var result = FailExpedition(currentSlotIndex, saveData, region, reason, pendingItemRewards);
 
         logMessage = result.LogMessage;
         SetHint(result.HintMessage);
         ClearRoomContent();
-        CultivationApp.ClearExpeditionRuntime();
+        ClearExpeditionRuntime();
         ChangeFlowState(ExpeditionFlowPhase.Failed);
     }
 
@@ -406,8 +406,10 @@ public sealed partial class GameController : MonoBehaviour
             rooms,
             currentRoomIndex,
             enemies,
+            PreviewEnemyIntents(CreateCombatTurnContext()),
             torchlight,
             supplies,
+            combatRound,
             pendingQiGain,
             pendingCrystalGain,
             pendingItemRewards,
@@ -542,7 +544,7 @@ public sealed partial class GameController : MonoBehaviour
     private void ReturnToMainMenuFromPause()
     {
         ClearPauseOverlayState();
-        CultivationApp.ClearExpeditionRuntime();
+        ClearExpeditionRuntime();
         SceneFlow.RequestScene(mainSceneName);
     }
 
@@ -611,7 +613,7 @@ public sealed partial class GameController : MonoBehaviour
 
     private void ApplyStress(int amount)
     {
-        var mindResult = CultivationApp.ApplyMindStress(CreateCombatTurnContext(), amount);
+        var mindResult = ApplyCombatMindStress(CreateCombatTurnContext(), amount);
         if (mindResult.ExpeditionFailed)
         {
             SyncPlayerHealthVisual();

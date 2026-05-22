@@ -4,7 +4,7 @@ using UnityEngine.Events;
 using UnityEngine.UI;
 using Text = TMPro.TMP_Text;
 
-public sealed class ExpeditionView : UIPanel
+public sealed class ExpeditionView : CultivationUIPanel
 {
     private const string OverlayMusicDuckReason = "ExpeditionOverlay";
 
@@ -135,7 +135,7 @@ public sealed class ExpeditionView : UIPanel
         actionButtons[index].interactable = enabled;
         if (action != null)
         {
-            CultivationAudio.BindButton(actionButtons[index], action, CultivationButtonSound.Confirm);
+            BindButton(actionButtons[index], action, CultivationButtonSound.Confirm);
         }
         else
         {
@@ -157,7 +157,7 @@ public sealed class ExpeditionView : UIPanel
 
     public void HideEventOverlay()
     {
-        CultivationApp.SetMusicDuck(OverlayMusicDuckReason, false);
+        SetMusicDuck(OverlayMusicDuckReason, false);
         if (eventOverlayBlocker != null)
         {
             eventOverlayBlocker.SetActive(false);
@@ -171,7 +171,7 @@ public sealed class ExpeditionView : UIPanel
 
     public void HidePauseOverlay()
     {
-        CultivationApp.SetMusicDuck(OverlayMusicDuckReason, false);
+        SetMusicDuck(OverlayMusicDuckReason, false);
         if (pauseOverlayBlocker != null)
         {
             pauseOverlayBlocker.SetActive(false);
@@ -190,7 +190,7 @@ public sealed class ExpeditionView : UIPanel
             return;
         }
 
-        CultivationApp.SetMusicDuck(OverlayMusicDuckReason, true, 8f);
+        SetMusicDuck(OverlayMusicDuckReason, true, 8f);
         if (pauseOverlayBlocker != null)
         {
             pauseOverlayBlocker.SetActive(true);
@@ -220,7 +220,7 @@ public sealed class ExpeditionView : UIPanel
             return;
         }
 
-        CultivationApp.SetMusicDuck(OverlayMusicDuckReason, true, 8f);
+        SetMusicDuck(OverlayMusicDuckReason, true, 8f);
         if (eventOverlayBlocker != null)
         {
             eventOverlayBlocker.SetActive(true);
@@ -290,7 +290,7 @@ public sealed class ExpeditionView : UIPanel
             var optionId = option.OptionId;
             if (option.IsAvailable && onOptionSelected != null)
             {
-                CultivationAudio.BindButton(button, () => onOptionSelected(optionId), CultivationButtonSound.Confirm);
+                BindButton(button, () => onOptionSelected(optionId), CultivationButtonSound.Confirm);
             }
             else
             {
@@ -306,7 +306,7 @@ public sealed class ExpeditionView : UIPanel
             return;
         }
 
-        CultivationApp.SetMusicDuck(OverlayMusicDuckReason, true, 8f);
+        SetMusicDuck(OverlayMusicDuckReason, true, 8f);
         if (eventOverlayBlocker != null)
         {
             eventOverlayBlocker.SetActive(true);
@@ -346,7 +346,7 @@ public sealed class ExpeditionView : UIPanel
             eventConfirmButton.gameObject.SetActive(true);
             if (onConfirm != null)
             {
-                CultivationAudio.BindButton(eventConfirmButton, onConfirm, CultivationButtonSound.Confirm);
+                BindButton(eventConfirmButton, onConfirm, CultivationButtonSound.Confirm);
             }
             else
             {
@@ -390,7 +390,7 @@ public sealed class ExpeditionView : UIPanel
         button.interactable = action != null;
         if (action != null)
         {
-            CultivationAudio.BindButton(button, action, sound);
+            CultivationUiAudio.BindButton(button, action, sound);
         }
         else
         {
@@ -400,6 +400,6 @@ public sealed class ExpeditionView : UIPanel
 
     private void OnDestroy()
     {
-        CultivationApp.SetMusicDuck(OverlayMusicDuckReason, false);
+        SetMusicDuck(OverlayMusicDuckReason, false);
     }
 }

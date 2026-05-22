@@ -32,8 +32,10 @@ public static class ExpeditionUiComposer
         List<ExpeditionRoomState> rooms,
         int currentRoomIndex,
         List<ExpeditionEnemyState> enemies,
+        EnemyIntentPreview[] enemyIntents,
         int torchlight,
         int supplies,
+        int combatRound,
         int pendingQiGain,
         int pendingCrystalGain,
         List<SaveItemStack> pendingItemRewards,
@@ -67,7 +69,7 @@ public static class ExpeditionUiComposer
         snapshot.RoomTitle = "第 " + (currentRoomIndex + 1) + " 室 / " + room.Title;
         snapshot.RoomDescription = room.Description;
         snapshot.LoadoutSummary = hero.Loadout.ToSummary();
-        snapshot.EnemySummary = BuildEnemySummary(enemies, phase);
+        snapshot.EnemySummary = BuildEnemySummary(enemies, enemyIntents, phase, combatRound);
         snapshot.LogMessage = logMessage;
         snapshot.SkillSummary = ExpeditionBuildFactory.DescribeSkills(hero);
         snapshot.HintMessage = hintMessage;
@@ -80,7 +82,7 @@ public static class ExpeditionUiComposer
         return snapshot;
     }
 
-    private static string BuildEnemySummary(List<ExpeditionEnemyState> enemies, ExpeditionFlowPhase phase)
+    private static string BuildEnemySummary(List<ExpeditionEnemyState> enemies, EnemyIntentPreview[] enemyIntents, ExpeditionFlowPhase phase, int combatRound)
     {
         if (enemies == null || enemies.Count == 0 || phase == ExpeditionFlowPhase.RoomDecision || phase == ExpeditionFlowPhase.AfterRoom || phase == ExpeditionFlowPhase.Completed || phase == ExpeditionFlowPhase.Retreated || phase == ExpeditionFlowPhase.Failed)
         {
@@ -107,6 +109,16 @@ public static class ExpeditionUiComposer
                        "  HP " + enemy.CurrentHealth + " / " + enemy.MaxHealth +
                        "  护体 " + enemy.GetEffectiveArmor() +
                        "  招式 " + enemy.TechniqueName;
+            var intent = enemyIntents != null && i < enemyIntents.Length ? enemyIntents[i] : null;
+            if (intent != null)
+            {
+                summary += "  意图 " + intent.IntentLabel;
+                if (!string.IsNullOrWhiteSpace(intent.RoleLabel))
+                {
+                    summary += " [" + intent.RoleLabel + "]";
+                }
+            }
+
             if (enemy.PoisonStacks > 0)
             {
                 summary += "  丹火" + enemy.PoisonStacks;
@@ -120,6 +132,11 @@ public static class ExpeditionUiComposer
             if (enemy.ExposedTurns > 0)
             {
                 summary += "  破绽";
+            }
+
+            if (combatRound > 0)
+            {
+                summary += "  回合 " + combatRound;
             }
 
             index++;

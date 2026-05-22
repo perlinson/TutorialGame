@@ -126,7 +126,7 @@ public sealed partial class GameController
             return;
         }
 
-        CultivationApp.SyncExpeditionRuntime(CreateCombatTurnContext());
+        SyncExpeditionRuntime(CreateCombatTurnContext());
         MainMenuSaveStore.SaveExpeditionRuntime(BuildPersistentSnapshot());
     }
 

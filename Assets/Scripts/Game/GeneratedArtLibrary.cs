@@ -135,10 +135,10 @@ public static class GeneratedArtLibrary
             return sprite;
         }
 
-        sprite = CultivationApp.LoadResource<Sprite>("Generated/" + relativePath);
+        sprite = GameResource.Load<Sprite>("Generated/" + relativePath);
         if (sprite == null)
         {
-            var texture = CultivationApp.LoadResource<Texture2D>("Generated/" + relativePath);
+            var texture = GameResource.Load<Texture2D>("Generated/" + relativePath);
             if (texture != null)
             {
                 sprite = Sprite.Create(
@@ -166,10 +166,10 @@ public static class GeneratedArtLibrary
             return sprite;
         }
 
-        sprite = CultivationApp.LoadResource<Sprite>("Art/" + relativePath);
+        sprite = GameResource.Load<Sprite>("Art/" + relativePath);
         if (sprite == null)
         {
-            var texture = CultivationApp.LoadResource<Texture2D>("Art/" + relativePath);
+            var texture = GameResource.Load<Texture2D>("Art/" + relativePath);
             if (texture != null)
             {
                 sprite = Sprite.Create(

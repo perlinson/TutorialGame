@@ -60,6 +60,21 @@ public sealed class WorldRegionNodeView : MonoBehaviour
             ? new Color(0.84f, 0.8f, 0.72f, 0.96f)
             : new Color(0.7f, 0.72f, 0.76f, 0.94f);
 
-        CultivationAudio.BindButton(button, onClick);
+        CultivationUiAudio.BindButton(button, onClick);
+        CultivationTooltipBinder.Bind(button, region.DisplayName + " · " + region.Subtitle, BuildTooltipBody(region, unlocked, accessible, cleared));
+    }
+
+    private static string BuildTooltipBody(WorldRegionDefinition region, bool unlocked, bool accessible, bool cleared)
+    {
+        var status = !unlocked
+            ? "状态：未探明"
+            : !accessible
+                ? "状态：需达到 " + WorldRegionLibrary.GetRealmName(region.RequiredRealmTier)
+                : cleared
+                    ? "状态：已肃清，可重复历练"
+                    : "状态：可前往历练";
+
+        return status + "\n危险阶：第 " + region.DangerRank + " 等\n基础奖赏：修为 +" + region.ClearQiReward +
+               " / 灵石 +" + region.ClearCrystalReward + "\n" + region.Description;
     }
 }

@@ -102,27 +102,26 @@ namespace QFramework
 
         public void SetLevelOfPanel(UILevel level, IPanel panel)
         {
-
-            var canvas = panel.Transform.GetComponent<Canvas>();
-
-            if (canvas)
+            switch (level)
             {
-                panel.Transform.SetParent(CanvasPanel);
-            }
-            else
-            {
-                switch (level)
-                {
-                    case UILevel.Bg:
-                        panel.Transform.SetParent(Bg);
-                        break;
-                    case UILevel.Common:
-                        panel.Transform.SetParent(Common);
-                        break;
-                    case UILevel.PopUI:
-                        panel.Transform.SetParent(PopUI);
-                        break;
-                }
+                case UILevel.Bg:
+                    panel.Transform.SetParent(Bg);
+                    break;
+                case UILevel.Common:
+                    panel.Transform.SetParent(Common);
+                    break;
+                case UILevel.PopUI:
+                    panel.Transform.SetParent(PopUI);
+                    break;
+                case UILevel.AlwayTop:
+                    panel.Transform.SetParent(PopUI);
+                    break;
+                case UILevel.CanvasPanel:
+                    panel.Transform.SetParent(CanvasPanel);
+                    break;
+                default:
+                    panel.Transform.SetParent(Common);
+                    break;
             }
 
             if (panel.Info != null && panel.Info.Level != level)

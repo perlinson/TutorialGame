@@ -41,7 +41,8 @@ public sealed class ArchetypeCardView : MonoBehaviour
 
         SetSelected(selected);
 
-        CultivationAudio.BindButton(button, onClick);
+        CultivationUiAudio.BindButton(button, onClick);
+        CultivationTooltipBinder.Bind(button, data.name, data.origin + " / " + data.specialty + "\n" + data.description + "\n" + data.trait);
     }
 
     public void SetSelected(bool selected)

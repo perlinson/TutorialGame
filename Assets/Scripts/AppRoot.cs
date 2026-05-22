@@ -49,13 +49,22 @@ public sealed class AppRoot : MonoBehaviour
         Initialize();
     }
 
+    private void OnDestroy()
+    {
+        if (instance == this)
+        {
+            CleanupPersistentFrameworkRoots();
+            instance = null;
+        }
+    }
+
     private void Initialize()
     {
         if (!rootInitialized)
         {
             DontDestroyOnLoad(gameObject);
             CultivationApp.EnsureInitialized();
-            CultivationApp.LogInfo("Resource backend: " + CultivationApp.GetResourceBackendName());
+            GameLog.Info("Resource backend: " + GameResource.BackendName);
             rootInitialized = true;
         }
 
@@ -128,6 +137,35 @@ public sealed class AppRoot : MonoBehaviour
 
         return instance.gameFlowManager;
     }
+
+    private static void CleanupPersistentFrameworkRoots()
+    {
+        DestroyPersistentRoot("UIRoot");
+        DestroyPersistentRoot("QFramework");
+        DestroyPersistentRoot("UnRegisterCurrentSceneUnloadedTrigger");
+    }
+
+    private static void DestroyPersistentRoot(string objectName)
+    {
+        var objects = Resources.FindObjectsOfTypeAll<GameObject>();
+        for (var i = 0; i < objects.Length; i++)
+        {
+            var candidate = objects[i];
+            if (candidate == null || candidate.name != objectName || candidate.transform.parent != null)
+            {
+                continue;
+            }
+
+            if (Application.isPlaying)
+            {
+                Destroy(candidate);
+            }
+            else
+            {
+                DestroyImmediate(candidate);
+            }
+        }
+    }
 }
 
 public static class SceneFlow
@@ -197,7 +235,7 @@ public static class SceneFlow
 
         if (string.IsNullOrWhiteSpace(targetSceneName))
         {
-            CultivationApp.LogError("SceneFlow missing target scene.");
+            GameLog.Error("SceneFlow missing target scene.");
             return;
         }
 
@@ -244,13 +282,13 @@ public static class SceneFlow
     {
         if (string.IsNullOrWhiteSpace(sceneName))
         {
-            CultivationApp.LogError("SceneFlow missing target scene.");
+            GameLog.Error("SceneFlow missing target scene.");
             return;
         }
 
         if (!Application.CanStreamedLevelBeLoaded(sceneName))
         {
-            CultivationApp.LogError("Scene is not in Build Settings: " + sceneName);
+            GameLog.Error("Scene is not in Build Settings: " + sceneName);
             return;
         }
 
@@ -258,9 +296,10 @@ public static class SceneFlow
     }
 }
 
-public sealed class GlobalAudioManager : MonoBehaviour
+public sealed class GlobalAudioManager : CultivationController
 {
     private bool isInitialized;
+    private IGameSettingsService settingsService;
 
     public void Initialize()
     {
@@ -269,8 +308,9 @@ public sealed class GlobalAudioManager : MonoBehaviour
             return;
         }
 
-        CultivationApp.InitializeAudio();
-        CultivationApp.ApplyUserSettings();
+        settingsService = this.GetUtility<IGameSettingsService>();
+        _ = SoundSystem;
+        settingsService.ApplyRuntimeSettings();
         SceneManager.sceneLoaded += HandleSceneLoaded;
         isInitialized = true;
     }
@@ -283,16 +323,23 @@ public sealed class GlobalAudioManager : MonoBehaviour
         }
     }
 
-    private static void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
+    private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        CultivationApp.ApplyUserSettings();
+        if (settingsService == null)
+        {
+            settingsService = this.GetUtility<IGameSettingsService>();
+        }
+
+        settingsService.ApplyRuntimeSettings();
     }
 }
 
-public sealed class GlobalUiManager : MonoBehaviour
+public sealed class GlobalUiManager : CultivationController
 {
     private EventSystem eventSystem;
     private bool isInitialized;
+    private IGameUiService uiService;
+    private IGameLogService logService;
 
     public void Initialize()
     {
@@ -322,9 +369,14 @@ public sealed class GlobalUiManager : MonoBehaviour
         RemoveDuplicateEventSystems();
     }
 
-    private static void EnsureUiRoot()
+    private void EnsureUiRoot()
     {
-        CultivationApp.InitializeUi();
+        if (uiService == null)
+        {
+            uiService = this.GetUtility<IGameUiService>();
+        }
+
+        uiService.Initialize();
 
         var uiRoot = UIKit.Root;
         if (uiRoot != null)
@@ -342,7 +394,12 @@ public sealed class GlobalUiManager : MonoBehaviour
 
         if (eventSystem == null)
         {
-            CultivationApp.LogError("GlobalUiManager could not find EventSystem. Boot scene must contain a static EventSystem.");
+            if (logService == null)
+            {
+                logService = this.GetUtility<IGameLogService>();
+            }
+
+            logService.Error("GlobalUiManager could not find EventSystem. Boot scene must contain a static EventSystem.");
             return;
         }
 

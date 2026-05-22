@@ -244,7 +244,7 @@ public static class ExpeditionEnemyFactory
     {
         if (cachedEnemyDatabase == null)
         {
-            cachedEnemyDatabase = CultivationApp.LoadResource<EnemyArchetypeDatabaseAsset>("Data/EnemyArchetypeDatabase");
+            cachedEnemyDatabase = GameResource.Load<EnemyArchetypeDatabaseAsset>("Data/EnemyArchetypeDatabase");
         }
 
         return cachedEnemyDatabase;
@@ -254,7 +254,7 @@ public static class ExpeditionEnemyFactory
     {
         if (cachedEncounterDatabase == null)
         {
-            cachedEncounterDatabase = CultivationApp.LoadResource<RegionEncounterDatabaseAsset>("Data/RegionEncounterDatabase");
+            cachedEncounterDatabase = GameResource.Load<RegionEncounterDatabaseAsset>("Data/RegionEncounterDatabase");
         }
 
         return cachedEncounterDatabase;

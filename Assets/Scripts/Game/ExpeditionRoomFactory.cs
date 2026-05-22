@@ -214,7 +214,7 @@ public static class ExpeditionRoomFactory
     {
         if (cachedRoomEventTable == null)
         {
-            cachedRoomEventTable = CultivationApp.LoadResource<RoomEventTableAsset>("Data/RoomEventTable");
+            cachedRoomEventTable = GameResource.Load<RoomEventTableAsset>("Data/RoomEventTable");
         }
 
         return cachedRoomEventTable;

@@ -88,6 +88,11 @@ public static class GeneratedUiSkinLibrary
     public static void ApplySmallTooltipPanelSkin(Image image)
     {
         ApplySprite(image, ref tooltipSmallPanelSprite, TooltipSmallPanelPath);
+        if (image != null && image.sprite != null)
+        {
+            image.type = image.sprite.border.sqrMagnitude > 0.01f ? Image.Type.Sliced : Image.Type.Simple;
+            image.preserveAspect = false;
+        }
     }
 
     public static void ApplyTabSkin(Image image, bool selected)

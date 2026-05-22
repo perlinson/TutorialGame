@@ -147,7 +147,7 @@ public static class InventoryLibrary
         }
 
         definitions = new Dictionary<string, InventoryItemDefinition>();
-        var database = CultivationApp.LoadResource<InventoryDatabaseAsset>("Data/InventoryDatabase");
+        var database = GameResource.Load<InventoryDatabaseAsset>("Data/InventoryDatabase");
         if (database != null && database.items != null)
         {
             for (var i = 0; i < database.items.Length; i++)

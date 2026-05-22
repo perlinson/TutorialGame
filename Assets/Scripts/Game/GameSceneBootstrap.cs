@@ -7,7 +7,7 @@ using Text = TMPro.TextMeshProUGUI;
 using UnityEditor;
 #endif
 
-public sealed class GameSceneBootstrap : MonoBehaviour
+public sealed class GameSceneBootstrap : CultivationController
 {
 #if UNITY_EDITOR
     private const string PrimaryButtonArtPath = "Assets/GameArt/UI/Buttons/ui_btn_primary_gold.png";
@@ -18,9 +18,9 @@ public sealed class GameSceneBootstrap : MonoBehaviour
     {
         AppRoot.EnsureCreated();
         SceneFlow.SyncActiveSceneState(SceneFlow.GameplaySceneName);
-        CultivationApp.CloseAllGameUiPanels();
+        CloseAllGameUiPanels();
 
-        var snapshot = CultivationApp.BootstrapCurrentArchive();
+        var snapshot = BootstrapCurrentArchive();
         if (snapshot == null || snapshot.SaveData == null)
         {
             SceneFlow.RequestScene("Main");
@@ -36,7 +36,7 @@ public sealed class GameSceneBootstrap : MonoBehaviour
         {
             region = WorldRegionLibrary.GetStartingRegion();
             saveData.currentRegionId = region.Id;
-            CultivationApp.SyncArchiveState(slotIndex, saveData);
+            SyncArchiveState(slotIndex, saveData);
         }
 
         PersistentExpeditionRuntimeSnapshot runtimeSnapshot = null;
@@ -53,7 +53,7 @@ public sealed class GameSceneBootstrap : MonoBehaviour
         }
 
         ConfigureCamera(region);
-        CultivationAudio.PlayExpeditionMusic(region);
+        PlayExpeditionMusic(region);
 
         var controller = GetComponent<GameController>();
         if (controller == null)
@@ -70,10 +70,10 @@ public sealed class GameSceneBootstrap : MonoBehaviour
             controller.Initialize(slotIndex, saveData, region);
         }
 
-        var view = CultivationApp.OpenExpeditionPanel();
+        var view = OpenExpeditionPanel();
         if (view == null)
         {
-            CultivationApp.LogError("Expedition UI prefab is required but missing or invalid: UI/Game/ExpeditionRoot");
+            LogError("Expedition UI prefab is required but missing or invalid: UI/Game/ExpeditionRoot");
             SceneFlow.RequestScene("Main");
             return;
         }

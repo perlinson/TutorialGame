@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Text = TMPro.TMP_Text;
 
-public sealed partial class MainMenuController : UIPanel
+public sealed partial class MainMenuController : CultivationUIPanel
 {
     public Text titleText;
     public Text subtitleText;
@@ -85,7 +85,7 @@ public sealed partial class MainMenuController : UIPanel
             return;
         }
 
-        var database = CultivationApp.LoadResource<HeroArchetypeDatabaseAsset>("Data/HeroArchetypeDatabase");
+        var database = LoadResource<HeroArchetypeDatabaseAsset>("Data/HeroArchetypeDatabase");
         if (database != null && database.archetypes != null && database.archetypes.Length > 0)
         {
             for (var i = 0; i < database.archetypes.Length; i++)
@@ -154,9 +154,9 @@ public sealed partial class MainMenuController : UIPanel
         }
     }
 
-    private static Sprite LoadArchetypePortrait(string archetypeId)
+    private Sprite LoadArchetypePortrait(string archetypeId)
     {
-        var database = CultivationApp.LoadResource<HeroArchetypeDatabaseAsset>("Data/HeroArchetypeDatabase");
+        var database = LoadResource<HeroArchetypeDatabaseAsset>("Data/HeroArchetypeDatabase");
         if (database == null || database.archetypes == null)
         {
             return null;
@@ -181,6 +181,12 @@ public sealed partial class MainMenuController : UIPanel
         BindButton(loadButton, OpenLoadPanel);
         BindButton(settingsButton, OpenSettings);
         BindButton(quitButton, QuitGame);
+
+        CultivationTooltipBinder.Bind(newGameButton, "新游戏", "创建新的修士档案，选择流派、姓名与存档位后进入修行。");
+        CultivationTooltipBinder.Bind(continueButton, "继续游戏", "直接载入当前活跃存档，回到上次离开的流程。");
+        CultivationTooltipBinder.Bind(loadButton, "加载存档", "打开全部档位，查看并手动载入已有修士。");
+        CultivationTooltipBinder.Bind(settingsButton, "设置", "调整音乐、音效、语音和显示模式。");
+        CultivationTooltipBinder.Bind(quitButton, "退出游戏", "结束当前游戏进程并返回桌面。");
     }
 
     private void ApplyCopy()
@@ -192,16 +198,16 @@ public sealed partial class MainMenuController : UIPanel
 
     private void LoadPreferences()
     {
-        musicVolume = CultivationApp.GetMusicVolume();
-        sfxVolume = CultivationApp.GetSfxVolume();
-        voiceVolume = CultivationApp.GetVoiceVolume();
-        isFullscreen = CultivationApp.IsFullscreen();
+        musicVolume = GetMusicVolume();
+        sfxVolume = GetSfxVolume();
+        voiceVolume = GetVoiceVolume();
+        isFullscreen = IsFullscreen();
         selectedArchetypeIndex = Mathf.Clamp(MainMenuSaveStore.LoadSelectedArchetype(), 0, archetypes.Count - 1);
         selectedLoadSlotIndex = MainMenuSaveStore.GetPreferredLoadSlot();
         selectedCharacterSlotIndex = MainMenuSaveStore.GetPreferredNewGameSlot();
         pendingHeroName = ResolveDefaultHeroName();
 
-        CultivationApp.ApplyUserSettings();
+        ApplyUserSettings();
     }
 
     private void RefreshAll()
@@ -403,10 +409,11 @@ public sealed partial class MainMenuController : UIPanel
 
     public void ContinueGame()
     {
-        var snapshot = CultivationApp.BootstrapCurrentArchive();
+        var snapshot = BootstrapCurrentArchive();
         if (snapshot == null || snapshot.SaveData == null)
         {
             SetStatus("当前没有可继续的存档");
+            ShowWarningMessage("当前没有可继续的存档。");
             return;
         }
 
@@ -465,11 +472,12 @@ public sealed partial class MainMenuController : UIPanel
         saveData.taskStates = System.Array.Empty<SaveTaskState>();
         saveData.EnsureDefaults();
 
-        CultivationApp.SaveArchive(selectedCharacterSlotIndex, saveData);
+        SaveArchive(selectedCharacterSlotIndex, saveData);
         MainMenuSaveStore.SaveSelectedArchetype(selectedArchetypeIndex);
         CloseCharacterPanel();
         RefreshAll();
         SetStatus("已立下新档案：" + heroName + " / " + archetype.name);
+        ShowSuccessMessage("已立下新档案：" + heroName + " / " + archetype.name);
         EnterGameplay(selectedCharacterSlotIndex, saveData, "新游戏");
     }
 
@@ -478,6 +486,7 @@ public sealed partial class MainMenuController : UIPanel
         if (!MainMenuSaveStore.TryLoadSlot(selectedLoadSlotIndex, out var saveData))
         {
             SetStatus("所选档位暂无存档");
+            ShowWarningMessage("所选档位暂无存档。");
             return;
         }
 
@@ -489,40 +498,42 @@ public sealed partial class MainMenuController : UIPanel
         if (!MainMenuSaveStore.TryLoadSlot(selectedLoadSlotIndex, out var saveData))
         {
             SetStatus("空档位无需删除");
+            ShowInfoMessage("空档位无需删除。");
             return;
         }
 
-        CultivationApp.DeleteArchive(selectedLoadSlotIndex);
+        DeleteArchive(selectedLoadSlotIndex);
         selectedLoadSlotIndex = MainMenuSaveStore.GetPreferredLoadSlot();
         RefreshAll();
         SetStatus("已删除存档：" + saveData.heroName);
+        ShowSuccessMessage("已删除存档：" + saveData.heroName);
     }
 
     public void ChangeMusicVolume(float delta)
     {
         musicVolume = Mathf.Clamp01(musicVolume + delta);
-        CultivationApp.SetMusicVolume(musicVolume);
+        SetMusicVolume(musicVolume);
         SetStatus("背景音乐音量已调整为 " + Mathf.RoundToInt(musicVolume * 100f) + "%");
     }
 
     public void ChangeSfxVolume(float delta)
     {
         sfxVolume = Mathf.Clamp01(sfxVolume + delta);
-        CultivationApp.SetSfxVolume(sfxVolume);
+        SetSfxVolume(sfxVolume);
         SetStatus("音效音量已调整为 " + Mathf.RoundToInt(sfxVolume * 100f) + "%");
     }
 
     public void ChangeVoiceVolume(float delta)
     {
         voiceVolume = Mathf.Clamp01(voiceVolume + delta);
-        CultivationApp.SetVoiceVolume(voiceVolume);
+        SetVoiceVolume(voiceVolume);
         SetStatus("语音音量已调整为 " + Mathf.RoundToInt(voiceVolume * 100f) + "%");
     }
 
     public void ToggleFullscreenMode()
     {
         isFullscreen = !isFullscreen;
-        CultivationApp.SetFullscreen(isFullscreen);
+        SetFullscreen(isFullscreen);
         SetStatus(isFullscreen ? "已切换为全屏" : "已切换为窗口模式");
     }
 
@@ -532,8 +543,9 @@ public sealed partial class MainMenuController : UIPanel
         sfxVolume = 0.8f;
         voiceVolume = 0.8f;
         isFullscreen = true;
-        CultivationApp.ResetUserSettings();
+        ResetUserSettings();
         SetStatus("设置已恢复默认");
+        ShowInfoMessage("设置已恢复默认。");
     }
 
     public void QuitGame()
@@ -583,18 +595,20 @@ public sealed partial class MainMenuController : UIPanel
     private void EnterGameplay(int slotIndex, MainMenuSaveData saveData, string source)
     {
         saveData.lastPlayed = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm");
-        CultivationApp.SaveArchive(slotIndex, saveData);
+        SaveArchive(slotIndex, saveData);
         RefreshAll();
 
         if (string.IsNullOrWhiteSpace(config.GameplaySceneName))
         {
             SetStatus(source + "已就绪，但还未配置 gameplaySceneName");
+            ShowErrorMessage(source + "已就绪，但还未配置 gameplaySceneName。");
             return;
         }
 
         if (!Application.CanStreamedLevelBeLoaded(config.GameplaySceneName))
         {
             SetStatus("场景未加入 Build Settings: " + config.GameplaySceneName);
+            ShowErrorMessage("场景未加入 Build Settings: " + config.GameplaySceneName);
             return;
         }
 
@@ -603,9 +617,9 @@ public sealed partial class MainMenuController : UIPanel
 
     private void CloseAllPanels()
     {
-        CultivationApp.CloseUiPanel(GameUiPanelId.MainMenuSettings);
-        CultivationApp.CloseUiPanel(GameUiPanelId.MainMenuLoad);
-        CultivationApp.CloseUiPanel(GameUiPanelId.MainMenuCharacterCreate);
+        CloseGameUiPanel(GameUiPanelId.MainMenuSettings);
+        CloseGameUiPanel(GameUiPanelId.MainMenuLoad);
+        CloseGameUiPanel(GameUiPanelId.MainMenuCharacterCreate);
     }
 
     private void SetStatus(string message)
@@ -627,11 +641,6 @@ public sealed partial class MainMenuController : UIPanel
         }
 
         return false;
-    }
-
-    private static void BindButton(Button button, UnityEngine.Events.UnityAction action, CultivationButtonSound sound = CultivationButtonSound.Click)
-    {
-        CultivationAudio.BindButton(button, action, sound);
     }
 
     private void ResolveLayoutReferences()
@@ -673,62 +682,11 @@ public sealed partial class MainMenuController : UIPanel
 
         lastLayoutWidth = layoutWidth;
         lastLayoutHeight = layoutHeight;
-        ApplyMainLayout(rect.width, rect.height);
-    }
-
-    private void ApplyMainLayout(float width, float height)
-    {
-        if (menuPanelRect == null || infoPanelRect == null || footerPanelRect == null)
-        {
-            return;
-        }
-
-        var widthT = Mathf.InverseLerp(1366f, 1920f, width);
-        var sideMargin = Mathf.Lerp(72f, 110f, widthT);
-        var panelGap = Mathf.Lerp(24f, 42f, widthT);
-        var topMargin = Mathf.Lerp(74f, 102f, widthT);
-        var menuBottom = Mathf.Lerp(102f, 122f, widthT);
-        var footerBottom = Mathf.Lerp(34f, 46f, widthT);
-        var footerWidth = Mathf.Min(width - sideMargin * 2f, 820f);
-
-        var menuWidth = Mathf.Clamp(width * 0.235f, 360f, 450f);
-        var infoWidth = width - sideMargin * 2f - panelGap - menuWidth;
-        if (infoWidth < 560f)
-        {
-            menuWidth = Mathf.Max(320f, menuWidth - (560f - infoWidth));
-            infoWidth = width - sideMargin * 2f - panelGap - menuWidth;
-        }
-
-        infoWidth = Mathf.Max(560f, infoWidth);
-        var menuHeight = Mathf.Clamp(height - menuBottom - 220f, 320f, 420f);
-        var infoHeight = Mathf.Clamp(height - topMargin - 142f, 520f, 836f);
-
-        SetBottomLeftRect(menuPanelRect, sideMargin, menuBottom, menuWidth, menuHeight);
-        SetTopRightRect(infoPanelRect, sideMargin, topMargin, infoWidth, infoHeight);
-        SetBottomLeftRect(footerPanelRect, sideMargin, footerBottom, footerWidth, 48f);
     }
 
     private RectTransform FindChildRect(string childName)
     {
         var child = transform.Find(childName);
         return child != null ? child as RectTransform : null;
-    }
-
-    private static void SetBottomLeftRect(RectTransform rect, float x, float y, float width, float height)
-    {
-        rect.anchorMin = Vector2.zero;
-        rect.anchorMax = Vector2.zero;
-        rect.pivot = Vector2.zero;
-        rect.anchoredPosition = new Vector2(x, y);
-        rect.sizeDelta = new Vector2(width, height);
-    }
-
-    private static void SetTopRightRect(RectTransform rect, float right, float top, float width, float height)
-    {
-        rect.anchorMin = Vector2.one;
-        rect.anchorMax = Vector2.one;
-        rect.pivot = Vector2.one;
-        rect.anchoredPosition = new Vector2(-right, -top);
-        rect.sizeDelta = new Vector2(width, height);
     }
 }

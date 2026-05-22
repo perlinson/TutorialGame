@@ -25,8 +25,8 @@
   当前状态：`Assets/Resources/Audio/CultivationAudioMixer.mixer` 已生成，包含 `Music / Sfx / Voice` 分组；`AudioKit` 创建出的 `AudioSource` 已按 bus 自动分配到对应 `AudioMixerGroup`
 - [x] 17. 把主菜单 UI 状态切到 `FSMKit`
   当前状态：`MainMenuController` 已新增 `Home / Settings / Load / CharacterCreate` 状态；按钮和 `Escape` 现在通过状态切换控制面板显示
-- [x] 18. 把大地图 UI 状态切到 `FSMKit`
-  当前状态：`WorldMapController` 已拆成 `Map / SectResidence` 主状态与 `None / Inventory / Workshop` 弹窗状态；`Escape` 现在按状态层级回退
+- [x] 18. 收敛大地图 UI 状态切换逻辑，去掉 `WorldMapRoot` 内嵌多面板切状态
+  当前状态：`WorldMap` 主地图只保留地图本体和右侧详情；`Inventory / Workshop / SectResidence` 已切向独立 prefab，并通过 `GameUiPanelId + UIKit` 调度显示/隐藏，避免多个主界面同时堆在同一个 root 下
 - [x] 19. 建立全局游戏流程状态机，并补上 `Splash` 入口
   当前状态：`AppRoot` 已新增全局 `GlobalGameFlowManager`；`Boot` 会先进入 `Splash` 再路由到 `Main / WorldMap / Game`；后续场景切换统一通过全局流程状态驱动
 - [x] 20. 把音量设置真正落到 `AudioMixer` 暴露参数，并加入基础 ducking
@@ -47,3 +47,23 @@
   当前状态：`UiPrefabGenerationUtility` 导出 `ExpeditionRoot` 时已不再通过反射调用私有方法，而是直接走 `GameSceneBootstrap.BuildPrefabExportView(...)`；大地图导出入口也已收口为 `WorldMapPrefabExportBuilder.BuildPrefabExportController()`；主菜单、大地图、远征 prefab 批量导出均已重新验证通过
 - [x] 27. 把战斗 support 对象推进到 `prefab-first`
   当前状态：已新增 `CombatPrefabGenerator`，统一导出 `SpiritNode / SpiritHerb / TrialRelic / FloatingCombatText / CombatSlashEffect / CombatImpactEffect` 到 `Assets/Resources/Prefabs/Combat`；`GameArenaBuilder` 现在会优先实例化这些 prefab，缺失时才回退到代码创建
+- [ ] 28. 把 `WorldMap` 内嵌子界面彻底拆成独立 prefab，并切到 `GameUiPanelId + UIKit` 枚举调度
+  当前状态：代码层已进一步补上 `GameUiPanelId.WorldMapRegion`，地图节点点击现在会打开独立的 `Bg` 级全屏地点页；`WorldMapRoot` 本身已降级为轻量入口页，不再承担主详情展示；`WorldMapPrefabExportBuilder` 和 `UiPrefabGenerationUtility` 已能导出 `WorldMapRoot / WorldMapRegionPanel / WorldMapInventoryPanel / WorldMapWorkshopPanel / WorldMapSectResidencePanel` 五份 prefab。下一步是继续把城镇/宗门/历练地点这几类页面的视觉结构做统一
+- [x] 29. 拆分 UI 生命周期语义：缓存型窗口默认隐藏复用，保留显式销毁入口
+  当前状态：`GameUiService.ClosePanel/CloseAllPanels` 已切为软关闭（`Hide`），不再默认销毁；同时新增 `DestroyPanel/DestroyAllPanels` 与 `CultivationApp.DestroyUiPanel/DestroyAllGameUiPanels` 作为硬释放入口
+- [ ] 30. 把通用 `Tooltip / MessagePopup` 也切到独立 prefab + `GameUiPanelId` 调度
+  当前状态：代码层已补上 `GameUiPanelId.Tooltip / MessagePopup`、非排他 `UILevel.PopUI` 注册和消息弹窗专用入口；`Tooltip` 已拆成独立脚本避免 prefab 丢脚本；`MessagePopup` 已补上 `Info / Warning / Error / Success` 分级皮肤入口；主菜单建档/删档、世界地图强化/炼制/宗门事务等关键反馈已接入弹窗；`OverlayPrefabGenerator` 现已补上自适应尺寸、淡入淡出和消息侧边强调条所需的默认布局。下一步是在 Unity 里执行一次生成，把 `Assets/Resources/UI/Overlay/` 下的 prefab 真正落盘并继续手调样式
+- [x] 31. 把 `GameHub / PlayerCompendium` 从世界地图专属 UI 提升为游戏级展示面板，并切到 `Model + Command + BindableProperty/Event` 驱动
+  当前状态：`CultivationPlayerModel / CultivationGameModel` 已补上玩家摘要、世界时序、Hub 可见性、总览页签与分栏选择；`GameHubPanel` 与 `PlayerCompendiumPanel` 已改为 `IController`，显示数据直接从 Model 读取，交互改为发送 Command，刷新改由 `BindableProperty` 和事件驱动；`WorldMapController` 只保留导航职责，不再负责给这两个面板喂显示数据
+- [x] 32. 收口 QFramework 架构边界：表现层改走 `CultivationController`，系统层禁止反调 `CultivationApp`
+  当前状态：`MainMenuBootstrap / WorldMapSceneBootstrap / GameSceneBootstrap / GameController / ExpeditionView` 已切到 `CultivationController / CultivationUIPanel` 基类，主流程交互统一改走 `Command + Utility`；`CultivationBattleSystem / CultivationExpeditionSystem / CultivationExpeditionEventSystem` 已改为 `GetSystem / GetUtility` 直接协作，不再在系统层通过 `CultivationApp` 静态门面回调自身架构
+- [x] 33. 把静态资源读取从 `CultivationApp` 全局门面抽到专用资源桥接层
+  当前状态：已新增 `GameResource` 作为只负责 `Load / Instantiate / ClearCache` 的窄桥接；`WorldRegionLibrary / TaskLibrary / InventoryLibrary / GameArenaBuilder / GeneratedArtLibrary / ExpeditionBuildFactory / ExpeditionEnemyFactory / ExpeditionRoomFactory / ExpeditionLootFactory / WorkshopLibrary` 已切到 `GameResource`，不再直接依赖 `CultivationApp` 全量静态接口
+- [x] 34. 把音效 / 音乐入口提升为正式 `SoundSystem`
+  当前状态：已新增 `Assets/Scripts/Architecture/Systems/Audio/SoundSystem.cs`，通过 `RegisterSystem<ISoundSystem>(new SoundSystem())` 接入架构；主菜单 / 大地图 / 历练 BGM 与战斗/拾取反馈音已切到 `ISoundSystem`；`CultivationAudio` 现降级为兼容包装层，旧按钮绑定代码仍可继续工作，但新代码已经可以直接使用 `this.GetSystem<ISoundSystem>().PlaySound(SoundType.Button_Low);`
+- [x] 35. 把 `Boot/AppRoot` 全局管理器和核心 UI 按钮绑定切回 `IController + Utility/System`
+  当前状态：`AppRoot` 内的 `GlobalAudioManager / GlobalUiManager` 已改为继承 `CultivationController`，音频初始化、运行时设置应用、UIRoot 初始化与错误日志不再通过 `CultivationApp` 大门面静态转发；同时补上 `GameLog` 窄桥接供 `SceneFlow` 等静态流程使用。`MainMenu / WorldMap / Hub / Compendium` 及其主要子面板的按钮绑定现已直接走 `CultivationUIPanel.BindButton(...) -> ISoundSystem`，`CultivationAudio.BindButton` 只保留给 `SaveSlotView / ArchetypeCardView / WorldRegionNodeView` 这类纯视图组件
+- [x] 36. 删除 `CultivationAudio` 兼容层，拆分为 `GameSound + UI helper`
+  当前状态：`Assets/Scripts/Audio/CultivationAudio.cs` 已移除；静态播放入口收敛到 `GameSound`，底层统一走 `ISoundSystem`；`SaveSlotView / ArchetypeCardView / WorldRegionNodeView / ExpeditionView` 等剩余按钮绑定点已改为走 `CultivationUiAudio` 表现层 helper。音频系统只负责播放与音量/ducking，不再承担 `Button` 绑定职责
+- [x] 37. 给 prefab-first UI 补 `ButtonSoundBinder`，并把修仙技艺页升级为可视节点
+  当前状态：已新增 `UIButtonSoundBinder`，`CultivationUiAudio.BindButton(...)` 现在会优先复用 prefab 上的声音绑定组件，避免音效逻辑继续散落在纯视图类里；`PlayerCompendiumSnapshot` 已补 `VisualTitle + VisualNodes`，`PlayerCompendiumPanel` 与 `WorldMapPrefabExportBuilder` 已新增节点区块和 `PlayerCompendiumNodeView`，`主修功法 / 战斗术法 / 丹道 / 符道` 四个子页都能产出可视节点数据。下一步需要在 Unity 里重新生成 `GameHubPanel` / `PlayerCompendiumPanel` prefab 并实跑世界地图流

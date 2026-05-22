@@ -255,7 +255,7 @@ public sealed partial class GameController
 
         if (enemyDamaged)
         {
-            CultivationAudio.PlayCombatHit(enemyHeavyHit);
+            PlaySound(enemyHeavyHit ? SoundType.CombatHitHeavy : SoundType.CombatHitLight);
         }
 
         if (hero == null || hero.CurrentHealth == snapshot.HeroHealth)
@@ -265,7 +265,7 @@ public sealed partial class GameController
 
         if (hero.CurrentHealth < snapshot.HeroHealth)
         {
-            CultivationAudio.PlayHeroDamaged();
+            PlaySound(SoundType.HeroDamaged);
             if (livePlayer != null)
             {
                 livePlayer.PlayDamageFeedback();
@@ -279,7 +279,7 @@ public sealed partial class GameController
 
         if (livePlayer != null)
         {
-            CultivationAudio.PlayHeroHealed();
+            PlaySound(SoundType.HeroHealed);
             livePlayer.PlayHealFeedback();
             SpawnHealEffect(livePlayer.transform.position + new Vector3(0f, 0.3f, 0f), false);
             SpawnCombatText(livePlayer.transform.position + new Vector3(0f, 1.18f, 0f), "+" + (hero.CurrentHealth - snapshot.HeroHealth), new Color(0.52f, 1f, 0.62f, 1f), false);
@@ -372,7 +372,7 @@ public sealed partial class GameController
             return;
         }
 
-        var instance = CultivationApp.InstantiatePrefab(resourcePath, arenaRoomContentRoot);
+        var instance = InstantiatePrefab(resourcePath, arenaRoomContentRoot);
         if (instance == null)
         {
             return;

@@ -31,6 +31,8 @@ public sealed class MainMenuSaveData
     public string sectName;
     public bool isSectDisciple;
     public bool isInSectResidence;
+    public int worldDay;
+    public int worldTimeIndex;
     public int realmTier;
     public int qi;
     public string currentRegionId;
@@ -47,6 +49,7 @@ public sealed class MainMenuSaveData
     public SaveItemStack[] storageItems;
     public string activeTaskId;
     public SaveTaskState[] taskStates;
+    public SaveNpcState[] npcStates;
     public SaveFactionState[] factionStates;
     public SaveAfflictionState[] afflictions;
     public string[] storyFlags;
@@ -163,6 +166,23 @@ public sealed class MainMenuSaveData
             }
         }
 
+        if (npcStates == null)
+        {
+            npcStates = Array.Empty<SaveNpcState>();
+        }
+        else
+        {
+            for (var i = 0; i < npcStates.Length; i++)
+            {
+                if (npcStates[i] == null)
+                {
+                    npcStates[i] = new SaveNpcState();
+                }
+
+                npcStates[i].EnsureDefaults();
+            }
+        }
+
         if (factionStates == null)
         {
             factionStates = Array.Empty<SaveFactionState>();
@@ -225,6 +245,8 @@ public sealed class MainMenuSaveData
         {
             lastPlayed = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
         }
+
+        CultivationGameTime.EnsureDefaults(this);
     }
 
     public bool IsRegionUnlocked(string regionId)
@@ -379,6 +401,24 @@ public sealed class MainMenuSaveData
         }
 
         return null;
+    }
+
+    public SaveNpcState GetOrCreateNpcState(string npcId)
+    {
+        EnsureDefaults();
+        for (var i = 0; i < npcStates.Length; i++)
+        {
+            var state = npcStates[i];
+            if (state != null && state.npcId == npcId)
+            {
+                return state;
+            }
+        }
+
+        var created = new SaveNpcState(npcId);
+        var merged = new List<SaveNpcState>(npcStates) { created };
+        npcStates = merged.ToArray();
+        return created;
     }
 
     public SaveFactionState GetOrCreateFactionState(ExpeditionEnemyFaction faction)

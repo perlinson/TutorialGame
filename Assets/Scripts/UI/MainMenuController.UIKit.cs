@@ -10,7 +10,7 @@ public sealed partial class MainMenuController
 
     protected override void OnClose()
     {
-        CultivationApp.SetMusicDuck(ModalMusicDuckReason, false);
+        SetMusicDuck(ModalMusicDuckReason, false);
         CloseAllPanels();
     }
 

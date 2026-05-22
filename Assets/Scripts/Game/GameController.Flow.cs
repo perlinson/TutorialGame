@@ -6,11 +6,11 @@ public sealed partial class GameController
     {
         enemies.Clear();
         combatRound = 1;
-        enemies.AddRange(CultivationApp.BuildEncounterEnemies(region, room, saveData, random));
+        enemies.AddRange(BuildEncounterEnemies(region, room, saveData, random));
         currentEncounterSnapshot.Clear();
         currentEncounterSnapshot.AddRange(enemies);
 
-        CultivationAudio.PlayBattleStart();
+        PlaySound(SoundType.BattleStart);
         logMessage = room.Kind == ExpeditionRoomKind.Boss
             ? "前方核心灵压暴涨，凶煞、邪修与残阵气息纠缠在一起。"
             : "黑暗中有气机锁定了远征队，只能当场开战。";
@@ -20,7 +20,7 @@ public sealed partial class GameController
 
     private void AdvanceOrSearch()
     {
-        HandleAdvanceResult(CultivationApp.AdvanceExpedition(CreateAdvanceContext()));
+        HandleAdvanceResult(AdvanceExpedition(CreateAdvanceContext()));
     }
 
     private void SearchCurrentRoom()
@@ -32,7 +32,7 @@ public sealed partial class GameController
             return;
         }
 
-        activeEventCard = CultivationApp.OpenRoomEvent(CreateCombatTurnContext());
+        activeEventCard = OpenRoomEvent(CreateCombatTurnContext());
         activeEventResult = null;
         if (activeEventCard == null || !string.IsNullOrWhiteSpace(activeEventCard.FailureReason))
         {
@@ -60,7 +60,7 @@ public sealed partial class GameController
             SpawnAttackEffect(livePlayer.transform.position, enemyActorBindings[0].View.transform.position, new Color(1f, 0.84f, 0.52f, 0.94f), true);
         }
 
-        ApplyCombatTurnResult(CultivationApp.ResolveSkillTurn(CreateCombatTurnContext(), skillIndex), visualSnapshot);
+        ApplyCombatTurnResult(ResolveSkillTurn(CreateCombatTurnContext(), skillIndex), visualSnapshot);
     }
 
     private void UseTalisman()
@@ -77,7 +77,7 @@ public sealed partial class GameController
             SpawnAttackEffect(livePlayer.transform.position, enemyActorBindings[0].View.transform.position, new Color(0.72f, 0.9f, 1f, 0.94f), true);
         }
 
-        ApplyCombatTurnResult(CultivationApp.ResolveTalismanTurn(CreateCombatTurnContext()), visualSnapshot);
+        ApplyCombatTurnResult(ResolveTalismanTurn(CreateCombatTurnContext()), visualSnapshot);
     }
 
     private void UseMedicine()
@@ -88,7 +88,7 @@ public sealed partial class GameController
         }
 
         var visualSnapshot = CaptureCombatVisualSnapshot();
-        ApplyCombatTurnResult(CultivationApp.ResolveMedicineTurn(CreateCombatTurnContext()), visualSnapshot);
+        ApplyCombatTurnResult(ResolveMedicineTurn(CreateCombatTurnContext()), visualSnapshot);
     }
 
     private void ApplyCombatTurnResult(CombatTurnResult result, CombatVisualSnapshot? visualSnapshot = null)
@@ -154,7 +154,7 @@ public sealed partial class GameController
         }
 
         var visualSnapshot = CaptureCombatVisualSnapshot();
-        ApplySupportActionResult(CultivationApp.UseTorchSupply(CreateCombatTurnContext()), null, visualSnapshot);
+        ApplySupportActionResult(UseTorchSupply(CreateCombatTurnContext()), null, visualSnapshot);
     }
 
     private void CampAndRecover()
@@ -165,7 +165,7 @@ public sealed partial class GameController
         }
 
         var visualSnapshot = CaptureCombatVisualSnapshot();
-        ApplySupportActionResult(CultivationApp.CampAndRecover(CreateCombatTurnContext()), null, visualSnapshot);
+        ApplySupportActionResult(CampAndRecover(CreateCombatTurnContext()), null, visualSnapshot);
     }
 
     private void RecenterMind()
@@ -179,18 +179,18 @@ public sealed partial class GameController
 
         recenterUsedInCurrentRoom = true;
         var visualSnapshot = CaptureCombatVisualSnapshot();
-        ApplySupportActionResult(CultivationApp.RecenterMind(CreateCombatTurnContext()), null, visualSnapshot);
+        ApplySupportActionResult(RecenterMind(CreateCombatTurnContext()), null, visualSnapshot);
     }
 
     private void SkipCurrentRoom()
     {
         var visualSnapshot = CaptureCombatVisualSnapshot();
-        ApplySupportActionResult(CultivationApp.SkipRoom(CreateCombatTurnContext()), ExpeditionFlowPhase.AfterRoom, visualSnapshot);
+        ApplySupportActionResult(SkipRoom(CreateCombatTurnContext()), ExpeditionFlowPhase.AfterRoom, visualSnapshot);
     }
 
     private void AdvanceToNextPhase()
     {
-        HandleAdvanceResult(CultivationApp.AdvanceExpedition(CreateAdvanceContext()));
+        HandleAdvanceResult(AdvanceExpedition(CreateAdvanceContext()));
     }
 
     private void OnEventOptionSelected(string optionId)
@@ -200,7 +200,7 @@ public sealed partial class GameController
             return;
         }
 
-        activeEventResult = CultivationApp.ResolveEventOption(CreateCombatTurnContext(), activeEventCard.EventId, optionId);
+        activeEventResult = ResolveEventOption(CreateCombatTurnContext(), activeEventCard.EventId, optionId);
         if (activeEventResult == null)
         {
             return;

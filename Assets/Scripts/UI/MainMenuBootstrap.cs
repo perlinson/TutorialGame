@@ -1,5 +1,5 @@
 using UnityEngine;
-public sealed class MainMenuBootstrap : MonoBehaviour
+public sealed class MainMenuBootstrap : CultivationController
 {
     [Header("Scene Routing")]
     [SerializeField] private string gameplaySceneName = string.Empty;
@@ -15,7 +15,7 @@ public sealed class MainMenuBootstrap : MonoBehaviour
     {
         AppRoot.EnsureCreated();
         SceneFlow.SyncActiveSceneState(SceneFlow.MainMenuSceneName);
-        CultivationAudio.PlayMainMenuMusic();
+        PlayMainMenuMusic();
         ConfigureCamera();
         EnsureMenuInstance();
     }
@@ -35,6 +35,6 @@ public sealed class MainMenuBootstrap : MonoBehaviour
 
     private void EnsureMenuInstance()
     {
-        CultivationApp.OpenMainMenuPanel(new MainMenuConfig(gameplaySceneName, gameTitle, gameSubtitle, gameDescription));
+        OpenMainMenuPanel(new MainMenuConfig(gameplaySceneName, gameTitle, gameSubtitle, gameDescription));
     }
 }

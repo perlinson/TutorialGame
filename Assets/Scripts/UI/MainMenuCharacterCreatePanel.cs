@@ -5,7 +5,7 @@ using UnityEngine.UI;
 using Text = TMPro.TMP_Text;
 using InputField = TMPro.TMP_InputField;
 
-public sealed class MainMenuCharacterCreatePanel : UIPanel
+public sealed class MainMenuCharacterCreatePanel : CultivationUIPanel
 {
     private static readonly Vector2 WindowDesignSize = new Vector2(1540f, 860f);
 
@@ -38,6 +38,7 @@ public sealed class MainMenuCharacterCreatePanel : UIPanel
         EnsureButtonsBound();
         RefreshFromOwner();
         RefreshResponsiveLayout(true);
+        UiPanelOrderUtility.BringToFront(this, 220);
     }
 
     protected override void OnClose()
@@ -181,8 +182,4 @@ public sealed class MainMenuCharacterCreatePanel : UIPanel
         windowRect.localScale = new Vector3(scale, scale, 1f);
     }
 
-    private static void BindButton(Button button, UnityEngine.Events.UnityAction action, CultivationButtonSound sound = CultivationButtonSound.Click)
-    {
-        CultivationAudio.BindButton(button, action, sound);
-    }
 }

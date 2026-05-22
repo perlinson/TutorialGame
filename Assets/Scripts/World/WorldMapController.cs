@@ -4,12 +4,10 @@ using UnityEngine;
 using UnityEngine.UI;
 using Text = TMPro.TMP_Text;
 
-public sealed partial class WorldMapController : UIPanel
+public sealed partial class WorldMapController : CultivationUIPanel, IGameHubNavigator
 {
     private static readonly Vector2 MapContentDesignSize = new Vector2(1920f, 1080f);
-    private static readonly Vector2 InventoryWindowDesignSize = new Vector2(820f, 660f);
-    private static readonly Vector2 WorkshopWindowDesignSize = new Vector2(920f, 680f);
-    private static readonly Vector2 SectWindowDesignSize = new Vector2(1780f, 960f);
+    private static readonly Vector2 CompactActionButtonSize = new Vector2(72f, 72f);
 
     public Text titleText;
     public Text heroSummaryText;
@@ -21,56 +19,33 @@ public sealed partial class WorldMapController : UIPanel
     public Text taskSummaryText;
     public Image taskPreviewImage;
     public Text taskPreviewLabelText;
-    public Text inventoryDetailText;
-    public Text workshopSummaryText;
-    public Text sectTitleText;
-    public Text sectDescriptionText;
-    public Text sectStatusText;
     public Image regionPreviewImage;
     public Text regionPreviewLabelText;
-    public Image inventoryPreviewImage;
-    public Text inventoryPreviewLabelText;
-    public Image workshopPreviewImage;
-    public Text workshopPreviewLabelText;
-    public Image sectPreviewImage;
-    public Text sectPreviewLabelText;
     public Text hintText;
 
     public Button travelButton;
     public Button bagButton;
     public Button workshopButton;
-    public Button sectButton;
     public Button sectResidenceButton;
     public Button vitalityUpgradeButton;
     public Button attackUpgradeButton;
     public Button returnButton;
-    public Button closeInventoryButton;
-    public Button closeWorkshopButton;
-    public Button closeSectButton;
-    public Button craftQiButton;
-    public Button craftBagButton;
-    public Button craftVitalityButton;
-    public Button craftAttackButton;
-    public Button[] sectHallButtons;
-    public Button[] sectActionButtons;
 
     public GameObject mapScreen;
-    public GameObject inventoryPanel;
-    public GameObject workshopPanel;
-    public GameObject sectPanel;
-    public GameObject modalBlocker;
 
     private readonly List<WorldRegionDefinition> regions = new List<WorldRegionDefinition>();
     private readonly List<WorldRegionNodeView> nodeViews = new List<WorldRegionNodeView>();
-    private readonly ExclusiveUiPanelGroup primaryPanels = new ExclusiveUiPanelGroup();
-    private readonly ExclusiveUiPanelGroup modalPanels = new ExclusiveUiPanelGroup();
 
     private RectTransform rootRect;
+    private RectTransform titlePanelRect;
+    private RectTransform mapPanelRect;
     private RectTransform mapContentRootRect;
-    private RectTransform inventoryWindowRect;
-    private RectTransform workshopWindowRect;
-    private RectTransform sectWindowRect;
+    private RectTransform mapFieldRect;
+    private RectTransform detailPanelRect;
+    private RectTransform hintPanelRect;
+    private CanvasGroup detailPanelCanvasGroup;
     private bool isInitialized;
+    private bool compactMapLayoutPrepared;
     private int lastLayoutWidth = -1;
     private int lastLayoutHeight = -1;
     private string gameplaySceneName;
@@ -78,6 +53,11 @@ public sealed partial class WorldMapController : UIPanel
     private int currentSlotIndex = -1;
     private int selectedRegionIndex;
     private int selectedSectHallIndex;
+    private string selectedNpcId;
+    private float detailPanelVisibility;
+    private float detailPanelTargetVisibility;
+    private Vector2 detailPanelShownPosition;
+    private Vector2 detailPanelHiddenPosition;
     private MainMenuSaveData saveData;
     private SectHallSnapshot[] sectHallSnapshots = new SectHallSnapshot[0];
 }

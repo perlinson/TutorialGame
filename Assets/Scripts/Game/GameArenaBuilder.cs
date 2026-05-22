@@ -71,7 +71,7 @@ public static class GameArenaBuilder
     private static PlayerCultivator CreatePlayer(Transform parent, WorldRegionDefinition region, MainMenuSaveData saveData)
     {
         var playerPortrait = GeneratedArtLibrary.GetHeroPortrait(saveData != null ? saveData.archetypeId : string.Empty);
-        var prefabPlayer = CultivationApp.InstantiatePrefab(PlayerPrefabPath, parent);
+        var prefabPlayer = GameResource.InstantiatePrefab(PlayerPrefabPath, parent);
         if (prefabPlayer != null)
         {
             prefabPlayer.name = "PlayerCultivator";
@@ -104,7 +104,7 @@ public static class GameArenaBuilder
         renderer.sortingOrder = 18;
 
         var animator = visualBody.GetComponent<Animator>();
-        animator.runtimeAnimatorController = CultivationApp.LoadResource<RuntimeAnimatorController>(PlayerAnimatorPath);
+        animator.runtimeAnimatorController = GameResource.Load<RuntimeAnimatorController>(PlayerAnimatorPath);
 
         ConfigurePlayerPhysics(root);
         var player = root.GetComponent<PlayerCultivator>();
@@ -115,7 +115,7 @@ public static class GameArenaBuilder
     public static SpiritEnemy CreateEnemy(Transform parent, Vector2 position, ExpeditionEnemyFaction faction, Color bodyColor, bool elite)
     {
         var enemyPortrait = GeneratedArtLibrary.GetEnemyPortrait(faction, elite);
-        var prefabEnemy = CultivationApp.InstantiatePrefab(EnemyPrefabPath, parent);
+        var prefabEnemy = GameResource.InstantiatePrefab(EnemyPrefabPath, parent);
         if (prefabEnemy != null)
         {
             prefabEnemy.name = "SpiritEnemy";
@@ -148,7 +148,7 @@ public static class GameArenaBuilder
         renderer.sortingOrder = 16;
 
         var animator = visualBody.GetComponent<Animator>();
-        animator.runtimeAnimatorController = CultivationApp.LoadResource<RuntimeAnimatorController>(EnemyAnimatorPath);
+        animator.runtimeAnimatorController = GameResource.Load<RuntimeAnimatorController>(EnemyAnimatorPath);
 
         ConfigureEnemyPhysics(root, elite);
 
@@ -162,7 +162,7 @@ public static class GameArenaBuilder
 
     public static SpiritNode CreateSpiritNode(Transform parent, Vector2 position, Color tint)
     {
-        var prefabNode = CultivationApp.InstantiatePrefab(SpiritNodePrefabPath, parent);
+        var prefabNode = GameResource.InstantiatePrefab(SpiritNodePrefabPath, parent);
         if (prefabNode != null)
         {
             prefabNode.name = "SpiritNode";
@@ -197,7 +197,7 @@ public static class GameArenaBuilder
 
     public static SpiritHerb CreateSpiritHerb(Transform parent, Vector2 position, Color tint)
     {
-        var prefabHerb = CultivationApp.InstantiatePrefab(SpiritHerbPrefabPath, parent);
+        var prefabHerb = GameResource.InstantiatePrefab(SpiritHerbPrefabPath, parent);
         if (prefabHerb != null)
         {
             prefabHerb.name = "SpiritHerb";
@@ -232,7 +232,7 @@ public static class GameArenaBuilder
 
     public static TrialRelic CreateRelic(Transform parent, Vector2 position, Color tint)
     {
-        var prefabRelic = CultivationApp.InstantiatePrefab(TrialRelicPrefabPath, parent);
+        var prefabRelic = GameResource.InstantiatePrefab(TrialRelicPrefabPath, parent);
         if (prefabRelic != null)
         {
             prefabRelic.name = "TrialRelic";
@@ -272,7 +272,7 @@ public static class GameArenaBuilder
 
     public static FloatingCombatText CreateFloatingCombatText(Transform parent, Vector3 position, string message, Color color, int sortingOrder = 40, float characterSize = 0.12f)
     {
-        var prefabText = CultivationApp.InstantiatePrefab(FloatingCombatTextPrefabPath, parent);
+        var prefabText = GameResource.InstantiatePrefab(FloatingCombatTextPrefabPath, parent);
         if (prefabText != null)
         {
             prefabText.name = "FloatingCombatText";
@@ -301,7 +301,7 @@ public static class GameArenaBuilder
         var angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - 90f;
         var drift = new Vector3(direction.x, direction.y, 0f).normalized * (emphasized ? 0.45f : 0.3f);
         var slashSprite = GeneratedArtLibrary.GetRuntimeArtSprite("VFX/Combat/vfx_hit_ink_slash");
-        var prefabEffect = CultivationApp.InstantiatePrefab(SlashEffectPrefabPath, parent);
+        var prefabEffect = GameResource.InstantiatePrefab(SlashEffectPrefabPath, parent);
         if (prefabEffect != null)
         {
             prefabEffect.name = "CombatSlashEffect";
@@ -344,7 +344,7 @@ public static class GameArenaBuilder
 
     public static TransientSpriteEffect CreateImpactBurst(Transform parent, Vector3 position, Color color, bool emphasized)
     {
-        var prefabEffect = CultivationApp.InstantiatePrefab(ImpactEffectPrefabPath, parent);
+        var prefabEffect = GameResource.InstantiatePrefab(ImpactEffectPrefabPath, parent);
         if (prefabEffect != null)
         {
             prefabEffect.name = "CombatImpactEffect";
@@ -495,7 +495,7 @@ public static class GameArenaBuilder
 
         if (animator.runtimeAnimatorController == null && !string.IsNullOrWhiteSpace(resourcePath))
         {
-            animator.runtimeAnimatorController = CultivationApp.LoadResource<RuntimeAnimatorController>(resourcePath);
+            animator.runtimeAnimatorController = GameResource.Load<RuntimeAnimatorController>(resourcePath);
         }
     }
 }

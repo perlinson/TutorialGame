@@ -1,5 +1,5 @@
 using UnityEngine;
-public sealed class WorldMapSceneBootstrap : MonoBehaviour
+public sealed class WorldMapSceneBootstrap : CultivationController
 {
     [SerializeField] private string mainSceneName = "Main";
     [SerializeField] private string gameplaySceneName = "Game";
@@ -8,7 +8,7 @@ public sealed class WorldMapSceneBootstrap : MonoBehaviour
     {
         AppRoot.EnsureCreated();
         SceneFlow.SyncActiveSceneState(SceneFlow.WorldMapSceneName);
-        CultivationAudio.PlayWorldMapMusic();
+        PlayWorldMapMusic();
         ConfigureCamera();
         EnsureMapInstance();
     }
@@ -28,6 +28,6 @@ public sealed class WorldMapSceneBootstrap : MonoBehaviour
 
     private void EnsureMapInstance()
     {
-        CultivationApp.OpenWorldMapPanel(gameplaySceneName, mainSceneName);
+        OpenWorldMapPanel(gameplaySceneName, mainSceneName);
     }
 }

@@ -68,28 +68,28 @@ public sealed partial class MainMenuController
 
     private void EnterHomeState()
     {
-        CultivationApp.SetMusicDuck(ModalMusicDuckReason, false);
+        SetMusicDuck(ModalMusicDuckReason, false);
         CloseAllPanels();
     }
 
     private void EnterSettingsState()
     {
-        CultivationApp.SetMusicDuck(ModalMusicDuckReason, true, 6f);
-        CultivationApp.OpenMainMenuSettingsPanel(this);
+        SetMusicDuck(ModalMusicDuckReason, true, 6f);
+        OpenGameUiPanel(GameUiPanelId.MainMenuSettings, new MainMenuSettingsPanelData(this));
         SetStatus("已打开洞府设置");
     }
 
     private void EnterLoadState()
     {
-        CultivationApp.SetMusicDuck(ModalMusicDuckReason, true, 6f);
+        SetMusicDuck(ModalMusicDuckReason, true, 6f);
         selectedLoadSlotIndex = MainMenuSaveStore.GetPreferredLoadSlot();
-        CultivationApp.OpenMainMenuLoadPanel(this);
+        OpenGameUiPanel(GameUiPanelId.MainMenuLoad, new MainMenuLoadPanelData(this));
         SetStatus("已展开存档卷轴");
     }
 
     private void EnterCharacterCreateState()
     {
-        CultivationApp.SetMusicDuck(ModalMusicDuckReason, true, 6f);
+        SetMusicDuck(ModalMusicDuckReason, true, 6f);
         selectedCharacterSlotIndex = MainMenuSaveStore.GetPreferredNewGameSlot();
         selectedArchetypeIndex = Mathf.Clamp(MainMenuSaveStore.LoadSelectedArchetype(), 0, archetypes.Count - 1);
         if (string.IsNullOrWhiteSpace(GetPendingHeroName()) || MatchesAnyDefaultName(GetPendingHeroName()))
@@ -97,7 +97,7 @@ public sealed partial class MainMenuController
             SetPendingHeroName(string.Empty);
         }
 
-        CultivationApp.OpenMainMenuCharacterCreatePanel(this);
+        OpenGameUiPanel(GameUiPanelId.MainMenuCharacterCreate, new MainMenuCharacterCreatePanelData(this));
         SetStatus("选择一条修途与存档档位");
     }
 
@@ -120,7 +120,7 @@ public sealed partial class MainMenuController
     protected override void OnBeforeDestroy()
     {
         base.OnBeforeDestroy();
-        CultivationApp.SetMusicDuck(ModalMusicDuckReason, false);
+        SetMusicDuck(ModalMusicDuckReason, false);
         uiStateMachine.Clear();
     }
 }

@@ -37,7 +37,8 @@ public sealed class SaveSlotView : MonoBehaviour
             ? new Color(0.44f, 0.33f, 0.16f, 0.96f)
             : new Color(0.36f, 0.34f, 0.32f, 0.86f);
 
-        CultivationAudio.BindButton(button, onClick);
+        CultivationUiAudio.BindButton(button, onClick);
+        CultivationTooltipBinder.Bind(button, title, detail + "\n" + footer);
     }
 
     public int SlotIndex => slotIndex;

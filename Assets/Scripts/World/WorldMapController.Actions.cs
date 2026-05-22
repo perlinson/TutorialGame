@@ -1,77 +1,148 @@
 using UnityEngine;
-using UnityEngine.UI;
-using Text = TMPro.TMP_Text;
 
 public sealed partial class WorldMapController
 {
-    private void TravelToSelectedRegion()
+    public void TravelToSelectedRegion()
     {
         if (!EnsureValidSelectedRegionSelection())
         {
             SetHint("当前没有可前往的地域数据。");
+            ShowWarningMessage("当前没有可前往的地域数据。");
             return;
         }
 
         var region = regions[selectedRegionIndex];
-        var result = CultivationApp.TravelToRegion(currentSlotIndex, saveData, region);
+        var result = TravelToRegion(currentSlotIndex, saveData, region);
         if (!result.Succeeded)
         {
             SetHint(result.Message);
+            ShowWarningMessage(result.Message);
             return;
         }
 
         if (!Application.CanStreamedLevelBeLoaded(gameplaySceneName))
         {
             SetHint("场景未加入 Build Settings: " + gameplaySceneName);
+            ShowErrorMessage("场景未加入 Build Settings: " + gameplaySceneName);
             return;
         }
 
+        CloseFloatingPanels();
         SceneFlow.RequestScene(gameplaySceneName);
     }
 
-    private void UpgradeVitality()
+    public void UpgradeVitality()
     {
-        var result = CultivationApp.UpgradeProtectiveRelic(currentSlotIndex, saveData);
+        var result = UpgradeProtectiveRelic(currentSlotIndex, saveData);
         RefreshAll();
         SetHint(result.Message);
+        if (result.Succeeded)
+        {
+            ShowSuccessMessage(result.Message);
+        }
+        else
+        {
+            ShowWarningMessage(result.Message);
+        }
     }
 
-    private void UpgradeAttack()
+    public void UpgradeAttack()
     {
-        var result = CultivationApp.UpgradeMainArtifact(currentSlotIndex, saveData);
+        var result = UpgradeMainArtifact(currentSlotIndex, saveData);
         RefreshAll();
         SetHint(result.Message);
+        if (result.Succeeded)
+        {
+            ShowSuccessMessage(result.Message);
+        }
+        else
+        {
+            ShowWarningMessage(result.Message);
+        }
     }
 
-    private void OpenInventory()
+    public void OpenInventory()
     {
-        ChangePrimaryState(WorldMapPrimaryState.Map);
-        ChangeModalState(WorldMapModalState.Inventory);
-        SetHint("储物袋已展开，可在此查看历练带回的灵材与凭证。");
+        CloseGameUiPanel(GameUiPanelId.WorldMapWorkshop);
+        OpenCompendium();
     }
 
-    private void CloseInventory()
+    public void OpenWorldMapHome()
     {
-        ChangeModalState(WorldMapModalState.None);
+        CloseGameUiPanel(GameUiPanelId.WorldMapRegion);
+        CloseGameUiPanel(GameUiPanelId.WorldMapSettlement);
+        CloseGameUiPanel(GameUiPanelId.WorldMapSectResidence);
+        CloseGameUiPanel(GameUiPanelId.WorldMapNpcDialogue);
+        CloseInventory();
+        CloseWorkshop();
+        SetHudContext(GameHubContext.WorldMap);
+        EnsureHudPanel();
+        ShowGameUiPanel(GameUiPanelId.WorldMap);
+        ShowGameUiPanel(GameUiPanelId.GameHub);
+        RefreshAll();
+        SetHint("已返回山海大地图。");
     }
 
-    private void OpenWorkshop()
+    public void CloseInventory()
     {
-        ChangePrimaryState(WorldMapPrimaryState.Map);
-        ChangeModalState(WorldMapModalState.Workshop);
+        SetPlayerCompendiumVisible(false);
+        CloseGameUiPanel(GameUiPanelId.PlayerCompendium);
+        CloseGameUiPanel(GameUiPanelId.WorldMapInventory);
+    }
+
+    public void OpenSettlement()
+    {
+        CloseInventory();
+        CloseGameUiPanel(GameUiPanelId.WorldMapRegion);
+        CloseGameUiPanel(GameUiPanelId.WorldMapSectResidence);
+        CloseGameUiPanel(GameUiPanelId.WorldMapNpcDialogue);
+        var panel = OpenGameUiPanel(GameUiPanelId.WorldMapSettlement, new WorldMapSettlementPanelData(this));
+        if (panel == null)
+        {
+            SetHint("城镇整备面板 prefab 缺失，请先重新生成 WorldMap UI Prefabs。");
+            ShowErrorMessage("城镇整备面板 prefab 缺失，请先重新生成 WorldMap UI Prefabs。");
+            return;
+        }
+
+        SetHudContext(GameHubContext.Settlement);
+        RefreshHudPanel();
+        SetHint("已进入整备区域，可处理储物、炼制与法器养成。");
+    }
+
+    public void CloseSettlement()
+    {
+        CloseGameUiPanel(GameUiPanelId.WorldMapSettlement);
+        OpenWorldMapHome();
+        SetHint("已离开整备区域，回到山海大地图。");
+    }
+
+    public void OpenWorkshopWorkbench()
+    {
+        CloseGameUiPanel(GameUiPanelId.WorldMapRegion);
+        CloseGameUiPanel(GameUiPanelId.PlayerCompendium);
+        CloseGameUiPanel(GameUiPanelId.WorldMapInventory);
+        CloseGameUiPanel(GameUiPanelId.WorldMapNpcDialogue);
+        if (OpenGameUiPanel(GameUiPanelId.WorldMapWorkshop, new WorldMapWorkshopPanelData(this)) == null)
+        {
+            SetHint("洞府整备面板 prefab 缺失，请先重新生成 WorldMap UI Prefabs。");
+            ShowErrorMessage("洞府整备面板 prefab 缺失，请先重新生成 WorldMap UI Prefabs。");
+            return;
+        }
+
         SetHint("洞府整备已展开。主法器与护身法器可直接耗灵石精修，丹炉和符匣则依赖材料拓展。");
     }
 
-    private void CloseWorkshop()
+    public void CloseWorkshop()
     {
-        ChangeModalState(WorldMapModalState.None);
+        CloseGameUiPanel(GameUiPanelId.WorldMapWorkshop);
     }
 
-    private void OpenSectResidence(bool persistState)
+    public void OpenSectResidence(bool persistState)
     {
         if (saveData == null || !saveData.isSectDisciple)
         {
             SetHint("散修无固定山门驻地，只能在大地图中游历寻机缘。");
+            ShowInfoMessage("散修无固定山门驻地，只能在大地图中游历寻机缘。");
             return;
         }
 
@@ -79,65 +150,195 @@ public sealed partial class WorldMapController
         {
             saveData.isInSectResidence = true;
             saveData.location = saveData.sectName;
-            CultivationApp.SaveArchive(currentSlotIndex, saveData);
+            SaveArchive(currentSlotIndex, saveData);
             RefreshAll();
         }
 
-        ChangePrimaryState(WorldMapPrimaryState.SectResidence);
+        CloseInventory();
+        CloseWorkshop();
+        CloseGameUiPanel(GameUiPanelId.WorldMapNpcDialogue);
+        CloseGameUiPanel(GameUiPanelId.WorldMapSettlement);
+        CloseRegionPage();
+        var panel = OpenGameUiPanel(GameUiPanelId.WorldMapSectResidence, new WorldMapSectResidencePanelData(this));
+        if (panel == null)
+        {
+            SetHint("门派驻地面板 prefab 缺失，请先重新生成 WorldMap UI Prefabs。");
+            ShowErrorMessage("门派驻地面板 prefab 缺失，请先重新生成 WorldMap UI Prefabs。");
+            return;
+        }
+
+        SetHudContext(GameHubContext.SectResidence);
+        RefreshHudPanel();
         SetHint("已回到" + saveData.sectName + "。自己的洞府和各殿堂都在山门内。");
     }
 
-    private void CloseSect()
+    public void CloseSect()
     {
         if (saveData != null)
         {
             saveData.isInSectResidence = false;
             saveData.location = WorldRegionLibrary.GetRegionDisplayName(saveData.currentRegionId);
-            CultivationApp.SaveArchive(currentSlotIndex, saveData);
+            SaveArchive(currentSlotIndex, saveData);
             RefreshAll();
         }
 
-        ChangePrimaryState(WorldMapPrimaryState.Map);
+        CloseGameUiPanel(GameUiPanelId.WorldMapSectResidence);
+        CloseGameUiPanel(GameUiPanelId.WorldMapNpcDialogue);
+        OpenWorldMapHome();
         SetHint("已离开门派，回到山海大地图。");
     }
 
-    private void CraftRecipe(string recipeId)
+    public void OpenRegionPage(int index)
     {
-        var result = CultivationApp.CraftRecipe(currentSlotIndex, saveData, recipeId);
+        if (!HasRegions())
+        {
+            SetHint("当前没有可展示的地域数据。");
+            ShowWarningMessage("当前没有可展示的地域数据。");
+            return;
+        }
+
+        CloseInventory();
+        CloseWorkshop();
+        CloseGameUiPanel(GameUiPanelId.WorldMapSettlement);
+        CloseGameUiPanel(GameUiPanelId.WorldMapSectResidence);
+        CloseGameUiPanel(GameUiPanelId.WorldMapNpcDialogue);
+
+        selectedRegionIndex = Mathf.Clamp(index, 0, regions.Count - 1);
+        EnsureValidSelectedRegionSelection();
         RefreshAll();
-        RefreshPanels();
-        SetHint(result.Message);
+
+        var region = regions[selectedRegionIndex];
+        var panel = OpenGameUiPanel(GameUiPanelId.WorldMapRegion, new WorldMapRegionPanelData(this, region.Id));
+        if (panel == null)
+        {
+            SetHint("地域详情面板 prefab 缺失，请先重新生成 WorldMap UI Prefabs。");
+            ShowErrorMessage("地域详情面板 prefab 缺失，请先重新生成 WorldMap UI Prefabs。");
+            return;
+        }
+
+        SetHudContext(GameHubContext.Region);
+        RefreshHudPanel();
+        SetHint("已展开 " + region.DisplayName + " 的全屏情报页。");
     }
 
-    private void SelectSectHall(int index)
+    public void CloseRegionPage()
+    {
+        CloseGameUiPanel(GameUiPanelId.WorldMapRegion);
+        CloseGameUiPanel(GameUiPanelId.WorldMapNpcDialogue);
+        ShowGameUiPanel(GameUiPanelId.WorldMap);
+        SetDetailPanelVisible(false);
+        RefreshAll();
+    }
+
+    public void CraftRecipe(string recipeId)
+    {
+        var result = CraftWorldMapRecipe(currentSlotIndex, saveData, recipeId);
+        RefreshAll();
+        SetHint(result.Message);
+        if (result.Succeeded)
+        {
+            ShowSuccessMessage(result.Message);
+        }
+        else
+        {
+            ShowWarningMessage(result.Message);
+        }
+    }
+
+    public void SelectSectHall(int index)
     {
         selectedSectHallIndex = index;
-        RefreshSectPanel();
+        RefreshOpenPanels();
     }
 
-    private void ExecuteSectAction(string actionId)
+    public void ExecuteSectAction(string actionId)
     {
-        var result = CultivationApp.ExecuteSectAction(currentSlotIndex, saveData, actionId);
+        var result = ExecuteSectAction(currentSlotIndex, saveData, actionId);
         RefreshAll();
-        RefreshPanels();
-        SetHint(result != null ? result.Message : "宗门事务没有返回结果。");
+        var message = result != null ? result.Message : "宗门事务没有返回结果。";
+        SetHint(message);
+        if (result == null)
+        {
+            ShowWarningMessage(message);
+            return;
+        }
+
+        if (result.Succeeded)
+        {
+            ShowSuccessMessage(message);
+        }
+        else
+        {
+            ShowWarningMessage(message);
+        }
     }
 
-    private void UpdateRecipeButton(Button button, string recipeId)
+    public void OpenSettlementDialogue()
     {
-        var label = button != null ? button.GetComponentInChildren<Text>() : null;
-        if (label != null)
+        selectedNpcId = string.Empty;
+        OpenNpcDialoguePanel(NpcSceneType.Settlement, string.Empty, string.Empty);
+    }
+
+    public void OpenSectDialogue()
+    {
+        selectedNpcId = string.Empty;
+        OpenNpcDialoguePanel(NpcSceneType.SectResidence, string.Empty, GetSelectedSectHallId());
+    }
+
+    public void OpenRegionDialogue(string regionId)
+    {
+        selectedNpcId = string.Empty;
+        OpenNpcDialoguePanel(NpcSceneType.Region, regionId, string.Empty);
+    }
+
+    public void SelectNpc(string npcId)
+    {
+        selectedNpcId = npcId ?? string.Empty;
+        RefreshOpenPanels();
+    }
+
+    public void CloseNpcDialogue()
+    {
+        CloseGameUiPanel(GameUiPanelId.WorldMapNpcDialogue);
+    }
+
+    public WorldMapNpcDialogueSnapshot BuildNpcDialogueSnapshot(NpcSceneType sceneType, string regionId, string sectHallId)
+    {
+        return base.BuildNpcDialogueSnapshot(saveData, sceneType, regionId, sectHallId, selectedNpcId);
+    }
+
+    public void ExecuteNpcDialogueChoice(NpcSceneType sceneType, string regionId, string sectHallId, string npcId, string choiceId)
+    {
+        var result = base.ExecuteNpcDialogueChoice(currentSlotIndex, saveData, sceneType, regionId, sectHallId, npcId, choiceId);
+        if (result != null)
         {
-            label.text = WorkshopLibrary.BuildRecipeButtonLabel(saveData, recipeId);
+            selectedNpcId = result.SelectedNpcId;
         }
+
+        RefreshAll();
+        RefreshOpenPanels();
+        var message = result != null ? result.Message : "人物交谈没有返回结果。";
+        SetHint(message);
+        if (result != null && result.Succeeded)
+        {
+            ShowSuccessMessage(message);
+            return;
+        }
+
+        ShowWarningMessage(message);
     }
 
     private bool CanCraft(string recipeId)
     {
         WorkshopRecipeDefinition[] recipes = WorkshopLibrary.GetRecipes();
+        if (recipes == null)
+        {
+            return false;
+        }
+
         for (var i = 0; i < recipes.Length; i++)
         {
-            if (recipes[i].Id != recipeId)
+            if (recipes[i] == null || recipes[i].Id != recipeId)
             {
                 continue;
             }
@@ -164,5 +365,47 @@ public sealed partial class WorldMapController
     private void SetHint(string message)
     {
         hintText.text = "山海录 / " + message;
+    }
+
+    private void CloseFloatingPanels()
+    {
+        SetHubState(false, GameHubContext.WorldMap);
+        SetPlayerCompendiumVisible(false);
+        CloseGameUiPanel(GameUiPanelId.GameHub);
+        CloseGameUiPanel(GameUiPanelId.PlayerCompendium);
+        CloseGameUiPanel(GameUiPanelId.WorldMapRegion);
+        CloseGameUiPanel(GameUiPanelId.WorldMapSettlement);
+        CloseInventory();
+        CloseWorkshop();
+        CloseGameUiPanel(GameUiPanelId.WorldMapSectResidence);
+        CloseGameUiPanel(GameUiPanelId.WorldMapNpcDialogue);
+    }
+
+    private void OpenNpcDialoguePanel(NpcSceneType sceneType, string regionId, string sectHallId)
+    {
+        CloseGameUiPanel(GameUiPanelId.WorldMapInventory);
+        CloseGameUiPanel(GameUiPanelId.WorldMapWorkshop);
+        var panel = OpenGameUiPanel(GameUiPanelId.WorldMapNpcDialogue, new WorldMapNpcDialoguePanelData(this, sceneType, regionId, sectHallId));
+        if (panel == null)
+        {
+            SetHint("人物对话面板 prefab 缺失，请先重新生成 WorldMap UI Prefabs。");
+            ShowErrorMessage("人物对话面板 prefab 缺失，请先重新生成 WorldMap UI Prefabs。");
+            return;
+        }
+
+        RefreshOpenPanels();
+        SetHint("已打开人物交谈界面。");
+    }
+
+    private string GetSelectedSectHallId()
+    {
+        if (sectHallSnapshots == null || sectHallSnapshots.Length == 0)
+        {
+            return string.Empty;
+        }
+
+        var index = Mathf.Clamp(selectedSectHallIndex, 0, sectHallSnapshots.Length - 1);
+        var snapshot = sectHallSnapshots[index];
+        return snapshot != null && snapshot.Definition != null ? snapshot.Definition.Id : string.Empty;
     }
 }
