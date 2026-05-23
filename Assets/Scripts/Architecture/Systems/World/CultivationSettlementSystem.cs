@@ -3,10 +3,12 @@ using QFramework;
 public sealed class CultivationSettlementSystem : AbstractSystem
 {
     private CultivationSaveSystem saveSystem;
+    private CultivationRealmSystem realmSystem;
 
     protected override void OnInit()
     {
         saveSystem = this.GetSystem<CultivationSaveSystem>();
+        realmSystem = this.GetSystem<CultivationRealmSystem>();
     }
 
     public WorldMapActionResult UpgradeProtectiveRelic(int slotIndex, MainMenuSaveData saveData)
@@ -59,7 +61,7 @@ public sealed class CultivationSettlementSystem : AbstractSystem
         }
 
         string summary;
-        if (!WorkshopLibrary.Craft(saveData, recipeId, out summary))
+        if (!WorkshopLibrary.Craft(saveData, recipeId, realmSystem, out summary))
         {
             return new WorldMapActionResult(false, summary);
         }

@@ -57,6 +57,24 @@ public sealed class MainMenuSaveData
     public int settlementBuildCount;
     public string lastSettlementAction;
 
+    // 修仙基础属性（M2 AttributeModel 持久化字段）
+    public int rootBone;        // 根骨：影响气血上限与抗性
+    public int insight;         // 悟性：影响修炼速度与功法学习
+    public int spiritSense;     // 神识：影响命中、暴击与法术抗性
+    public int vitalityStat;    // 气血上限基底（区别于战斗运行时血量）
+    public int manaStat;        // 法力上限基底
+    public int charm;           // 魅力：影响 NPC / 道侣 / 师承
+    public int soulPower;       // 魂力：灵魂强度、附魔能力
+    public int vitalEnergy;     // 精元：生命力、炼器火候
+    public int willpower;       // 意志：心魔抵抗、突破成功率
+    public int dexterity;       // 机巧：手工精细度、绘制能力
+    public int spiritRoot;      // 灵根：五行亲和、灵气吸收（0=凡体,1=伪灵根,2=真灵根,3=天灵根,4=变异灵根）
+
+    // 境界与突破（M1 RealmModel 持久化字段）
+    public bool atBottleneck;   // 当前是否陷入瓶颈
+    public int breakthroughCount; // 历次突破成功次数
+    public int heartDemonMark;  // 心魔印记层数（>0 时有惩罚）
+
     public void EnsureDefaults()
     {
         heroName = heroName ?? string.Empty;
@@ -129,6 +147,21 @@ public sealed class MainMenuSaveData
         {
             bagCapacity = 12;
         }
+
+        if (rootBone < 0) rootBone = 0;
+        if (insight < 0) insight = 0;
+        if (spiritSense < 0) spiritSense = 0;
+        if (vitalityStat < 0) vitalityStat = 0;
+        if (manaStat < 0) manaStat = 0;
+        if (charm < 0) charm = 0;
+        if (soulPower < 0) soulPower = 0;
+        if (vitalEnergy < 0) vitalEnergy = 0;
+        if (willpower < 0) willpower = 0;
+        if (dexterity < 0) dexterity = 0;
+        if (spiritRoot < 0) spiritRoot = 0;
+        if (spiritRoot > 4) spiritRoot = 4;
+        if (breakthroughCount < 0) breakthroughCount = 0;
+        if (heartDemonMark < 0) heartDemonMark = 0;
 
         var regionWasMissing = string.IsNullOrWhiteSpace(currentRegionId);
         if (regionWasMissing)

@@ -30,11 +30,19 @@ public sealed class GameHubView : MonoBehaviour
     public Image inventoryButtonImage;
     public Image settlementButtonImage;
     public Image sectButtonImage;
+    public TextMeshProUGUI mapButtonLabel;
+    public TextMeshProUGUI inventoryButtonLabel;
+    public TextMeshProUGUI settlementButtonLabel;
+    public TextMeshProUGUI sectButtonLabel;
 
-    private static readonly Color NormalButtonColor = new Color(0.2f, 0.18f, 0.14f, 0.94f);
-    private static readonly Color SelectedButtonColor = new Color(0.64f, 0.52f, 0.24f, 0.98f);
-    private static readonly Color DisabledButtonColor = new Color(0.15f, 0.14f, 0.12f, 0.58f);
+    private static readonly Color NormalButtonColor = new Color(0.18f, 0.16f, 0.12f, 0.92f);
+    private static readonly Color SelectedButtonColor = new Color(0.62f, 0.50f, 0.22f, 0.98f);
+    private static readonly Color DisabledButtonColor = new Color(0.13f, 0.12f, 0.10f, 0.55f);
     private static readonly Color PortraitPlaceholderColor = new Color(0.22f, 0.18f, 0.14f, 1f);
+
+    private static readonly Color NormalTextColor = new Color(0.82f, 0.78f, 0.68f, 1f);
+    private static readonly Color SelectedTextColor = new Color(1f, 0.95f, 0.78f, 1f);
+    private static readonly Color DisabledTextColor = new Color(0.45f, 0.42f, 0.38f, 1f);
 
     public void Apply(GameHubSnapshot snapshot, bool canNavigateSettlement, bool canNavigateSect)
     {
@@ -110,10 +118,10 @@ public sealed class GameHubView : MonoBehaviour
             sectButton.interactable = canNavigateSect && snapshot.ShowSectButton && !snapshot.SectSelected;
         }
 
-        ApplyButtonVisual(mapButtonImage, snapshot.MapSelected, mapButton != null && mapButton.interactable);
-        ApplyButtonVisual(inventoryButtonImage, false, inventoryButton != null && inventoryButton.interactable);
-        ApplyButtonVisual(settlementButtonImage, snapshot.SettlementSelected, settlementButton != null && settlementButton.interactable);
-        ApplyButtonVisual(sectButtonImage, snapshot.SectSelected, sectButton != null && sectButton.interactable);
+        ApplyButtonVisual(mapButton, mapButtonImage, mapButtonLabel, "◈", snapshot.MapSelected);
+        ApplyButtonVisual(inventoryButton, inventoryButtonImage, inventoryButtonLabel, "◆", false);
+        ApplyButtonVisual(settlementButton, settlementButtonImage, settlementButtonLabel, "◇", snapshot.SettlementSelected);
+        ApplyButtonVisual(sectButton, sectButtonImage, sectButtonLabel, "◎", snapshot.SectSelected);
     }
 
     private static void ApplyBarFill(Image fillImage, int currentValue, int maxValue)
@@ -126,17 +134,26 @@ public sealed class GameHubView : MonoBehaviour
         fillImage.fillAmount = maxValue <= 0 ? 0f : Mathf.Clamp01(currentValue / (float) maxValue);
     }
 
-    private static void ApplyButtonVisual(Image image, bool selected, bool interactable)
+    private static void ApplyButtonVisual(Button button, Image image, TextMeshProUGUI label, string icon, bool selected)
     {
-        if (image == null)
-        {
-            return;
-        }
+        if (image == null) return;
 
+        var interactable = button != null && button.interactable;
         image.color = !interactable && !selected
             ? DisabledButtonColor
             : selected
                 ? SelectedButtonColor
                 : NormalButtonColor;
+
+        if (label != null)
+        {
+            label.text = icon;
+            label.color = !interactable && !selected
+                ? DisabledTextColor
+                : selected
+                    ? SelectedTextColor
+                    : NormalTextColor;
+            label.fontSize = 22;
+        }
     }
 }

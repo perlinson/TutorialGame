@@ -103,7 +103,26 @@ public sealed class ExpeditionEventDefinition
     public ExpeditionRoomKind[] EligibleRoomKinds;
     public string[] EligibleRegionIds;
     public string RequiredTaskId;
+    public int Priority;
     public int Weight = 1;
     public EventCondition[] Conditions;
     public ExpeditionEventOptionDefinition[] Options;
+
+    public int GetSelectionPriority()
+    {
+        if (Priority != 0)
+        {
+            return Priority;
+        }
+
+        switch (CardType)
+        {
+            case ExpeditionEventCardType.TaskExclusive:
+                return 200;
+            case ExpeditionEventCardType.TaskInjected:
+                return 100;
+            default:
+                return 0;
+        }
+    }
 }

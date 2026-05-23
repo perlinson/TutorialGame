@@ -7,7 +7,7 @@ public static class GeneratedCombatArtBatch
     private const string EnemyOutputDirectory = "Assets/Resources/Generated/Enemies";
     private const string ArenaBackdropOutputDirectory = "Assets/Resources/Generated/ArenaBackdrops";
 
-    [MenuItem("TutorialGame/Generated Art/Generate Combat Resource Batch")]
+    [MenuItem("Cultivation/Generated Art/Generate Combat Resource Batch")]
     public static void GenerateAll()
     {
         EnsureDirectory(EnemyOutputDirectory);

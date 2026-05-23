@@ -12,7 +12,7 @@ public static class WorkshopLibrary
             return recipes;
         }
 
-        var database = GameResource.Load<WorkshopRecipeDatabaseAsset>("Data/WorkshopRecipeDatabase");
+        var database = GameData.LoadAsset<WorkshopRecipeDatabaseAsset>("Data/WorkshopRecipeDatabase");
         if (database != null && database.recipes != null && database.recipes.Length > 0)
         {
             recipes = database.recipes;
@@ -60,7 +60,7 @@ public static class WorkshopLibrary
         return recipe.Title + (CanCraft(saveData, recipe) ? " · 可炼" : " · 缺材");
     }
 
-    public static bool Craft(MainMenuSaveData saveData, string recipeId, out string summary)
+    public static bool Craft(MainMenuSaveData saveData, string recipeId, CultivationRealmSystem realmSystem, out string summary)
     {
         saveData.EnsureDefaults();
         var recipe = GetRecipe(recipeId);
@@ -84,7 +84,6 @@ public static class WorkshopLibrary
             }
         }
 
-        saveData.qi += recipe.RewardQi;
         saveData.spiritCrystals += recipe.RewardCrystals;
         saveData.mainArtifactLevel += recipe.RewardMainArtifactLevel + recipe.RewardAttackLevel;
         saveData.protectiveRelicLevel += recipe.RewardProtectiveRelicLevel + recipe.RewardVitalityLevel;
@@ -94,25 +93,15 @@ public static class WorkshopLibrary
         saveData.attackLevel = saveData.mainArtifactLevel;
         saveData.vitalityLevel = saveData.protectiveRelicLevel;
 
-        var breakthroughs = 0;
-        while (true)
-        {
-            var requiredQi = WorldRegionLibrary.GetQiRequiredForNextRealm(saveData.realmTier);
-            if (requiredQi <= 0 || saveData.qi < requiredQi)
-            {
-                break;
-            }
+        // 使用 RealmSystem.GainQi 处理修为获取和突破
+        var gainResult = realmSystem != null
+            ? realmSystem.GainQi(saveData, recipe.RewardQi, autoBreakthrough: true)
+            : new RealmGainResult(recipe.RewardQi, 0, saveData.realmTier, saveData.realmTier);
 
-            saveData.qi -= requiredQi;
-            saveData.realmTier++;
-            breakthroughs++;
-        }
-
-        saveData.realm = WorldRegionLibrary.GetRealmName(saveData.realmTier);
         summary = "洞府整备完成：" + recipe.Title + "，" + FormatReward(recipe);
-        if (breakthroughs > 0)
+        if (gainResult.HasBreakthrough)
         {
-            summary += "，并借此突破境界 +" + breakthroughs;
+            summary += "，并借此突破境界 +" + gainResult.BreakthroughCount;
         }
 
         summary += "。";

@@ -10,6 +10,8 @@ public sealed class CultivationExpeditionEventSystem : AbstractSystem
     private CultivationStorySystem storySystem;
     private CultivationMindStateSystem mindStateSystem;
     private IGameResourceService resourceService;
+    private ExpeditionEventResolver eventResolver;
+    private ExpeditionEventEffectExecutor effectExecutor;
     private ExpeditionEventDefinition[] cachedEvents;
 
     protected override void OnInit()
@@ -20,6 +22,8 @@ public sealed class CultivationExpeditionEventSystem : AbstractSystem
         storySystem = this.GetSystem<CultivationStorySystem>();
         mindStateSystem = this.GetSystem<CultivationMindStateSystem>();
         resourceService = this.GetUtility<IGameResourceService>();
+        eventResolver = new ExpeditionEventResolver();
+        effectExecutor = ExpeditionEventEffectExecutor.CreateDefault();
     }
 
     public ExpeditionEventCardResult OpenRoomEvent(CombatTurnContext context)
@@ -42,7 +46,14 @@ public sealed class CultivationExpeditionEventSystem : AbstractSystem
             };
         }
 
-        return BuildCardResult(definition, context, taskContext);
+        var card = BuildCardResult(definition, context, taskContext);
+        this.SendEvent(new ExpeditionEventOpenedEvent
+        {
+            EventId = definition.Id,
+            ActiveTaskId = taskContext != null ? taskContext.ActiveTaskId : string.Empty,
+            RoomKind = context.Room.Kind
+        });
+        return card;
     }
 
     public ExpeditionEventOptionResult ResolveEventOption(CombatTurnContext context, string eventId, string optionId)
@@ -164,6 +175,16 @@ public sealed class CultivationExpeditionEventSystem : AbstractSystem
             result.HintMessage = "事件已经处理完毕，可以继续向更深处推进。";
         }
 
+        this.SendEvent(new ExpeditionEventResolvedEvent
+        {
+            EventId = definition.Id,
+            OptionId = option.Id,
+            ActiveTaskId = taskContext != null ? taskContext.ActiveTaskId : string.Empty,
+            RoomKind = context.Room.Kind,
+            RoomResolved = result.RoomResolved,
+            ExpeditionFailed = result.ExpeditionFailed
+        });
+
         return result;
     }
 
@@ -196,40 +217,26 @@ public sealed class CultivationExpeditionEventSystem : AbstractSystem
 
     private ExpeditionEventDefinition PickEventDefinition(CombatTurnContext context, TaskContextSnapshot taskContext)
     {
-        var definitions = GetDefinitions();
-        var candidates = new List<ExpeditionEventDefinition>();
-        var totalWeight = 0;
-        for (var i = 0; i < definitions.Length; i++)
-        {
-            var definition = definitions[i];
-            if (!IsEventEligible(definition, context, taskContext))
-            {
-                continue;
-            }
+        return eventResolver.Resolve(GetDefinitions(), CreateRuntimeContext(context, taskContext), IsEventEligible);
+    }
 
-            candidates.Add(definition);
-            totalWeight += Mathf.Max(1, definition.Weight);
+    private static ExpeditionEventRuntimeContext CreateRuntimeContext(CombatTurnContext context, TaskContextSnapshot taskContext)
+    {
+        return new ExpeditionEventRuntimeContext
+        {
+            CombatContext = context,
+            TaskContext = taskContext
+        };
+    }
+
+    private bool IsEventEligible(ExpeditionEventDefinition definition, ExpeditionEventRuntimeContext runtimeContext)
+    {
+        if (runtimeContext == null)
+        {
+            return false;
         }
 
-        if (candidates.Count == 0)
-        {
-            return null;
-        }
-
-        var seed = context.Room.Seed * 31 + context.CurrentRoomIndex * 17 + SafeHash(taskContext.ActiveTaskId) + context.PendingQiGain * 7 + context.PendingCrystalGain * 13;
-        var randomSource = new System.Random(seed);
-        var roll = randomSource.Next(0, Mathf.Max(1, totalWeight));
-        var accumulated = 0;
-        for (var i = 0; i < candidates.Count; i++)
-        {
-            accumulated += Mathf.Max(1, candidates[i].Weight);
-            if (roll < accumulated)
-            {
-                return candidates[i];
-            }
-        }
-
-        return candidates[0];
+        return IsEventEligible(definition, runtimeContext.CombatContext, runtimeContext.TaskContext);
     }
 
     private bool IsEventEligible(ExpeditionEventDefinition definition, CombatTurnContext context, TaskContextSnapshot taskContext)
@@ -299,68 +306,15 @@ public sealed class CultivationExpeditionEventSystem : AbstractSystem
 
     private void ApplyEffects(EventEffect[] effects, CombatTurnContext context, TaskContextSnapshot taskContext, ExpeditionEventOptionResult result)
     {
-        if (effects == null)
+        effectExecutor.Apply(effects, new ExpeditionEventEffectExecutionContext
         {
-            return;
-        }
-
-        for (var i = 0; i < effects.Length; i++)
-        {
-            var effect = effects[i];
-            if (effect == null)
-            {
-                continue;
-            }
-
-            switch (effect.Type)
-            {
-                case EventEffectType.GainPendingQi:
-                    result.PendingQiGain += effect.IntValue;
-                    break;
-                case EventEffectType.GainPendingCrystals:
-                    result.PendingCrystalGain += effect.IntValue;
-                    break;
-                case EventEffectType.ModifyTorchlight:
-                    result.Torchlight = Mathf.Clamp(result.Torchlight + effect.IntValue, 0, 100);
-                    break;
-                case EventEffectType.ModifySupplies:
-                    result.Supplies = Mathf.Max(0, result.Supplies + effect.IntValue);
-                    break;
-                case EventEffectType.HealHero:
-                    context.Hero.CurrentHealth = Mathf.Min(context.Hero.MaxHealth, context.Hero.CurrentHealth + Mathf.Max(0, effect.IntValue));
-                    break;
-                case EventEffectType.ModifyStress:
-                    ApplyStress(context, result, effect.IntValue);
-                    break;
-                case EventEffectType.ReceiveDamage:
-                    ReceiveDamage(context, result, effect.IntValue);
-                    break;
-                case EventEffectType.AddPendingItem:
-                    rewardSystem.AddPendingItem(context.PendingItemRewards, effect.StringValue, Mathf.Max(1, effect.IntValue));
-                    break;
-                case EventEffectType.AddTaskFlag:
-                    if (taskContext != null && !string.IsNullOrWhiteSpace(taskContext.ActiveTaskId))
-                    {
-                        taskSystem.AddTaskFlag(context.SaveData, taskContext.ActiveTaskId, effect.StringValue);
-                    }
-
-                    break;
-                case EventEffectType.AddTaskProgress:
-                    taskSystem.RecordProgress(context.SaveData, new TaskProgressSignal
-                    {
-                        Type = TaskProgressSignalType.AddProgressToActiveTask,
-                        Count = Mathf.Max(1, effect.IntValue)
-                    });
-                    break;
-            }
-
-            if (context.Hero.CurrentHealth <= 0)
-            {
-                result.ExpeditionFailed = true;
-                result.FailureReason = "远征队在 " + context.Region.DisplayName + " 深处彻底溃散。";
-                return;
-            }
-        }
+            CombatContext = context,
+            TaskContext = taskContext,
+            Result = result,
+            TaskSystem = taskSystem,
+            RewardSystem = rewardSystem,
+            MindStateSystem = mindStateSystem
+        });
     }
 
     private TaskProgressResult ApplyTaskSignals(TaskProgressSignal[] signals, CombatTurnContext context)
@@ -886,73 +840,6 @@ public sealed class CultivationExpeditionEventSystem : AbstractSystem
         };
     }
 
-    private void ApplyStress(CombatTurnContext context, ExpeditionEventOptionResult result, int amount)
-    {
-        var mindResult = mindStateSystem.ApplyStress(context, amount);
-        if (mindResult.ExpeditionFailed)
-        {
-            result.ExpeditionFailed = true;
-            result.FailureReason = mindResult.FailureReason;
-            return;
-        }
-
-        if (!string.IsNullOrWhiteSpace(mindResult.Message) && mindResult.BreakdownTriggered)
-        {
-            result.LogMessage = string.IsNullOrWhiteSpace(result.LogMessage)
-                ? mindResult.Message
-                : result.LogMessage + "\n" + mindResult.Message;
-        }
-    }
-
-    private static void ReceiveDamage(CombatTurnContext context, ExpeditionEventOptionResult result, int amount)
-    {
-        context.Hero.CurrentHealth = Mathf.Max(0, context.Hero.CurrentHealth - Mathf.Max(0, amount));
-        if (context.Hero.CurrentHealth <= 0)
-        {
-            result.ExpeditionFailed = true;
-            result.FailureReason = "远征队在 " + context.Region.DisplayName + " 深处彻底溃散。";
-        }
-    }
-
-    private static void AddPendingItem(List<SaveItemStack> pendingItemRewards, string itemId, int quantity)
-    {
-        if (pendingItemRewards == null || string.IsNullOrWhiteSpace(itemId) || quantity <= 0)
-        {
-            return;
-        }
-
-        for (var i = 0; i < pendingItemRewards.Count; i++)
-        {
-            if (pendingItemRewards[i] != null && pendingItemRewards[i].itemId == itemId)
-            {
-                pendingItemRewards[i].quantity += quantity;
-                return;
-            }
-        }
-
-        pendingItemRewards.Add(new SaveItemStack(itemId, quantity));
-    }
-
-    private static int GetCombinedItemCount(CombatTurnContext context, string itemId)
-    {
-        var count = context.SaveData.GetItemCount(itemId);
-        if (context.PendingItemRewards == null)
-        {
-            return count;
-        }
-
-        for (var i = 0; i < context.PendingItemRewards.Count; i++)
-        {
-            var stack = context.PendingItemRewards[i];
-            if (stack != null && stack.itemId == itemId)
-            {
-                count += Mathf.Max(0, stack.quantity);
-            }
-        }
-
-        return count;
-    }
-
     private static bool MatchesRoomKind(ExpeditionRoomKind[] eligibleKinds, ExpeditionRoomKind roomKind)
     {
         if (eligibleKinds == null || eligibleKinds.Length == 0)
@@ -1015,25 +902,6 @@ public sealed class CultivationExpeditionEventSystem : AbstractSystem
         }
 
         return false;
-    }
-
-    private static int SafeHash(string value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return 0;
-        }
-
-        unchecked
-        {
-            var hash = 17;
-            for (var i = 0; i < value.Length; i++)
-            {
-                hash = hash * 31 + value[i];
-            }
-
-            return hash;
-        }
     }
 
     private static string CombinePrimaryAndNotes(string primary, string notes)

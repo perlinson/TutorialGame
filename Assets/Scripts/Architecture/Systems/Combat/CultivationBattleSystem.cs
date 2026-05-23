@@ -8,6 +8,10 @@ public sealed partial class CultivationBattleSystem : AbstractSystem
     private CultivationRewardSystem rewardSystem;
     private CultivationMindStateSystem mindStateSystem;
     private CultivationEnemyAiSystem enemyAiSystem;
+    private CultivationSkillCastSystem skillCastSystem;
+    private CultivationDamageSystem damageSystem;
+    private CultivationBuffSystem buffSystem;
+    private CultivationRealmSystem realmSystem;
 
     protected override void OnInit()
     {
@@ -17,5 +21,9 @@ public sealed partial class CultivationBattleSystem : AbstractSystem
         rewardSystem = this.GetSystem<CultivationRewardSystem>();
         mindStateSystem = this.GetSystem<CultivationMindStateSystem>();
         enemyAiSystem = this.GetSystem<CultivationEnemyAiSystem>();
+        skillCastSystem = this.GetSystem<CultivationSkillCastSystem>();
+        damageSystem = this.GetSystem<CultivationDamageSystem>();
+        buffSystem = this.GetSystem<CultivationBuffSystem>();
+        realmSystem = this.GetSystem<CultivationRealmSystem>();
     }
 }

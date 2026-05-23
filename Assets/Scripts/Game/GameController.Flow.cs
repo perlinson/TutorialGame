@@ -1,6 +1,6 @@
 using UnityEngine;
-
-public sealed partial class GameController
+using QFramework;
+public sealed partial class GameController : ICanSendEvent
 {
     private void StartCombat(ExpeditionRoomState room)
     {
@@ -98,11 +98,16 @@ public sealed partial class GameController
             return;
         }
 
+        var previousTorchlight = torchlight;
+        var previousSupplies = supplies;
+
         combatRound = result.CombatRound;
         torchlight = result.Torchlight;
         supplies = result.Supplies;
         pendingQiGain = result.PendingQiGain;
         pendingCrystalGain = result.PendingCrystalGain;
+
+        PublishResourceChangeEvents(previousTorchlight, previousSupplies);
 
         RemoveExpiredEnemyStates();
         SyncEnemyActors();
@@ -206,10 +211,15 @@ public sealed partial class GameController
             return;
         }
 
+        var previousTorchlight = torchlight;
+        var previousSupplies = supplies;
+
         torchlight = activeEventResult.Torchlight;
         supplies = activeEventResult.Supplies;
         pendingQiGain = activeEventResult.PendingQiGain;
         pendingCrystalGain = activeEventResult.PendingCrystalGain;
+
+        PublishResourceChangeEvents(previousTorchlight, previousSupplies);
         SyncPlayerHealthVisual();
 
         if (activeEventResult.ExpeditionFailed)
@@ -263,12 +273,17 @@ public sealed partial class GameController
             return;
         }
 
+        var previousTorchlight = torchlight;
+        var previousSupplies = supplies;
+
         currentRoomIndex = result.RoomIndex;
         torchlight = result.Torchlight;
         recenterUsedInCurrentRoom = false;
         logMessage = result.LogMessage;
         SetHint(result.HintMessage);
         ClearEventOverlayState();
+
+        PublishResourceChangeEvents(previousTorchlight, previousSupplies);
 
         if (result.StartCombat)
         {
@@ -327,8 +342,13 @@ public sealed partial class GameController
             return;
         }
 
+        var previousTorchlight = torchlight;
+        var previousSupplies = supplies;
+
         torchlight = result.Torchlight;
         supplies = result.Supplies;
+
+        PublishResourceChangeEvents(previousTorchlight, previousSupplies);
         SyncPlayerHealthVisual();
 
         if (result.ExpeditionFailed)
@@ -382,5 +402,21 @@ public sealed partial class GameController
         {
             view.HideEventOverlay();
         }
+    }
+
+    private void PublishResourceChangeEvents(int previousTorchlight, int previousSupplies)
+    {
+        if (torchlight != previousTorchlight)
+        {
+            this.SendEvent(new ExpeditionTorchlightChangedEvent { PreviousValue = previousTorchlight, NewValue = torchlight });
+        }
+
+        if (supplies != previousSupplies)
+        {
+            this.SendEvent(new ExpeditionSuppliesChangedEvent { PreviousValue = previousSupplies, NewValue = supplies });
+        }
+
+        this.SendEvent(new ExpeditionResourcesChangedEvent { PendingQiGain = pendingQiGain, PendingCrystalGain = pendingCrystalGain });
+        this.SendEvent(new ExpeditionCombatRoundChangedEvent { Round = combatRound });
     }
 }

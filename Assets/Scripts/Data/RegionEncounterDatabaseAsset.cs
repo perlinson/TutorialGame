@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "RegionEncounterDatabase", menuName = "TutorialGame/Data/Region Encounter Database")]
+[CreateAssetMenu(fileName = "RegionEncounterDatabase", menuName = "Cultivation/Data/Region Encounter Database")]
 public sealed class RegionEncounterDatabaseAsset : ScriptableObject
 {
     public Sprite coverImage;

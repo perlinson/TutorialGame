@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "LootTable", menuName = "TutorialGame/Data/Loot Table")]
+[CreateAssetMenu(fileName = "LootTable", menuName = "Cultivation/Data/Loot Table")]
 public sealed class LootTableAsset : ScriptableObject
 {
     public Sprite coverImage;

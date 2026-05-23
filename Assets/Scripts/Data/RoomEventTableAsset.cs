@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "RoomEventTable", menuName = "TutorialGame/Data/Room Event Table")]
+[CreateAssetMenu(fileName = "RoomEventTable", menuName = "Cultivation/Data/Room Event Table")]
 public sealed class RoomEventTableAsset : ScriptableObject
 {
     public Sprite coverImage;

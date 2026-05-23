@@ -56,7 +56,7 @@ public sealed class CultivationExpeditionSystem : AbstractSystem
             }
         }
 
-        if (context.Room.Kind == ExpeditionRoomKind.Battle || context.Room.Kind == ExpeditionRoomKind.Elite || context.Room.Kind == ExpeditionRoomKind.Boss)
+        if (RoomKindStrategyRegistry.IsCombatRoom(context.Room.Kind))
         {
             result.Phase = ExpeditionFlowPhase.CombatPlayerTurn;
             result.StartCombat = true;

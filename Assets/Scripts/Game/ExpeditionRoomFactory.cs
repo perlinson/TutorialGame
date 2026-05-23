@@ -140,28 +140,11 @@ public static class ExpeditionRoomFactory
             }
         }
 
-        switch (room.Kind)
+        var strategy = RoomKindStrategyRegistry.Get(room.Kind);
+        if (strategy != null)
         {
-            case ExpeditionRoomKind.Battle:
-                room.Title = "阴影甬道";
-                room.Description = "甬道里残留着新近踩踏痕迹，若继续前探，多半要与伏兵碰面。";
-                break;
-            case ExpeditionRoomKind.Treasure:
-                room.Title = "散落行囊";
-                room.Description = "破损行囊和散碎残卷躺在角落，像是在引诱后人俯身搜查。";
-                break;
-            case ExpeditionRoomKind.Herb:
-                room.Title = "灵草湿地";
-                room.Description = "潮气从裂缝翻涌而上，这种地方常能长出稳神与疗伤类灵草。";
-                break;
-            case ExpeditionRoomKind.Shrine:
-                room.Title = "残阵祭台";
-                room.Description = "半毁的祭台仍在微弱运转，也许能借其阵势稳定真元。";
-                break;
-            default:
-                room.Title = "隐伏险机";
-                room.Description = "地表纹理异常断裂，脚下很可能埋着旧阵或瘴陷。";
-                break;
+            room.Title = strategy.DefaultTitle;
+            room.Description = strategy.DefaultDescription;
         }
     }
 
@@ -176,8 +159,12 @@ public static class ExpeditionRoomFactory
             return;
         }
 
-        room.Title = "山门外缘";
-        room.Description = "远征队刚踏出山门旧界，需要先重新校正地脉与撤退路径。";
+        var strategy = RoomKindStrategyRegistry.Get(ExpeditionRoomKind.Scout);
+        if (strategy != null)
+        {
+            room.Title = strategy.DefaultTitle;
+            room.Description = strategy.DefaultDescription;
+        }
     }
 
     public static void ApplyEliteCopy(ExpeditionRoomState room)
@@ -191,8 +178,12 @@ public static class ExpeditionRoomFactory
             return;
         }
 
-        room.Title = "险隘关口";
-        room.Description = "狭窄地形迫使队伍正面接战，这里通常盘踞着更难缠的敌手。";
+        var strategy = RoomKindStrategyRegistry.Get(ExpeditionRoomKind.Elite);
+        if (strategy != null)
+        {
+            room.Title = strategy.DefaultTitle;
+            room.Description = strategy.DefaultDescription;
+        }
     }
 
     private static void ApplyBossCopy(ExpeditionRoomState room)
@@ -206,8 +197,12 @@ public static class ExpeditionRoomFactory
             return;
         }
 
-        room.Title = "核心险地";
-        room.Description = "灵压在前方凝成实质，真正的镇守者就潜伏在尽头。";
+        var strategy = RoomKindStrategyRegistry.Get(ExpeditionRoomKind.Boss);
+        if (strategy != null)
+        {
+            room.Title = strategy.DefaultTitle;
+            room.Description = strategy.DefaultDescription;
+        }
     }
 
     private static RoomEventTableAsset GetRoomEventTable()
@@ -222,6 +217,12 @@ public static class ExpeditionRoomFactory
 
     private static void ApplyVisualCopy(ExpeditionRoomState room)
     {
+        if (RoomKindStrategyRegistry.IsCombatRoom(room.Kind))
+        {
+            ApplyRoomCopy(room);
+            return;
+        }
+
         switch (room.Kind)
         {
             case ExpeditionRoomKind.Scout:

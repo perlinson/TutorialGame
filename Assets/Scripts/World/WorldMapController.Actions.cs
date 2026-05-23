@@ -158,6 +158,7 @@ public sealed partial class WorldMapController
         CloseWorkshop();
         CloseGameUiPanel(GameUiPanelId.WorldMapNpcDialogue);
         CloseGameUiPanel(GameUiPanelId.WorldMapSettlement);
+        CloseGameUiPanel(GameUiPanelId.WorldMap);
         CloseRegionPage();
         var panel = OpenGameUiPanel(GameUiPanelId.WorldMapSectResidence, new WorldMapSectResidencePanelData(this));
         if (panel == null)

@@ -6,6 +6,8 @@ public sealed class CultivationSaveSystem : AbstractSystem
     private CultivationArchiveModel archiveModel;
     private CultivationInventoryModel inventoryModel;
     private CultivationPlayerModel playerModel;
+    private CultivationRealmModel realmModel;
+    private CultivationAttributeModel attributeModel;
     private CultivationGameModel gameModel;
     private CultivationTaskBoardModel taskBoardModel;
     private CultivationWorldMapModel worldMapModel;
@@ -15,6 +17,8 @@ public sealed class CultivationSaveSystem : AbstractSystem
         archiveModel = this.GetModel<CultivationArchiveModel>();
         inventoryModel = this.GetModel<CultivationInventoryModel>();
         playerModel = this.GetModel<CultivationPlayerModel>();
+        realmModel = this.GetModel<CultivationRealmModel>();
+        attributeModel = this.GetModel<CultivationAttributeModel>();
         gameModel = this.GetModel<CultivationGameModel>();
         taskBoardModel = this.GetModel<CultivationTaskBoardModel>();
         worldMapModel = this.GetModel<CultivationWorldMapModel>();
@@ -123,6 +127,8 @@ public sealed class CultivationSaveSystem : AbstractSystem
         archiveModel.Apply(slotIndex, syncedCopy);
         inventoryModel.Apply(syncedCopy);
         playerModel.Apply(syncedCopy);
+        realmModel.Apply(syncedCopy);
+        attributeModel.Apply(syncedCopy);
         gameModel.Apply(syncedCopy);
         taskBoardModel.Apply(syncedCopy, boardMessage);
         worldMapModel.Apply(syncedCopy);
@@ -134,6 +140,8 @@ public sealed class CultivationSaveSystem : AbstractSystem
         archiveModel.Clear();
         inventoryModel.Apply(null);
         playerModel.Clear();
+        realmModel.Clear();
+        attributeModel.Clear();
         gameModel.Clear();
         taskBoardModel.Apply(null, string.Empty);
         worldMapModel.Apply(null);

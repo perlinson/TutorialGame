@@ -6,12 +6,18 @@ public sealed class CultivationApp : Architecture<CultivationApp>
     protected override void Init()
     {
         var resourceService = new GameResourceService();
+        var dataService = new GameDataService();
+        var timeService = new GameTimeService();
+        var randomService = new GameRandomService();
         var settingsService = new GameSettingsService();
         var audioService = new GameAudioService();
         var logService = new GameLogService();
         var uiService = new GameUiService();
 
         RegisterUtility<IGameResourceService>(resourceService);
+        RegisterUtility<IGameDataService>(dataService);
+        RegisterUtility<IGameTimeService>(timeService);
+        RegisterUtility<IGameRandomService>(randomService);
         RegisterUtility<IGameSettingsService>(settingsService);
         RegisterUtility<IGameAudioService>(audioService);
         RegisterUtility<IGameLogService>(logService);
@@ -20,12 +26,22 @@ public sealed class CultivationApp : Architecture<CultivationApp>
         RegisterModel(new CultivationArchiveModel());
         RegisterModel(new CultivationInventoryModel());
         RegisterModel(new CultivationPlayerModel());
+        RegisterModel(new CultivationRealmModel());
+        RegisterModel(new CultivationAttributeModel());
+        RegisterModel(new CultivationBranchModel());
+        RegisterModel(new CultivationSchoolModel());
+        RegisterModel(new CultivationDivinePowerModel());
+        RegisterModel(new CultivationStatusModel());
+        RegisterModel(new CultivationSocialModel());
+        RegisterModel(new CultivationSkillModel());
+        RegisterModel(new CultivationCombatStatsModel());
         RegisterModel(new CultivationGameModel());
         RegisterModel(new CultivationTaskBoardModel());
         RegisterModel(new CultivationWorldMapModel());
         RegisterModel(new CultivationExpeditionModel());
         RegisterSystem<ISoundSystem>(new SoundSystem());
         RegisterSystem(new CultivationSaveSystem());
+        RegisterSystem(new CultivationRealmSystem());
         RegisterSystem(new CultivationConditionSystem());
         RegisterSystem(new CultivationStorySystem());
         RegisterSystem(new CultivationMindStateSystem());
@@ -38,9 +54,19 @@ public sealed class CultivationApp : Architecture<CultivationApp>
         RegisterSystem(new CultivationEncounterDirectorSystem());
         RegisterSystem(new CultivationEnemyAiSystem());
         RegisterSystem(new CultivationWorldMapSystem());
+        RegisterSystem(new CultivationDamageSystem());
+        RegisterSystem(new CultivationBuffSystem());
+        RegisterSystem(new CultivationSkillCastSystem());
         RegisterSystem(new CultivationBattleSystem());
+        RegisterSystem(new CultivationBranchSystem());
+        RegisterSystem(new CultivationSchoolSystem());
+        RegisterSystem(new CultivationDivinePowerSystem());
+        RegisterSystem(new CultivationStatusSystem());
         RegisterSystem(new CultivationExpeditionSystem());
         RegisterSystem(new CultivationExpeditionEventSystem());
+
+        // 初始化战斗快照构建器（集成流派和分支系统）
+        CombatSnapshotBuilder.Initialize();
     }
 
     public static void EnsureInitialized()

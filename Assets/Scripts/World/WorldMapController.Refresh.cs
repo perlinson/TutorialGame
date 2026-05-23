@@ -108,13 +108,11 @@ public sealed partial class WorldMapController
             var unlocked = saveData.IsRegionUnlocked(region.Id);
             var cleared = saveData.IsRegionCleared(region.Id);
             var accessible = unlocked && saveData.realmTier >= region.RequiredRealmTier;
-            view.gameObject.SetActive(accessible);
-            if (!accessible)
-            {
-                continue;
-            }
+            // 觅长生风格：所有城镇都显示，仅按状态区分高亮（未解锁灰显但仍可见）
+            view.gameObject.SetActive(true);
 
-            view.Bind(region, hasSelectedRegion && regions[selectedRegionIndex].Id == region.Id, unlocked, accessible, cleared, () => OpenRegionPage(regions.IndexOf(region)));
+            var capturedRegion = region;
+            view.Bind(region, hasSelectedRegion && regions[selectedRegionIndex].Id == region.Id, unlocked, accessible, cleared, () => BeginTravelToRegion(regions.IndexOf(capturedRegion)));
         }
     }
 

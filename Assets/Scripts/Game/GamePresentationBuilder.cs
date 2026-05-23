@@ -747,7 +747,7 @@ public static class GamePresentationBuilder
 
         if (cachedHeroArchetypeDatabase == null)
         {
-            cachedHeroArchetypeDatabase = GameResource.Load<HeroArchetypeDatabaseAsset>("Data/HeroArchetypeDatabase");
+            cachedHeroArchetypeDatabase = GameData.LoadAsset<HeroArchetypeDatabaseAsset>("Data/HeroArchetypeDatabase");
         }
 
         if (cachedHeroArchetypeDatabase == null || cachedHeroArchetypeDatabase.archetypes == null)

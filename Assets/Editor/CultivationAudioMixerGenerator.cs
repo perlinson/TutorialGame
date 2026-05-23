@@ -23,7 +23,7 @@ public static class CultivationAudioMixerGenerator
         new ExposedVolumeBinding { GroupName = "Voice", ParameterName = "VoiceVolume" }
     };
 
-    [MenuItem("Tools/TutorialGame/Regenerate Audio Mixer")]
+    [MenuItem("Tools/Cultivation/Regenerate Audio Mixer")]
     private static void RegenerateMixer()
     {
         EnsureMixerAsset();

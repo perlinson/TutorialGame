@@ -136,7 +136,7 @@ public static class ExpeditionBuildFactory
     {
         if (cachedDatabase == null)
         {
-            cachedDatabase = GameResource.Load<HeroArchetypeDatabaseAsset>("Data/HeroArchetypeDatabase");
+            cachedDatabase = GameData.LoadAsset<HeroArchetypeDatabaseAsset>("Data/HeroArchetypeDatabase");
         }
 
         return cachedDatabase;

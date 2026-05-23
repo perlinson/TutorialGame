@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using QFramework;
 
 public sealed class WorkshopLibraryEditModeTests
 {
@@ -40,7 +41,12 @@ public sealed class WorkshopLibraryEditModeTests
         };
         saveData.EnsureDefaults();
 
-        var crafted = WorkshopLibrary.Craft(saveData, "pill_cauldron_upgrade", out var summary);
+        var realmSystem = new CultivationRealmSystem();
+        var architecture = new TestArchitecture();
+        architecture.RegisterSystem(realmSystem);
+        architecture.InternalInit();
+
+        var crafted = WorkshopLibrary.Craft(saveData, "pill_cauldron_upgrade", realmSystem, out var summary);
 
         Assert.That(crafted, Is.True);
         Assert.That(saveData.pillCauldronLevel, Is.EqualTo(1));
@@ -69,11 +75,28 @@ public sealed class WorkshopLibraryEditModeTests
         };
         saveData.EnsureDefaults();
 
-        var crafted = WorkshopLibrary.Craft(saveData, "peiyuan_powder", out _);
+        var realmSystem = new CultivationRealmSystem();
+        var architecture = new TestArchitecture();
+        architecture.RegisterSystem(realmSystem);
+        architecture.InternalInit();
+
+        var crafted = WorkshopLibrary.Craft(saveData, "peiyuan_powder", realmSystem, out _);
 
         Assert.That(crafted, Is.True);
         Assert.That(saveData.realmTier, Is.EqualTo(1));
         Assert.That(saveData.qi, Is.EqualTo(0));
         Assert.That(saveData.realm, Is.EqualTo(WorldRegionLibrary.GetRealmName(1)));
+    }
+
+    private class TestArchitecture : Architecture<TestArchitecture>
+    {
+        public void InternalInit()
+        {
+            Init();
+        }
+
+        protected override void Init()
+        {
+        }
     }
 }

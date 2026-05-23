@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "InventoryDatabase", menuName = "TutorialGame/Data/Inventory Database")]
+[CreateAssetMenu(fileName = "InventoryDatabase", menuName = "Cultivation/Data/Inventory Database")]
 public sealed class InventoryDatabaseAsset : ScriptableObject
 {
     public Sprite coverImage;

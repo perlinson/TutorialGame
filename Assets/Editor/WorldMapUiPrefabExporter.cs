@@ -3,7 +3,7 @@ using UnityEditor;
 
 public static class WorldMapUiPrefabExporter
 {
-    [MenuItem("TutorialGame/UI/Export WorldMap Prefabs")]
+    [MenuItem("Cultivation/UI/Export WorldMap Prefabs")]
     public static void ExportWorldMapPrefabs()
     {
         UiPrefabGenerationUtility.GenerateWorldMapPrefabs();

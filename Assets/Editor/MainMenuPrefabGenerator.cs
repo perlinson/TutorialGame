@@ -23,7 +23,7 @@ public static class MainMenuPrefabGenerator
     private const string SaveSlotPanelArtPath = "Assets/GameArt/UI/Panels/panel_save_slot_ink.png";
     private const string ArchetypeCardPanelArtPath = "Assets/GameArt/UI/Panels/panel_archetype_card_ink.png";
 
-    [MenuItem("Tools/TutorialGame/Regenerate Main Menu Prefabs")]
+    [MenuItem("Tools/Cultivation/Regenerate Main Menu Prefabs")]
     public static void RegeneratePrefabs()
     {
         EnsurePrefabAssets(true);

@@ -398,7 +398,7 @@ public sealed class ExpeditionView : CultivationUIPanel
         }
     }
 
-    private void OnDestroy()
+    private new void OnDestroy()
     {
         SetMusicDuck(OverlayMusicDuckReason, false);
     }

@@ -12,6 +12,8 @@ public static class WorldMapPrefabExportBuilder
     private const string RegionNodeArtPath = "Assets/GameArt/UI/Buttons/ui_node_region_ink.png";
     private const string PrimaryButtonArtPath = "Assets/GameArt/UI/Buttons/ui_btn_primary_gold.png";
     private const string SecondaryButtonArtPath = "Assets/GameArt/UI/Buttons/ui_btn_secondary_jade.png";
+    private const string GameHubPanelPrefabPath = "Assets/Resources/UI/Game/GameHubPanel.prefab";
+    private const string WorldMapRegionPanelPrefabPath = "Assets/Resources/UI/WorldMap/WorldMapRegionPanel.prefab";
     private static readonly Color AccentGold = new Color(0.68f, 0.57f, 0.3f, 0.92f);
     private static readonly Color PaperDark = new Color(0.08f, 0.1f, 0.12f, 0.84f);
     private static readonly Color PaperMid = new Color(0.09f, 0.1f, 0.11f, 0.94f);
@@ -156,6 +158,12 @@ public static class WorldMapPrefabExportBuilder
 
     public static GameHubPanel BuildHudPanelExport()
     {
+        var existingPanel = ClonePrefabAsset<GameHubPanel>(GameHubPanelPrefabPath, "GameHubPanel");
+        if (existingPanel != null)
+        {
+            return existingPanel;
+        }
+
         var root = CreateUiObject("GameHubPanel", null);
         root.layer = 5;
         Stretch(root.GetComponent<RectTransform>());
@@ -618,6 +626,12 @@ public static class WorldMapPrefabExportBuilder
 
     public static WorldMapRegionPanel BuildRegionPanelExport()
     {
+        var existingPanel = ClonePrefabAsset<WorldMapRegionPanel>(WorldMapRegionPanelPrefabPath, "WorldMapRegionPanel");
+        if (existingPanel != null)
+        {
+            return existingPanel;
+        }
+
         var root = CreateUiObject("WorldMapRegionPanel", null);
         root.layer = 5;
         Stretch(root.GetComponent<RectTransform>());
@@ -684,6 +698,31 @@ public static class WorldMapPrefabExportBuilder
         panel.previewLabelText = previewLabel;
         panel.windowRect = window;
         return panel;
+    }
+
+    private static T ClonePrefabAsset<T>(string assetPath, string expectedName) where T : Component
+    {
+        var prefabAsset = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
+        if (prefabAsset == null)
+        {
+            return null;
+        }
+
+        var instance = PrefabUtility.InstantiatePrefab(prefabAsset) as GameObject;
+        if (instance == null)
+        {
+            return null;
+        }
+
+        instance.name = expectedName;
+        var component = instance.GetComponent<T>();
+        if (component != null)
+        {
+            return component;
+        }
+
+        Object.DestroyImmediate(instance);
+        return null;
     }
 
     private static GameHubView CreateWorldMapHud(string name, Transform parent, Vector2 anchoredPosition)
@@ -777,6 +816,10 @@ public static class WorldMapPrefabExportBuilder
         view.inventoryButtonImage = inventoryButton.GetComponent<Image>();
         view.settlementButtonImage = settlementButton.GetComponent<Image>();
         view.sectButtonImage = sectButton.GetComponent<Image>();
+        view.mapButtonLabel = mapButton.GetComponentInChildren<TextMeshProUGUI>(true);
+        view.inventoryButtonLabel = inventoryButton.GetComponentInChildren<TextMeshProUGUI>(true);
+        view.settlementButtonLabel = settlementButton.GetComponentInChildren<TextMeshProUGUI>(true);
+        view.sectButtonLabel = sectButton.GetComponentInChildren<TextMeshProUGUI>(true);
         return view;
     }
 

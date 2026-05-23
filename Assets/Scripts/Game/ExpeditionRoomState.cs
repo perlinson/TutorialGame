@@ -27,25 +27,8 @@ public sealed class ExpeditionRoomState
     {
         get
         {
-            switch (Kind)
-            {
-                case ExpeditionRoomKind.Scout:
-                    return "途";
-                case ExpeditionRoomKind.Battle:
-                    return "战";
-                case ExpeditionRoomKind.Elite:
-                    return "险";
-                case ExpeditionRoomKind.Treasure:
-                    return "宝";
-                case ExpeditionRoomKind.Herb:
-                    return "药";
-                case ExpeditionRoomKind.Shrine:
-                    return "祭";
-                case ExpeditionRoomKind.Trap:
-                    return "陷";
-                default:
-                    return "王";
-            }
+            var strategy = RoomKindStrategyRegistry.Get(Kind);
+            return strategy != null ? strategy.Symbol : "?";
         }
     }
 }

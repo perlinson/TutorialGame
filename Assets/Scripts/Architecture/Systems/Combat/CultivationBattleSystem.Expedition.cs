@@ -165,6 +165,7 @@ public sealed partial class CultivationBattleSystem
             region,
             totalQi + region.ClearQiReward,
             totalCrystals + region.ClearCrystalReward,
+            realmSystem,
             out var breakthroughs,
             out var unlockedRegions);
         saveSystem.SaveArchive(slotIndex, saveData);

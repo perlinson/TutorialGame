@@ -165,7 +165,7 @@ public sealed class TutorialGameDataHubWindow : EditorWindow
         "Assets/Resources/Data"
     };
 
-    [MenuItem("Tools/TutorialGame/Open Data Hub")]
+    [MenuItem("Tools/Cultivation/Open Data Hub")]
     private static void OpenWindow()
     {
         var window = GetWindow<TutorialGameDataHubWindow>("Data Hub");

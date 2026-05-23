@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "EnemyArchetypeDatabase", menuName = "TutorialGame/Data/Enemy Archetype Database")]
+[CreateAssetMenu(fileName = "EnemyArchetypeDatabase", menuName = "Cultivation/Data/Enemy Archetype Database")]
 public sealed class EnemyArchetypeDatabaseAsset : ScriptableObject
 {
     public Sprite coverImage;

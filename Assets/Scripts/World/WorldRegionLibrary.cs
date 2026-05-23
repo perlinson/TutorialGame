@@ -109,10 +109,9 @@ public static class WorldRegionLibrary
         return true;
     }
 
-    public static void ApplyTrialRewards(MainMenuSaveData saveData, WorldRegionDefinition region, int qiGain, int crystalGain, out int breakthroughs, out string unlockedRegions)
+    public static void ApplyTrialRewards(MainMenuSaveData saveData, WorldRegionDefinition region, int qiGain, int crystalGain, CultivationRealmSystem realmSystem, out int breakthroughs, out string unlockedRegions)
     {
         saveData.EnsureDefaults();
-        saveData.qi += Mathf.Max(0, qiGain);
         saveData.spiritCrystals += Mathf.Max(0, crystalGain);
         saveData.MarkRegionCleared(region.Id);
         saveData.UnlockRegion(region.Id);
@@ -128,22 +127,13 @@ public static class WorldRegionLibrary
             }
         }
 
-        breakthroughs = 0;
-        while (true)
-        {
-            var requiredQi = GetQiRequiredForNextRealm(saveData.realmTier);
-            if (requiredQi <= 0 || saveData.qi < requiredQi)
-            {
-                break;
-            }
-
-            saveData.qi -= requiredQi;
-            saveData.realmTier = Mathf.Min(saveData.realmTier + 1, GetMaxRealmTier());
-            breakthroughs++;
-        }
+        // 使用 RealmSystem.GainQi 处理修为获取和突破
+        var gainResult = realmSystem != null
+            ? realmSystem.GainQi(saveData, qiGain, autoBreakthrough: true)
+            : new RealmGainResult(qiGain, 0, saveData.realmTier, saveData.realmTier);
+        breakthroughs = gainResult.BreakthroughCount;
 
         saveData.currentRegionId = region.UnlockRegionIds.Length > 0 ? region.UnlockRegionIds[0] : region.Id;
-        saveData.realm = GetRealmName(saveData.realmTier);
         saveData.location = region.DisplayName;
         saveData.lastPlayed = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
         unlockedRegions = newRegions.Count > 0 ? string.Join("、", newRegions.ToArray()) : string.Empty;
@@ -176,7 +166,7 @@ public static class WorldRegionLibrary
         }
 
         regions = new List<WorldRegionDefinition>();
-        var database = GameResource.Load<WorldRegionDatabaseAsset>("Data/WorldRegionDatabase");
+        var database = GameData.LoadAsset<WorldRegionDatabaseAsset>("Data/WorldRegionDatabase");
         if (database != null)
         {
             if (database.regions != null && database.regions.Length > 0)

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "WorldRegionDatabase", menuName = "TutorialGame/Data/World Region Database")]
+[CreateAssetMenu(fileName = "WorldRegionDatabase", menuName = "Cultivation/Data/World Region Database")]
 public sealed class WorldRegionDatabaseAsset : ScriptableObject
 {
     public Sprite coverImage;

@@ -169,21 +169,7 @@ public static class ExpeditionLootFactory
             return record.herbItemId;
         }
 
-        switch (regionId)
-        {
-            case "misty_forest":
-                return "mist_mushroom";
-            case "crimson_valley":
-                return "flame_jujube";
-            case "deep_springs":
-                return "cold_marrow_algae";
-            case "northern_pass":
-                return "north_iron";
-            case "celestial_ruins":
-                return "starfall_crystal";
-            default:
-                return "green_spirit_sand";
-        }
+        return GetRegionalHerbFallback(regionId);
     }
 
     private static void AddDrops(List<SaveItemStack> loot, LootDropRecord[] drops, bool useElite)
@@ -206,50 +192,19 @@ public static class ExpeditionLootFactory
 
     private static void ApplyFallbackFactionLoot(List<SaveItemStack> loot, ExpeditionEnemyState enemy)
     {
-        switch (enemy.Faction)
+        var strategy = FactionStrategyRegistry.Get(enemy.Faction);
+        if (strategy != null)
         {
-            case ExpeditionEnemyFaction.Bandit:
-                AddLoot(loot, "green_spirit_sand", 1);
-                AddLoot(loot, "bandit_route_token", enemy.IsElite ? 1 : 0);
-                break;
-            case ExpeditionEnemyFaction.Cultivator:
-                AddLoot(loot, "blood_talisman_page", 1);
-                AddLoot(loot, "evil_cult_notes", enemy.IsElite ? 1 : 0);
-                break;
-            case ExpeditionEnemyFaction.Beast:
-                AddLoot(loot, "beast_core_shard", 1);
-                AddLoot(loot, "beast_bone", enemy.IsElite ? 2 : 1);
-                break;
-            case ExpeditionEnemyFaction.HeartDemon:
-                AddLoot(loot, "heart_mark_fragment", enemy.IsElite ? 2 : 1);
-                break;
-            default:
-                AddLoot(loot, "yin_bone", enemy.IsElite ? 2 : 1);
-                AddLoot(loot, "corpse_core", enemy.IsElite ? 1 : 0);
-                break;
+            strategy.ApplyFallbackLoot(loot, enemy.IsElite);
         }
     }
 
     private static void ApplyFallbackRoomLoot(List<SaveItemStack> loot, string regionId, ExpeditionRoomKind roomKind)
     {
-        switch (roomKind)
+        var strategy = RoomKindStrategyRegistry.Get(roomKind);
+        if (strategy != null)
         {
-            case ExpeditionRoomKind.Treasure:
-                AddLoot(loot, "array_shard", 1);
-                AddLoot(loot, InventoryLibrary.GetRegionalRareItemId(regionId), 1);
-                break;
-            case ExpeditionRoomKind.Herb:
-                AddLoot(loot, GetRegionalHerb(null, regionId), 1);
-                break;
-            case ExpeditionRoomKind.Shrine:
-                AddLoot(loot, "mind_cleansing_incense", 1);
-                break;
-            case ExpeditionRoomKind.Trap:
-                AddLoot(loot, "array_shard", 1);
-                break;
-            case ExpeditionRoomKind.Scout:
-                AddLoot(loot, "green_spirit_sand", 1);
-                break;
+            strategy.ApplyFallbackLoot(loot, regionId);
         }
     }
 
@@ -284,7 +239,7 @@ public static class ExpeditionLootFactory
         loot.Add(new SaveItemStack(itemId, quantity));
     }
 
-    private static string GetRegionalHerb(string regionId)
+    public static string GetRegionalHerbFallback(string regionId)
     {
         switch (regionId)
         {

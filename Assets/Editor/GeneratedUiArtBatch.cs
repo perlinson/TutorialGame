@@ -34,7 +34,7 @@ public static class GeneratedUiArtBatch
         Counter
     }
 
-    [MenuItem("TutorialGame/Generated Art/Generate UI Icon Batch")]
+    [MenuItem("Cultivation/Generated Art/Generate UI Icon Batch")]
     public static void GenerateAll()
     {
         EnsureDirectory(ItemOutputDirectory);

@@ -8,6 +8,7 @@ public sealed partial class WorldMapController : CultivationUIPanel, IGameHubNav
 {
     private static readonly Vector2 MapContentDesignSize = new Vector2(1920f, 1080f);
     private static readonly Vector2 CompactActionButtonSize = new Vector2(72f, 72f);
+    private static readonly Vector2 ScrollableMapSize = new Vector2(1920f, 2160f); // 地图高度翻倍，支持滚动
 
     public Text titleText;
     public Text heroSummaryText;
@@ -32,6 +33,8 @@ public sealed partial class WorldMapController : CultivationUIPanel, IGameHubNav
     public Button returnButton;
 
     public GameObject mapScreen;
+    public RectTransform mapScrollContent; // 可滚动的地图内容
+    public Image characterIcon; // 人物图标
 
     private readonly List<WorldRegionDefinition> regions = new List<WorldRegionDefinition>();
     private readonly List<WorldRegionNodeView> nodeViews = new List<WorldRegionNodeView>();
@@ -60,4 +63,14 @@ public sealed partial class WorldMapController : CultivationUIPanel, IGameHubNav
     private Vector2 detailPanelHiddenPosition;
     private MainMenuSaveData saveData;
     private SectHallSnapshot[] sectHallSnapshots = new SectHallSnapshot[0];
+
+    // 地图滚动相关
+    private Vector2 mapScrollPosition;
+    private Vector2 targetMapScrollPosition;
+    private float scrollSpeed = 800f;
+    private bool isDraggingMap;
+    private Vector2 lastMousePosition;
+    private Vector2 characterTargetPosition;
+    private float characterMoveSpeed = 600f;
+    private bool isCharacterMoving;
 }

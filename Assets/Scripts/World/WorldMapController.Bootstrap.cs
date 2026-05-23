@@ -42,6 +42,7 @@ public sealed partial class WorldMapController
         EnsureValidSelectedRegionSelection();
         SetHudContext(GameHubContext.WorldMap);
         EnsureHudPanel();
+        EnsureNavigationInitialized();
         RefreshAll();
         RefreshResponsiveLayout(true);
 
@@ -81,6 +82,7 @@ public sealed partial class WorldMapController
     {
         RefreshResponsiveLayout(false);
         UpdateDetailPanelTransition(Time.unscaledDeltaTime);
+        UpdateNavigation(Time.unscaledDeltaTime);
         if (Input.GetKeyDown(KeyCode.Escape) && !HasBlockingPanelOpen())
         {
             ReturnToMain();
@@ -137,7 +139,7 @@ public sealed partial class WorldMapController
                 if (regions[regionIndex].Id == view.RegionId)
                 {
                     var capturedIndex = regionIndex;
-                    BindButton(view.button, () => OpenRegionPage(capturedIndex));
+                    BindButton(view.button, () => BeginTravelToRegion(capturedIndex));
                     break;
                 }
             }
@@ -278,18 +280,6 @@ public sealed partial class WorldMapController
         SetObjectVisible(bagButton, false);
         SetObjectVisible(workshopButton, false);
 
-        if (mapFieldRect != null)
-        {
-            for (var i = 0; i < mapFieldRect.childCount; i++)
-            {
-                var child = mapFieldRect.GetChild(i);
-                if (child != null && child.name.StartsWith("Path"))
-                {
-                    child.gameObject.SetActive(false);
-                }
-            }
-        }
-
         ConfigureCompactActionButton(returnButton, new Vector2(-66f, -44f), "返");
 
         if (sectResidenceButton != null)
@@ -302,6 +292,12 @@ public sealed partial class WorldMapController
 
     private void RefreshCompactMapLayout()
     {
+        if (navigationInitialized)
+        {
+            // 觅长生风格大地图布局由 EnsureNavigationInitialized 负责，不再覆盖。
+            return;
+        }
+
         if (mapPanelRect != null)
         {
             mapPanelRect.anchorMin = new Vector2(0f, 1f);

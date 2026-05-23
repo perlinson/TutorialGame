@@ -1,0 +1,16 @@
+{
+  "entries": [
+    {"attacker": 1, "defender": 2, "multiplierPercent": 200},
+    {"attacker": 2, "defender": 3, "multiplierPercent": 200},
+    {"attacker": 3, "defender": 4, "multiplierPercent": 200},
+    {"attacker": 4, "defender": 5, "multiplierPercent": 200},
+    {"attacker": 5, "defender": 1, "multiplierPercent": 200},
+    {"attacker": 6, "defender": 7, "multiplierPercent": 175},
+    {"attacker": 7, "defender": 6, "multiplierPercent": 175},
+    {"attacker": 8, "defender": 4, "multiplierPercent": 200},
+    {"attacker": 9, "defender": 2, "multiplierPercent": 175},
+    {"attacker": 5, "defender": 9, "multiplierPercent": 200},
+    {"attacker": 10, "defender": 2, "multiplierPercent": 175},
+    {"attacker": 10, "defender": 1, "multiplierPercent": 50}
+  ]
+}

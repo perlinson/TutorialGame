@@ -67,7 +67,9 @@ public sealed partial class GameController
             return;
         }
 
+        var previousPhase = phase;
         flowStateMachine.ChangeState(nextPhase);
+        this.SendEvent(new ExpeditionPhaseChangedEvent { PreviousPhase = previousPhase, NewPhase = nextPhase });
     }
 
     private void EnterRoomDecisionState()

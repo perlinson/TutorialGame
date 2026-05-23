@@ -104,26 +104,10 @@ public sealed partial class GameController
             return;
         }
 
-        switch (room.Kind)
+        var strategy = RoomKindStrategyRegistry.Get(room.Kind);
+        if (strategy != null)
         {
-            case ExpeditionRoomKind.Scout:
-                SpawnSpiritNodes(Mathf.Clamp(1 + region.DangerRank / 2, 1, 3), Mathf.Max(1, 1 + region.RequiredRealmTier / 2), randomSource);
-                break;
-            case ExpeditionRoomKind.Treasure:
-                SpawnRelics(1 + region.DangerRank / 3, 1 + region.RequiredRealmTier, randomSource);
-                GameArenaBuilder.CreateDecor(arenaRoomContentRoot, "TreasurePile", new Vector2(2.4f, -0.8f), new Vector2(1.1f, 0.8f), new Color(0.52f, 0.4f, 0.18f, 0.72f), -6);
-                break;
-            case ExpeditionRoomKind.Herb:
-                SpawnHerbs(Mathf.Clamp(1 + region.HerbCount / 3, 1, 3), 1 + region.RequiredRealmTier, 1 + region.RequiredRealmTier, randomSource);
-                break;
-            case ExpeditionRoomKind.Shrine:
-                SpawnSpiritNodes(1, 2 + region.RequiredRealmTier / 2, randomSource);
-                GameArenaBuilder.CreateDecor(arenaRoomContentRoot, "ShrineCore", new Vector2(0f, 1.4f), new Vector2(1.2f, 1.6f), new Color(region.AccentColor.r, region.AccentColor.g, region.AccentColor.b, 0.4f), -6);
-                break;
-            case ExpeditionRoomKind.Trap:
-                GameArenaBuilder.CreateDecor(arenaRoomContentRoot, "TrapShardA", new Vector2(-1.8f, -0.8f), new Vector2(0.45f, 1.35f), new Color(0.58f, 0.22f, 0.18f, 0.76f), -6);
-                GameArenaBuilder.CreateDecor(arenaRoomContentRoot, "TrapShardB", new Vector2(1.5f, 0.2f), new Vector2(0.36f, 1f), new Color(0.58f, 0.22f, 0.18f, 0.76f), -6);
-                break;
+            strategy.SpawnEventActors(arenaRoomContentRoot.gameObject, room, region, randomSource, this);
         }
     }
 
@@ -185,19 +169,8 @@ public sealed partial class GameController
 
     private Color GetFactionColor(ExpeditionEnemyFaction faction)
     {
-        switch (faction)
-        {
-            case ExpeditionEnemyFaction.Bandit:
-                return new Color(0.46f, 0.34f, 0.24f, 1f);
-            case ExpeditionEnemyFaction.Cultivator:
-                return new Color(0.54f, 0.16f, 0.2f, 1f);
-            case ExpeditionEnemyFaction.Beast:
-                return new Color(0.22f, 0.42f, 0.2f, 1f);
-            case ExpeditionEnemyFaction.HeartDemon:
-                return new Color(0.42f, 0.2f, 0.46f, 1f);
-            default:
-                return new Color(0.36f, 0.4f, 0.42f, 1f);
-        }
+        var strategy = FactionStrategyRegistry.Get(faction);
+        return strategy != null ? strategy.FactionColor : new Color(0.36f, 0.4f, 0.42f, 1f);
     }
 
     private void RemoveExpiredEnemyStates()
@@ -393,5 +366,35 @@ public sealed partial class GameController
         {
             combatHitStop.Trigger(heavy ? 0.06f : 0.035f, enemyHit ? 0.08f : 0.12f);
         }
+    }
+
+    public void SpawnSpiritNodeAt(Vector2 position, int qiAmount)
+    {
+        if (arenaRoomContentRoot == null) return;
+        var node = GameArenaBuilder.CreateSpiritNode(arenaRoomContentRoot, position, Color.Lerp(region.AccentColor, Color.white, 0.38f));
+        node.Configure(this, qiAmount);
+        SpawnSpawnEffect(new Vector3(position.x, position.y + 0.24f, 0f), 1f);
+    }
+
+    public void SpawnHerbAt(Vector2 position, int healAmount, int qiAmount)
+    {
+        if (arenaRoomContentRoot == null) return;
+        var herb = GameArenaBuilder.CreateSpiritHerb(arenaRoomContentRoot, position, Color.Lerp(region.InnerGroundColor, Color.green, 0.45f));
+        herb.Configure(this, healAmount, qiAmount);
+        SpawnSpawnEffect(new Vector3(position.x, position.y + 0.24f, 0f), 1f);
+    }
+
+    public void SpawnRelicAt(Vector2 position, int crystalAmount)
+    {
+        if (arenaRoomContentRoot == null) return;
+        var relic = GameArenaBuilder.CreateRelic(arenaRoomContentRoot, position, Color.Lerp(region.AccentColor, new Color(0.92f, 0.82f, 0.55f, 1f), 0.42f));
+        relic.Configure(this, crystalAmount);
+        SpawnSpawnEffect(new Vector3(position.x, position.y + 0.24f, 0f), 1f);
+    }
+
+    public void CreateArenaDecor(string name, Vector2 position, Vector2 size, Color color, int sortingOrder)
+    {
+        if (arenaRoomContentRoot == null) return;
+        GameArenaBuilder.CreateDecor(arenaRoomContentRoot, name, position, size, color, sortingOrder);
     }
 }

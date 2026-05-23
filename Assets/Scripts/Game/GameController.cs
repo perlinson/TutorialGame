@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-
-public sealed partial class GameController : CultivationController
+using QFramework;
+public sealed partial class GameController : CultivationController, ICanSendEvent
 {
     private sealed class EnemyActorBinding
     {
@@ -253,6 +253,8 @@ public sealed partial class GameController : CultivationController
 
         hero.MaxHealth = Mathf.Max(hero.MaxHealth, maxHp);
         hero.CurrentHealth = Mathf.Clamp(currentHp, 0, hero.MaxHealth);
+        this.SendEvent(new ExpeditionHeroHealthChangedEvent { CurrentHealth = hero.CurrentHealth, MaxHealth = hero.MaxHealth });
+
         if (hero.CurrentHealth <= 0 && phase != ExpeditionFlowPhase.Failed && phase != ExpeditionFlowPhase.Completed && phase != ExpeditionFlowPhase.Retreated)
         {
             FailExpedition("远征队在 " + region.DisplayName + " 深处彻底溃散。");
@@ -598,12 +600,14 @@ public sealed partial class GameController : CultivationController
     private void HealHero(int amount)
     {
         hero.CurrentHealth = Mathf.Min(hero.MaxHealth, hero.CurrentHealth + Mathf.Max(0, amount));
+        this.SendEvent(new ExpeditionHeroHealthChangedEvent { CurrentHealth = hero.CurrentHealth, MaxHealth = hero.MaxHealth });
         SyncPlayerHealthVisual();
     }
 
     private void ReceiveDamage(int amount)
     {
         hero.CurrentHealth = Mathf.Max(0, hero.CurrentHealth - Mathf.Max(0, amount));
+        this.SendEvent(new ExpeditionHeroHealthChangedEvent { CurrentHealth = hero.CurrentHealth, MaxHealth = hero.MaxHealth });
         SyncPlayerHealthVisual();
         if (hero.CurrentHealth <= 0 && livePlayer == null)
         {

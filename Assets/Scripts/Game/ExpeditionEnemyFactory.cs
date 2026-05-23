@@ -244,7 +244,7 @@ public static class ExpeditionEnemyFactory
     {
         if (cachedEnemyDatabase == null)
         {
-            cachedEnemyDatabase = GameResource.Load<EnemyArchetypeDatabaseAsset>("Data/EnemyArchetypeDatabase");
+            cachedEnemyDatabase = GameData.LoadAsset<EnemyArchetypeDatabaseAsset>("Data/EnemyArchetypeDatabase");
         }
 
         return cachedEnemyDatabase;
@@ -254,7 +254,7 @@ public static class ExpeditionEnemyFactory
     {
         if (cachedEncounterDatabase == null)
         {
-            cachedEncounterDatabase = GameResource.Load<RegionEncounterDatabaseAsset>("Data/RegionEncounterDatabase");
+            cachedEncounterDatabase = GameData.LoadAsset<RegionEncounterDatabaseAsset>("Data/RegionEncounterDatabase");
         }
 
         return cachedEncounterDatabase;
@@ -283,6 +283,11 @@ public static class ExpeditionEnemyFactory
             }
         }
 
+        return GetRegionFactionsFallback(regionId);
+    }
+
+    private static ExpeditionEnemyFaction[] GetRegionFactionsFallback(string regionId)
+    {
         switch (regionId)
         {
             case "misty_forest":
@@ -314,43 +319,17 @@ public static class ExpeditionEnemyFactory
         out string name,
         out string techniqueName)
     {
-        switch (faction)
+        var strategy = FactionStrategyRegistry.Get(faction);
+        if (strategy != null)
         {
-            case ExpeditionEnemyFaction.Bandit:
-                name = isElite ? "悍匪头目" : index % 2 == 0 ? "山贼刀手" : "黑风弩匪";
-                techniqueName = "掷灰夺灯";
-                maxHealth -= 1;
-                stressDamage = System.Math.Max(2, stressDamage - 2);
-                armor = 0;
-                break;
-            case ExpeditionEnemyFaction.Cultivator:
-                name = isElite ? "魔焰祭使" : index % 2 == 0 ? "夺灵邪修" : "血符散修";
-                techniqueName = "邪诀侵神";
-                poisonResistance = 1;
-                armor += 1;
-                break;
-            case ExpeditionEnemyFaction.Beast:
-                name = isElite ? "山魈头领" : index % 2 == 0 ? "裂爪妖狼" : "沼鳞蜥妖";
-                techniqueName = "扑杀撕咬";
-                damage += 1;
-                stressDamage = System.Math.Max(2, stressDamage - 1);
-                poisonResistance = 1;
-                break;
-            case ExpeditionEnemyFaction.HeartDemon:
-                name = roomKind == ExpeditionRoomKind.Boss ? "魇念魔主" : index % 2 == 0 ? "心魔残影" : "执念幻身";
-                techniqueName = "幻念侵心";
-                stressDamage += 2;
-                armor = 0;
-                poisonResistance = 2;
-                break;
-            default:
-                name = isElite ? "尸煞督统" : index % 2 == 0 ? "腐甲尸傀" : "阴骨行尸";
-                techniqueName = "尸毒重击";
-                maxHealth += 2;
-                armor += 1;
-                poisonResistance = 3;
-                stunResistance = 1;
-                break;
+            strategy.ApplyFallbackEnemyData(index, isElite, roomKind,
+                ref maxHealth, ref damage, ref stressDamage,
+                ref armor, ref poisonResistance, ref stunResistance,
+                out name, out techniqueName);
+            return;
         }
+
+        name = "未知敌人";
+        techniqueName = "普通攻击";
     }
 }
