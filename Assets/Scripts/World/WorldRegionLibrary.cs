@@ -83,7 +83,7 @@ public static class WorldRegionLibrary
         return 6 + realmTier * 3;
     }
 
-    public static bool CanTravel(MainMenuSaveData saveData, WorldRegionDefinition region, out string reason)
+    public static bool CanTravel(CultivationSaveData saveData, WorldRegionDefinition region, out string reason)
     {
         if (saveData == null)
         {
@@ -109,10 +109,11 @@ public static class WorldRegionLibrary
         return true;
     }
 
-    public static void ApplyTrialRewards(MainMenuSaveData saveData, WorldRegionDefinition region, int qiGain, int crystalGain, CultivationRealmSystem realmSystem, out int breakthroughs, out string unlockedRegions)
+    public static void ApplyTrialRewards(CultivationSaveData saveData, WorldRegionDefinition region, int qiGain, int crystalGain, CultivationRealmSystem realmSystem, out int breakthroughs, out string unlockedRegions)
     {
         saveData.EnsureDefaults();
-        saveData.spiritCrystals += Mathf.Max(0, crystalGain);
+        var grade = CultivationCurrencySystem.RealmToGrade(saveData.realmTier);
+        saveData.wallet.Add(grade, Mathf.Max(0, crystalGain));
         saveData.MarkRegionCleared(region.Id);
         saveData.UnlockRegion(region.Id);
 
@@ -139,13 +140,13 @@ public static class WorldRegionLibrary
         unlockedRegions = newRegions.Count > 0 ? string.Join("、", newRegions.ToArray()) : string.Empty;
     }
 
-    public static int GetVitalityUpgradeCost(MainMenuSaveData saveData)
+    public static int GetVitalityUpgradeCost(CultivationSaveData saveData)
     {
         saveData.EnsureDefaults();
         return CultivationLoadoutLibrary.GetProtectiveRelicUpgradeCost(saveData);
     }
 
-    public static int GetAttackUpgradeCost(MainMenuSaveData saveData)
+    public static int GetAttackUpgradeCost(CultivationSaveData saveData)
     {
         saveData.EnsureDefaults();
         return CultivationLoadoutLibrary.GetMainArtifactUpgradeCost(saveData);

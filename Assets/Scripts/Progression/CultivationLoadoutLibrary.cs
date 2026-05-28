@@ -2,13 +2,13 @@ using System.Text;
 
 public static class CultivationLoadoutLibrary
 {
-    public static int GetMainArtifactUpgradeCost(MainMenuSaveData saveData)
+    public static int GetMainArtifactUpgradeCost(CultivationSaveData saveData)
     {
         saveData.EnsureDefaults();
         return 3 + saveData.mainArtifactLevel * 2;
     }
 
-    public static int GetProtectiveRelicUpgradeCost(MainMenuSaveData saveData)
+    public static int GetProtectiveRelicUpgradeCost(CultivationSaveData saveData)
     {
         saveData.EnsureDefaults();
         return 3 + saveData.protectiveRelicLevel * 2;
@@ -50,7 +50,7 @@ public static class CultivationLoadoutLibrary
             level);
     }
 
-    public static string BuildCompactProgressSummary(MainMenuSaveData saveData)
+    public static string BuildCompactProgressSummary(CultivationSaveData saveData)
     {
         saveData.EnsureDefaults();
         return "主法器 +" + saveData.mainArtifactLevel +
@@ -59,7 +59,7 @@ public static class CultivationLoadoutLibrary
                " / 符匣 +" + saveData.talismanCaseLevel;
     }
 
-    public static string BuildEquipmentOverview(MainMenuSaveData saveData)
+    public static string BuildEquipmentOverview(CultivationSaveData saveData)
     {
         saveData.EnsureDefaults();
         var builder = new StringBuilder();
@@ -70,7 +70,7 @@ public static class CultivationLoadoutLibrary
         return builder.ToString();
     }
 
-    public static string BuildGrowthEffectSummary(MainMenuSaveData saveData)
+    public static string BuildGrowthEffectSummary(CultivationSaveData saveData)
     {
         saveData.EnsureDefaults();
         return "攻伐加成 +" + saveData.mainArtifactLevel * 2 +

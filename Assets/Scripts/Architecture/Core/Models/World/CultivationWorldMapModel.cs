@@ -11,7 +11,7 @@ public sealed class CultivationWorldMapModel : AbstractModel
     {
     }
 
-    public void Apply(MainMenuSaveData saveData)
+    public void Apply(CultivationSaveData saveData)
     {
         if (saveData == null)
         {

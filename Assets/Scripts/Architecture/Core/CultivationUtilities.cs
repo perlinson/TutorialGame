@@ -173,17 +173,17 @@ public sealed class GameSettingsService : IGameSettingsService
 
     public void RefreshFromStorage()
     {
-        musicVolume.SetValueWithoutEvent(Mathf.Clamp01(MainMenuSaveStore.LoadMusicVolume()));
-        sfxVolume.SetValueWithoutEvent(Mathf.Clamp01(MainMenuSaveStore.LoadSfxVolume()));
-        voiceVolume.SetValueWithoutEvent(Mathf.Clamp01(MainMenuSaveStore.LoadVoiceVolume()));
-        fullscreen.SetValueWithoutEvent(MainMenuSaveStore.LoadFullscreen());
+        musicVolume.SetValueWithoutEvent(Mathf.Clamp01(CultivationLocalSaveStore.LoadMusicVolume()));
+        sfxVolume.SetValueWithoutEvent(Mathf.Clamp01(CultivationLocalSaveStore.LoadSfxVolume()));
+        voiceVolume.SetValueWithoutEvent(Mathf.Clamp01(CultivationLocalSaveStore.LoadVoiceVolume()));
+        fullscreen.SetValueWithoutEvent(CultivationLocalSaveStore.LoadFullscreen());
         ApplyRuntimeSettings();
     }
 
     public void SetMusicVolume(float value)
     {
         var normalized = Mathf.Clamp01(value);
-        MainMenuSaveStore.SaveMusicVolume(normalized);
+        CultivationLocalSaveStore.SaveMusicVolume(normalized);
         musicVolume.Value = normalized;
         ApplyRuntimeSettings();
     }
@@ -191,7 +191,7 @@ public sealed class GameSettingsService : IGameSettingsService
     public void SetSfxVolume(float value)
     {
         var normalized = Mathf.Clamp01(value);
-        MainMenuSaveStore.SaveSfxVolume(normalized);
+        CultivationLocalSaveStore.SaveSfxVolume(normalized);
         sfxVolume.Value = normalized;
         ApplyRuntimeSettings();
     }
@@ -199,14 +199,14 @@ public sealed class GameSettingsService : IGameSettingsService
     public void SetVoiceVolume(float value)
     {
         var normalized = Mathf.Clamp01(value);
-        MainMenuSaveStore.SaveVoiceVolume(normalized);
+        CultivationLocalSaveStore.SaveVoiceVolume(normalized);
         voiceVolume.Value = normalized;
         ApplyRuntimeSettings();
     }
 
     public void SetFullscreen(bool isFullscreen)
     {
-        MainMenuSaveStore.SaveFullscreen(isFullscreen);
+        CultivationLocalSaveStore.SaveFullscreen(isFullscreen);
         fullscreen.Value = isFullscreen;
         ApplyRuntimeSettings();
     }

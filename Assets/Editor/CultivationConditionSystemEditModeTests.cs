@@ -7,7 +7,7 @@ public sealed class CultivationConditionSystemEditModeTests
     public void AreEventConditionsMet_CountsPendingRewardsForHasItemCondition()
     {
         var system = new CultivationConditionSystem();
-        var saveData = new MainMenuSaveData
+        var saveData = new CultivationSaveData
         {
             heroName = "测试修士",
             archetypeId = "sword",
@@ -40,7 +40,7 @@ public sealed class CultivationConditionSystemEditModeTests
     public void BuildRequirementText_ReturnsRealmRequirementWhenRealmTierTooLow()
     {
         var system = new CultivationConditionSystem();
-        var saveData = new MainMenuSaveData
+        var saveData = new CultivationSaveData
         {
             heroName = "测试修士",
             archetypeId = "sword",

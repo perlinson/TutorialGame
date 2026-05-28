@@ -120,6 +120,11 @@ namespace QFramework
             T instance = null;
             var type = typeof(T);
 
+            if (IsRuntimeShuttingDown())
+            {
+                return null;
+            }
+
             //判断T实例存在的条件是否满足
             if (!IsUnitTestMode && !Application.isPlaying)
                 return instance;
@@ -204,6 +209,28 @@ namespace QFramework
             }
 
             return FindGameObject(null, subPath, 0, build, dontDestroy);
+        }
+
+        private static bool IsRuntimeShuttingDown()
+        {
+            var trackerType = Type.GetType("RuntimeShutdownTracker");
+            if (trackerType == null)
+            {
+                trackerType = Type.GetType("RuntimeShutdownTracker, Assembly-CSharp");
+            }
+
+            if (trackerType == null)
+            {
+                return false;
+            }
+
+            var property = trackerType.GetProperty("IsShuttingDown", BindingFlags.Public | BindingFlags.Static);
+            if (property == null || property.PropertyType != typeof(bool))
+            {
+                return false;
+            }
+
+            return (bool)property.GetValue(null, null);
         }
     }
 }

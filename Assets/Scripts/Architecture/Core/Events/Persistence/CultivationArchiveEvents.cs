@@ -1,11 +1,11 @@
 public sealed class CultivationArchiveChangedEvent
 {
-    public CultivationArchiveChangedEvent(int slotIndex, MainMenuSaveData saveData)
+    public CultivationArchiveChangedEvent(int slotIndex, CultivationSaveData saveData)
     {
         SlotIndex = slotIndex;
         SaveData = saveData;
     }
 
     public int SlotIndex { get; }
-    public MainMenuSaveData SaveData { get; }
+    public CultivationSaveData SaveData { get; }
 }

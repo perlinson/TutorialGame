@@ -28,7 +28,7 @@ public sealed class CultivationMindStateSystem : AbstractSystem
         return ApplyStress(null, context.Hero, context.Region, amount);
     }
 
-    public MindStateResult ApplyStress(MainMenuSaveData saveData, ExpeditionHeroState hero, WorldRegionDefinition region, int amount)
+    public MindStateResult ApplyStress(CultivationSaveData saveData, ExpeditionHeroState hero, WorldRegionDefinition region, int amount)
     {
         var result = new MindStateResult();
         if (hero == null)
@@ -64,7 +64,7 @@ public sealed class CultivationMindStateSystem : AbstractSystem
         return result;
     }
 
-    public void AddAffliction(MainMenuSaveData saveData, string afflictionId, int stacks)
+    public void AddAffliction(CultivationSaveData saveData, string afflictionId, int stacks)
     {
         if (saveData == null || string.IsNullOrWhiteSpace(afflictionId) || stacks <= 0)
         {

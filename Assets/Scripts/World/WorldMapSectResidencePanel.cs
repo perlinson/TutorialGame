@@ -18,6 +18,7 @@ public sealed class WorldMapSectResidencePanel : CultivationUIPanel
     public Text statusText;
     public Image previewImage;
     public Text previewLabelText;
+    public Button[] locationButtons;
     public RectTransform windowRect;
 
     private WorldMapController owner;
@@ -92,8 +93,11 @@ public sealed class WorldMapSectResidencePanel : CultivationUIPanel
                 snapshot.Preview.PlaceholderColor);
         }
 
+        SetButtonLabel(dialogueButton, snapshot.DialogueButtonLabel);
+        CultivationTooltipBinder.Bind(dialogueButton, snapshot.DialogueButtonLabel, snapshot.DialogueButtonTooltip);
         ApplyHallButtons(snapshot.HallButtons);
         ApplyActionButtons(snapshot.ActionButtons);
+        ApplyLocationButtons(snapshot.LocationEntries);
     }
 
     private void EnsureBindings()
@@ -105,8 +109,21 @@ public sealed class WorldMapSectResidencePanel : CultivationUIPanel
 
         BindButton(closeButton, ClosePanel, CultivationButtonSound.Cancel);
         BindButton(dialogueButton, () => owner?.OpenSectDialogue(), CultivationButtonSound.Confirm);
-        CultivationTooltipBinder.Bind(dialogueButton, "同门人物", "按当前殿堂查看可对接的执事、前辈与同门。");
         buttonsBound = true;
+    }
+
+    private static void SetButtonLabel(Button button, string value)
+    {
+        if (button == null || string.IsNullOrWhiteSpace(value))
+        {
+            return;
+        }
+
+        var label = button.GetComponentInChildren<Text>(true);
+        if (label != null)
+        {
+            label.text = value;
+        }
     }
 
     private void ApplyHallButtons(WorldMapSectHallButtonSnapshot[] snapshots)
@@ -179,9 +196,58 @@ public sealed class WorldMapSectResidencePanel : CultivationUIPanel
         }
     }
 
+    private void ApplyLocationButtons(WorldMapLocationEntrySnapshot[] snapshots)
+    {
+        if (locationButtons == null)
+        {
+            return;
+        }
+
+        for (var i = 0; i < locationButtons.Length; i++)
+        {
+            var button = locationButtons[i];
+            if (button == null)
+            {
+                continue;
+            }
+
+            var hasSnapshot = snapshots != null && i < snapshots.Length && snapshots[i] != null && snapshots[i].IsVisible;
+            button.gameObject.SetActive(hasSnapshot);
+            if (!hasSnapshot)
+            {
+                continue;
+            }
+
+            var snapshot = snapshots[i];
+            var label = button.GetComponentInChildren<Text>(true);
+            if (label != null)
+            {
+                label.text = snapshot.ButtonLabel;
+            }
+
+            button.interactable = snapshot.IsInteractable;
+            CultivationTooltipBinder.Bind(button, snapshot.TooltipTitle, snapshot.TooltipBody);
+            var locationId = snapshot.LocationId;
+            BindButton(button, () => owner?.OpenSectDialogue(locationId), CultivationButtonSound.Confirm);
+        }
+    }
+
     private void ClosePanel()
     {
         owner?.CloseSect();
+    }
+
+    private static string BuildLocationButtonLabel(WorldMapLocationEntrySnapshot entry)
+    {
+        if (entry == null)
+        {
+            return string.Empty;
+        }
+
+        var title = entry.IsSelected ? "【" + entry.DisplayName + "】" : entry.DisplayName;
+        return string.IsNullOrWhiteSpace(entry.Subtitle)
+            ? title
+            : title + "\n" + entry.Subtitle;
     }
 
     private void RefreshResponsiveLayout(bool force)

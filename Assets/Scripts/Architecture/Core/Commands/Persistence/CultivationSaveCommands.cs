@@ -11,9 +11,9 @@ public sealed class BootstrapCurrentArchiveCommand : AbstractCommand<Cultivation
 public sealed class SaveArchiveCommand : AbstractCommand
 {
     private readonly int slotIndex;
-    private readonly MainMenuSaveData saveData;
+    private readonly CultivationSaveData saveData;
 
-    public SaveArchiveCommand(int slotIndex, MainMenuSaveData saveData)
+    public SaveArchiveCommand(int slotIndex, CultivationSaveData saveData)
     {
         this.slotIndex = slotIndex;
         this.saveData = saveData;
@@ -43,9 +43,9 @@ public sealed class DeleteArchiveCommand : AbstractCommand
 public sealed class ResolveTaskBoardCommand : AbstractCommand<string>
 {
     private readonly int slotIndex;
-    private readonly MainMenuSaveData saveData;
+    private readonly CultivationSaveData saveData;
 
-    public ResolveTaskBoardCommand(int slotIndex, MainMenuSaveData saveData)
+    public ResolveTaskBoardCommand(int slotIndex, CultivationSaveData saveData)
     {
         this.slotIndex = slotIndex;
         this.saveData = saveData;
@@ -59,9 +59,9 @@ public sealed class ResolveTaskBoardCommand : AbstractCommand<string>
 
 public sealed class GetActiveTaskContextCommand : AbstractCommand<TaskContextSnapshot>
 {
-    private readonly MainMenuSaveData saveData;
+    private readonly CultivationSaveData saveData;
 
-    public GetActiveTaskContextCommand(MainMenuSaveData saveData)
+    public GetActiveTaskContextCommand(CultivationSaveData saveData)
     {
         this.saveData = saveData;
     }
@@ -75,9 +75,9 @@ public sealed class GetActiveTaskContextCommand : AbstractCommand<TaskContextSna
 public sealed class ClaimActiveTaskCommand : AbstractCommand<string>
 {
     private readonly int slotIndex;
-    private readonly MainMenuSaveData saveData;
+    private readonly CultivationSaveData saveData;
 
-    public ClaimActiveTaskCommand(int slotIndex, MainMenuSaveData saveData)
+    public ClaimActiveTaskCommand(int slotIndex, CultivationSaveData saveData)
     {
         this.slotIndex = slotIndex;
         this.saveData = saveData;
@@ -92,10 +92,10 @@ public sealed class ClaimActiveTaskCommand : AbstractCommand<string>
 public sealed class RecordTaskProgressCommand : AbstractCommand<TaskProgressResult>
 {
     private readonly int slotIndex;
-    private readonly MainMenuSaveData saveData;
+    private readonly CultivationSaveData saveData;
     private readonly TaskProgressSignal signal;
 
-    public RecordTaskProgressCommand(int slotIndex, MainMenuSaveData saveData, TaskProgressSignal signal)
+    public RecordTaskProgressCommand(int slotIndex, CultivationSaveData saveData, TaskProgressSignal signal)
     {
         this.slotIndex = slotIndex;
         this.saveData = saveData;
@@ -110,10 +110,10 @@ public sealed class RecordTaskProgressCommand : AbstractCommand<TaskProgressResu
 
 public sealed class RecordTaskProgressDirectCommand : AbstractCommand<TaskProgressResult>
 {
-    private readonly MainMenuSaveData saveData;
+    private readonly CultivationSaveData saveData;
     private readonly TaskProgressSignal signal;
 
-    public RecordTaskProgressDirectCommand(MainMenuSaveData saveData, TaskProgressSignal signal)
+    public RecordTaskProgressDirectCommand(CultivationSaveData saveData, TaskProgressSignal signal)
     {
         this.saveData = saveData;
         this.signal = signal;
@@ -128,9 +128,9 @@ public sealed class RecordTaskProgressDirectCommand : AbstractCommand<TaskProgre
 public sealed class SyncArchiveStateCommand : AbstractCommand
 {
     private readonly int slotIndex;
-    private readonly MainMenuSaveData saveData;
+    private readonly CultivationSaveData saveData;
 
-    public SyncArchiveStateCommand(int slotIndex, MainMenuSaveData saveData)
+    public SyncArchiveStateCommand(int slotIndex, CultivationSaveData saveData)
     {
         this.slotIndex = slotIndex;
         this.saveData = saveData;

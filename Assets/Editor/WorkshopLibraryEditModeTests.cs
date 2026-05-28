@@ -6,7 +6,7 @@ public sealed class WorkshopLibraryEditModeTests
     [Test]
     public void BuildRecipeButtonLabel_ShowsCraftableWhenMaterialsAreEnough()
     {
-        var saveData = new MainMenuSaveData
+        var saveData = new CultivationSaveData
         {
             heroName = "测试修士",
             archetypeId = "sword",
@@ -27,7 +27,7 @@ public sealed class WorkshopLibraryEditModeTests
     [Test]
     public void Craft_ConsumesMaterialsAndAppliesRecipeReward()
     {
-        var saveData = new MainMenuSaveData
+        var saveData = new CultivationSaveData
         {
             heroName = "测试修士",
             archetypeId = "sword",
@@ -60,7 +60,7 @@ public sealed class WorkshopLibraryEditModeTests
     public void Craft_BreaksThroughRealmWhenQiCrossesThreshold()
     {
         var requiredQi = WorldRegionLibrary.GetQiRequiredForNextRealm(0);
-        var saveData = new MainMenuSaveData
+        var saveData = new CultivationSaveData
         {
             heroName = "测试修士",
             archetypeId = "sword",

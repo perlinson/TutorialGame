@@ -4,14 +4,18 @@ public sealed class CultivationSettlementSystem : AbstractSystem
 {
     private CultivationSaveSystem saveSystem;
     private CultivationRealmSystem realmSystem;
+    private CultivationCurrencySystem currencySystem;
+    private CultivationTradeSystem tradeSystem;
 
     protected override void OnInit()
     {
         saveSystem = this.GetSystem<CultivationSaveSystem>();
         realmSystem = this.GetSystem<CultivationRealmSystem>();
+        currencySystem = this.GetSystem<CultivationCurrencySystem>();
+        tradeSystem = this.GetSystem<CultivationTradeSystem>();
     }
 
-    public WorldMapActionResult UpgradeProtectiveRelic(int slotIndex, MainMenuSaveData saveData)
+    public WorldMapActionResult UpgradeProtectiveRelic(int slotIndex, CultivationSaveData saveData)
     {
         if (saveData == null)
         {
@@ -19,12 +23,12 @@ public sealed class CultivationSettlementSystem : AbstractSystem
         }
 
         var cost = WorldRegionLibrary.GetVitalityUpgradeCost(saveData);
-        if (saveData.spiritCrystals < cost)
+        if (!currencySystem.CanAfford(saveData, cost))
         {
-            return new WorldMapActionResult(false, "灵石不足，无法继续温养护身法器。");
+            return new WorldMapActionResult(false, CultivationCurrencySystem.GradeName(currencySystem.GetPlayerGrade(saveData)) + "不足，无法继续温养护身法器。");
         }
 
-        saveData.spiritCrystals -= cost;
+        currencySystem.SpendCrystals(saveData, cost);
         saveData.protectiveRelicLevel++;
         saveData.vitalityLevel = saveData.protectiveRelicLevel;
         TouchSettlement(saveData);
@@ -32,7 +36,7 @@ public sealed class CultivationSettlementSystem : AbstractSystem
         return new WorldMapActionResult(true, "护身法器已温养，出行时的气血和护体都会更稳。");
     }
 
-    public WorldMapActionResult UpgradeMainArtifact(int slotIndex, MainMenuSaveData saveData)
+    public WorldMapActionResult UpgradeMainArtifact(int slotIndex, CultivationSaveData saveData)
     {
         if (saveData == null)
         {
@@ -40,12 +44,12 @@ public sealed class CultivationSettlementSystem : AbstractSystem
         }
 
         var cost = WorldRegionLibrary.GetAttackUpgradeCost(saveData);
-        if (saveData.spiritCrystals < cost)
+        if (!currencySystem.CanAfford(saveData, cost))
         {
-            return new WorldMapActionResult(false, "灵石不足，无法继续祭炼主法器。");
+            return new WorldMapActionResult(false, CultivationCurrencySystem.GradeName(currencySystem.GetPlayerGrade(saveData)) + "不足，无法继续祭炼主法器。");
         }
 
-        saveData.spiritCrystals -= cost;
+        currencySystem.SpendCrystals(saveData, cost);
         saveData.mainArtifactLevel++;
         saveData.attackLevel = saveData.mainArtifactLevel;
         TouchSettlement(saveData);
@@ -53,7 +57,7 @@ public sealed class CultivationSettlementSystem : AbstractSystem
         return new WorldMapActionResult(true, "主法器已祭炼，下一次出手会更凌厉。");
     }
 
-    public WorldMapActionResult CraftRecipe(int slotIndex, MainMenuSaveData saveData, string recipeId)
+    public WorldMapActionResult CraftRecipe(int slotIndex, CultivationSaveData saveData, string recipeId)
     {
         if (saveData == null)
         {
@@ -61,7 +65,7 @@ public sealed class CultivationSettlementSystem : AbstractSystem
         }
 
         string summary;
-        if (!WorkshopLibrary.Craft(saveData, recipeId, realmSystem, out summary))
+        if (!tradeSystem.CraftRecipe(saveData, recipeId, out summary))
         {
             return new WorldMapActionResult(false, summary);
         }
@@ -71,7 +75,7 @@ public sealed class CultivationSettlementSystem : AbstractSystem
         return new WorldMapActionResult(true, summary);
     }
 
-    public string BuildSettlementSummary(MainMenuSaveData saveData)
+    public string BuildSettlementSummary(CultivationSaveData saveData)
     {
         if (saveData == null)
         {
@@ -84,9 +88,9 @@ public sealed class CultivationSettlementSystem : AbstractSystem
                "\n最近整备：" + (string.IsNullOrWhiteSpace(saveData.lastSettlementAction) ? "暂无" : saveData.lastSettlementAction);
     }
 
-    private static void TouchSettlement(MainMenuSaveData saveData)
+    private static void TouchSettlement(CultivationSaveData saveData)
     {
-        CultivationGameTime.Advance(saveData, 1);
+        GameTime.Advance(saveData, 1);
         saveData.settlementBuildCount++;
         saveData.lastSettlementAction = CultivationGameTime.Format(saveData);
         saveData.lastPlayed = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm");

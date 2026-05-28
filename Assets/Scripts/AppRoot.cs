@@ -53,8 +53,9 @@ public sealed class AppRoot : MonoBehaviour
     {
         if (instance == this)
         {
-            CleanupPersistentFrameworkRoots();
+            RuntimeShutdownTracker.MarkShuttingDown();
             instance = null;
+            CleanupPersistentFrameworkRoots();
         }
     }
 
@@ -433,23 +434,23 @@ public sealed class GlobalSaveManager : MonoBehaviour
         isInitialized = true;
     }
 
-    public bool TryLoadCurrentArchive(out int slotIndex, out MainMenuSaveData saveData)
+    public bool TryLoadCurrentArchive(out int slotIndex, out CultivationSaveData saveData)
     {
-        return MainMenuSaveStore.TryGetCurrentSave(out slotIndex, out saveData);
+        return CultivationLocalSaveStore.TryGetCurrentSave(out slotIndex, out saveData);
     }
 
-    public void SaveCurrentArchive(int slotIndex, MainMenuSaveData saveData)
+    public void SaveCurrentArchive(int slotIndex, CultivationSaveData saveData)
     {
-        MainMenuSaveStore.SaveCurrent(slotIndex, saveData);
+        CultivationLocalSaveStore.SaveCurrent(slotIndex, saveData);
     }
 
     public void SaveExpeditionRuntime(PersistentExpeditionRuntimeSnapshot snapshot)
     {
-        MainMenuSaveStore.SaveExpeditionRuntime(snapshot);
+        CultivationLocalSaveStore.SaveExpeditionRuntime(snapshot);
     }
 
     public void ClearExpeditionRuntime()
     {
-        MainMenuSaveStore.ClearExpeditionRuntime();
+        CultivationLocalSaveStore.ClearExpeditionRuntime();
     }
 }

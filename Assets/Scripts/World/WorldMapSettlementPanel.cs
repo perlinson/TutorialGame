@@ -24,6 +24,7 @@ public sealed class WorldMapSettlementPanel : CultivationUIPanel
     public TextMeshProUGUI attackButtonLabel;
     public Image previewImage;
     public TextMeshProUGUI previewLabelText;
+    public Button[] locationButtons;
     public RectTransform windowRect;
 
     private WorldMapController owner;
@@ -108,6 +109,10 @@ public sealed class WorldMapSettlementPanel : CultivationUIPanel
             attackButtonLabel.text = snapshot.AttackButtonLabel;
         }
 
+        SetButtonLabel(dialogueButton, snapshot.DialogueButtonLabel);
+        CultivationTooltipBinder.Bind(dialogueButton, snapshot.DialogueButtonLabel, snapshot.DialogueButtonTooltip);
+        ApplyLocationButtons(snapshot.LocationEntries);
+
         if (vitalityButton != null)
         {
             vitalityButton.interactable = snapshot.CanUpgradeVitality;
@@ -147,8 +152,70 @@ public sealed class WorldMapSettlementPanel : CultivationUIPanel
         CultivationTooltipBinder.Bind(workshopButton, "炼制台", "打开配方炼制与整备弹窗。");
         CultivationTooltipBinder.Bind(vitalityButton, "温养护身法器", "消耗灵石提升护身能力。");
         CultivationTooltipBinder.Bind(attackButton, "祭炼主法器", "消耗灵石提升攻伐能力。");
-        CultivationTooltipBinder.Bind(dialogueButton, "坊市人物", "查看行商、药师与地域风声相关的对话入口。");
         buttonsBound = true;
+    }
+
+    private void ApplyLocationButtons(WorldMapLocationEntrySnapshot[] entries)
+    {
+        if (locationButtons == null)
+        {
+            return;
+        }
+
+        for (var i = 0; i < locationButtons.Length; i++)
+        {
+            var button = locationButtons[i];
+            if (button == null)
+            {
+                continue;
+            }
+
+            var hasEntry = entries != null && i < entries.Length && entries[i] != null && entries[i].IsVisible;
+            button.gameObject.SetActive(hasEntry);
+            if (!hasEntry)
+            {
+                continue;
+            }
+
+            var entry = entries[i];
+            var label = button.GetComponentInChildren<TextMeshProUGUI>(true);
+            if (label != null)
+            {
+                label.text = BuildLocationButtonLabel(entry);
+            }
+
+            button.interactable = entry.IsInteractable;
+            CultivationTooltipBinder.Bind(button, entry.TooltipTitle, entry.TooltipBody);
+            var locationId = entry.LocationId;
+            BindButton(button, () => owner?.OpenSettlementDialogue(locationId), CultivationButtonSound.Confirm);
+        }
+    }
+
+    private static void SetButtonLabel(Button button, string value)
+    {
+        if (button == null || string.IsNullOrWhiteSpace(value))
+        {
+            return;
+        }
+
+        var label = button.GetComponentInChildren<TextMeshProUGUI>(true);
+        if (label != null)
+        {
+            label.text = value;
+        }
+    }
+
+    private static string BuildLocationButtonLabel(WorldMapLocationEntrySnapshot entry)
+    {
+        if (entry == null)
+        {
+            return string.Empty;
+        }
+
+        var title = entry.IsSelected ? "【" + entry.DisplayName + "】" : entry.DisplayName;
+        return string.IsNullOrWhiteSpace(entry.Subtitle)
+            ? title
+            : title + "\n<size=16>" + entry.Subtitle + "</size>";
     }
 
     private void ClosePanel()

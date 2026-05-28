@@ -10,7 +10,7 @@ public sealed class CultivationTaskBoardModel : AbstractModel
     {
     }
 
-    public void Apply(MainMenuSaveData saveData, string boardMessage = null)
+    public void Apply(CultivationSaveData saveData, string boardMessage = null)
     {
         if (saveData == null)
         {

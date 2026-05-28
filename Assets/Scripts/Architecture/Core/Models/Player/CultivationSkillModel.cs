@@ -7,7 +7,7 @@ using QFramework;
 /// - 已学技能集合按 ID 存（数据本体走 SkillDatabaseAsset）。
 /// - 装配槽位是有序 list（slot index 决定快捷键 1-N）。
 /// - 冷却以"剩余回合数"维护，0 表示就绪；战斗结束后由 <see cref="CultivationSkillCastSystem"/> 重置。
-/// 持久化（已学/装配）后续接入 <see cref="MainMenuSaveData"/>，本轮先以运行时状态承载。
+/// 持久化（已学/装配）后续接入 <see cref="CultivationSaveData"/>，本轮先以运行时状态承载。
 /// </summary>
 public sealed class CultivationSkillModel : AbstractModel
 {

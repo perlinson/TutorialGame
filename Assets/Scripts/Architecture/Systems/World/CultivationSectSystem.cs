@@ -7,6 +7,8 @@ public sealed class CultivationSectSystem : AbstractSystem
 {
     private CultivationSaveSystem saveSystem;
     private CultivationSettlementSystem settlementSystem;
+    private CultivationCurrencySystem currencySystem;
+    private CultivationTradeSystem tradeSystem;
 
     private static readonly SectHallDefinition[] HallDefinitions = BuildHallDefinitions();
     private static readonly SectActionDefinition[] ActionDefinitions = BuildActionDefinitions();
@@ -15,10 +17,22 @@ public sealed class CultivationSectSystem : AbstractSystem
     {
         saveSystem = this.GetSystem<CultivationSaveSystem>();
         settlementSystem = this.GetSystem<CultivationSettlementSystem>();
+        currencySystem = this.GetSystem<CultivationCurrencySystem>();
+        tradeSystem = this.GetSystem<CultivationTradeSystem>();
     }
 
-    public string BuildSectOverview(MainMenuSaveData saveData)
+    private void EnsureDependencies()
     {
+        saveSystem ??= this.GetSystem<CultivationSaveSystem>();
+        settlementSystem ??= this.GetSystem<CultivationSettlementSystem>();
+        currencySystem ??= this.GetSystem<CultivationCurrencySystem>();
+        tradeSystem ??= this.GetSystem<CultivationTradeSystem>();
+    }
+
+    public string BuildSectOverview(CultivationSaveData saveData)
+    {
+        EnsureDependencies();
+
         if (saveData == null)
         {
             return "宗门尚未接引。";
@@ -28,15 +42,17 @@ public sealed class CultivationSectSystem : AbstractSystem
         var builder = new StringBuilder();
         builder.Append("宗门：").Append(saveData.sectName).Append('\n');
         builder.Append(saveData.heroName).Append(" · ").Append(saveData.realm).Append(" · ").Append(saveData.archetypeName).Append('\n');
-        builder.Append("灵石：").Append(saveData.spiritCrystals)
+        builder.Append("灵石：").Append(currencySystem.GetDisplayString(saveData))
             .Append("    储物袋：").Append(saveData.GetUsedBagSlots()).Append(" / ").Append(saveData.bagCapacity).Append('\n');
         builder.Append(CultivationLoadoutLibrary.BuildCompactProgressSummary(saveData)).Append('\n');
         builder.Append("主事殿堂：勤功、炼器、丹鼎、符阵、藏经、庶务、洞府");
         return builder.ToString();
     }
 
-    public SectHallSnapshot[] GetHallSnapshots(MainMenuSaveData saveData)
+    public SectHallSnapshot[] GetHallSnapshots(CultivationSaveData saveData)
     {
+        EnsureDependencies();
+
         if (saveData == null)
         {
             return new SectHallSnapshot[0];
@@ -60,8 +76,16 @@ public sealed class CultivationSectSystem : AbstractSystem
         return snapshots;
     }
 
-    public SectActionResult ExecuteAction(int slotIndex, MainMenuSaveData saveData, string actionId)
+    public bool TryGetHallDefinition(string hallId, out SectHallDefinition hall)
     {
+        hall = FindHall(hallId);
+        return hall != null;
+    }
+
+    public SectActionResult ExecuteAction(int slotIndex, CultivationSaveData saveData, string actionId)
+    {
+        EnsureDependencies();
+
         if (saveData == null)
         {
             return new SectActionResult(false, "当前没有可用存档。", string.Empty, actionId);
@@ -84,7 +108,7 @@ public sealed class CultivationSectSystem : AbstractSystem
                     message = "勤功殿案卷已查阅，当前主委托仍在进行。";
                 }
 
-                CultivationGameTime.Advance(saveData, 1);
+                GameTime.Advance(saveData, 1);
                 saveSystem.SaveArchive(slotIndex, saveData);
                 return new SectActionResult(true, message, action.HallId, action.Id);
             }
@@ -98,7 +122,7 @@ public sealed class CultivationSectSystem : AbstractSystem
                 }
 
                 var resultMessage = saveSystem.ClaimActiveTask(slotIndex, saveData);
-                CultivationGameTime.Advance(saveData, 1);
+                GameTime.Advance(saveData, 1);
                 saveSystem.SaveArchive(slotIndex, saveData);
                 return new SectActionResult(true, resultMessage, action.HallId, action.Id);
             }
@@ -109,11 +133,11 @@ public sealed class CultivationSectSystem : AbstractSystem
             case SectActionKind.CraftRecipe:
                 return ConvertResult(settlementSystem.CraftRecipe(slotIndex, saveData, action.LinkedRecipeId), action);
             case SectActionKind.ShowSummary:
-                CultivationGameTime.Advance(saveData, 1);
+                GameTime.Advance(saveData, 1);
                 saveSystem.SaveArchive(slotIndex, saveData);
                 return new SectActionResult(true, BuildHallStatus(saveData, FindHall(action.HallId)), action.HallId, action.Id);
             case SectActionKind.Placeholder:
-                CultivationGameTime.Advance(saveData, 1);
+                GameTime.Advance(saveData, 1);
                 saveSystem.SaveArchive(slotIndex, saveData);
                 return new SectActionResult(true, "藏经阁已开放阅览。功法、术法、身法与神通树会在下一轮接入，现在先保留入口。", action.HallId, action.Id);
             default:
@@ -131,8 +155,10 @@ public sealed class CultivationSectSystem : AbstractSystem
         return new SectActionResult(result.Succeeded, result.Message, action.HallId, action.Id);
     }
 
-    private static SectActionSnapshot[] BuildActionSnapshots(MainMenuSaveData saveData, SectHallDefinition hall)
+    private SectActionSnapshot[] BuildActionSnapshots(CultivationSaveData saveData, SectHallDefinition hall)
     {
+        EnsureDependencies();
+
         var actions = new List<SectActionSnapshot>();
         if (hall.ActionIds == null)
         {
@@ -160,8 +186,10 @@ public sealed class CultivationSectSystem : AbstractSystem
         return actions.ToArray();
     }
 
-    private static string BuildActionButtonLabel(MainMenuSaveData saveData, SectActionDefinition action, out string unavailableReason)
+    private string BuildActionButtonLabel(CultivationSaveData saveData, SectActionDefinition action, out string unavailableReason)
     {
+        EnsureDependencies();
+
         unavailableReason = string.Empty;
         switch (action.Kind)
         {
@@ -187,25 +215,25 @@ public sealed class CultivationSectSystem : AbstractSystem
             case SectActionKind.UpgradeMainArtifact:
             {
                 var cost = WorldRegionLibrary.GetAttackUpgradeCost(saveData);
-                if (saveData.spiritCrystals < cost)
+                if (!currencySystem.CanAfford(saveData, cost))
                 {
-                    unavailableReason = "灵石不足。";
+                    unavailableReason = CultivationCurrencySystem.GradeName(currencySystem.GetPlayerGrade(saveData)) + "不足。";
                 }
 
-                return action.Title + " · " + cost + " 灵石";
+                return action.Title + " · " + cost + " " + CultivationCurrencySystem.GradeName(currencySystem.GetPlayerGrade(saveData));
             }
             case SectActionKind.UpgradeProtectiveRelic:
             {
                 var cost = WorldRegionLibrary.GetVitalityUpgradeCost(saveData);
-                if (saveData.spiritCrystals < cost)
+                if (!currencySystem.CanAfford(saveData, cost))
                 {
-                    unavailableReason = "灵石不足。";
+                    unavailableReason = CultivationCurrencySystem.GradeName(currencySystem.GetPlayerGrade(saveData)) + "不足。";
                 }
 
-                return action.Title + " · " + cost + " 灵石";
+                return action.Title + " · " + cost + " " + CultivationCurrencySystem.GradeName(currencySystem.GetPlayerGrade(saveData));
             }
             case SectActionKind.CraftRecipe:
-                if (!CanCraft(saveData, action.LinkedRecipeId))
+                if (!tradeSystem.CanCraft(saveData, action.LinkedRecipeId))
                 {
                     unavailableReason = "材料不足。";
                 }
@@ -216,39 +244,10 @@ public sealed class CultivationSectSystem : AbstractSystem
         }
     }
 
-    private static bool CanCraft(MainMenuSaveData saveData, string recipeId)
+    private string BuildHallStatus(CultivationSaveData saveData, SectHallDefinition hall)
     {
-        var recipes = WorkshopLibrary.GetRecipes();
-        for (var i = 0; i < recipes.Length; i++)
-        {
-            var recipe = recipes[i];
-            if (recipe == null || recipe.Id != recipeId)
-            {
-                continue;
-            }
+        EnsureDependencies();
 
-            if (recipe.CostItems == null)
-            {
-                return true;
-            }
-
-            for (var itemIndex = 0; itemIndex < recipe.CostItems.Length; itemIndex++)
-            {
-                var cost = recipe.CostItems[itemIndex];
-                if (cost == null || saveData.GetItemCount(cost.itemId) < cost.quantity)
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        return false;
-    }
-
-    private static string BuildHallStatus(MainMenuSaveData saveData, SectHallDefinition hall)
-    {
         if (hall == null)
         {
             return string.Empty;
@@ -260,8 +259,8 @@ public sealed class CultivationSectSystem : AbstractSystem
                 return TaskLibrary.BuildActiveTaskSummary(saveData);
             case SectHallType.RefiningHall:
                 return CultivationLoadoutLibrary.BuildEquipmentOverview(saveData) + "\n\n" +
-                       "祭炼主法器耗费：" + WorldRegionLibrary.GetAttackUpgradeCost(saveData) + " 灵石\n" +
-                       "温养护身法器耗费：" + WorldRegionLibrary.GetVitalityUpgradeCost(saveData) + " 灵石";
+                       "祭炼主法器耗费：" + WorldRegionLibrary.GetAttackUpgradeCost(saveData) + " " + CultivationCurrencySystem.GradeName(currencySystem.GetPlayerGrade(saveData)) + "\n" +
+                       "温养护身法器耗费：" + WorldRegionLibrary.GetVitalityUpgradeCost(saveData) + " " + CultivationCurrencySystem.GradeName(currencySystem.GetPlayerGrade(saveData));
             case SectHallType.AlchemyHall:
                 return "丹炉：" + CultivationLoadoutLibrary.GetPillCauldronName(saveData.archetypeId, saveData.pillCauldronLevel) +
                        "  +" + saveData.pillCauldronLevel + "\n" +
@@ -287,7 +286,7 @@ public sealed class CultivationSectSystem : AbstractSystem
         }
     }
 
-    private static string settlementSystemSummary(MainMenuSaveData saveData)
+    private static string settlementSystemSummary(CultivationSaveData saveData)
     {
         return "你的洞府位于山门后坡，当前仍以整备、储物和闭关静修为主。\n\n" +
                WorkshopLibrary.BuildWorkshopSummary(saveData) +
@@ -295,13 +294,13 @@ public sealed class CultivationSectSystem : AbstractSystem
                (string.IsNullOrWhiteSpace(saveData.lastSettlementAction) ? "暂无" : saveData.lastSettlementAction);
     }
 
-    private static string settlementSummaryLine(MainMenuSaveData saveData)
+    private static string settlementSummaryLine(CultivationSaveData saveData)
     {
         return "洞府建设：" + saveData.settlementBuildCount + " 次    最近整备：" +
                (string.IsNullOrWhiteSpace(saveData.lastSettlementAction) ? "暂无" : saveData.lastSettlementAction);
     }
 
-    private static string DescribeRecipe(MainMenuSaveData saveData, string recipeId)
+    private static string DescribeRecipe(CultivationSaveData saveData, string recipeId)
     {
         var recipes = WorkshopLibrary.GetRecipes();
         for (var i = 0; i < recipes.Length; i++)

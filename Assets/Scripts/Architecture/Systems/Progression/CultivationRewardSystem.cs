@@ -23,7 +23,7 @@ public sealed class CultivationRewardSystem : AbstractSystem
         return loot;
     }
 
-    public List<SaveItemStack> BuildRoomLoot(WorldRegionDefinition region, ExpeditionRoomState room, MainMenuSaveData saveData)
+    public List<SaveItemStack> BuildRoomLoot(WorldRegionDefinition region, ExpeditionRoomState room, CultivationSaveData saveData)
     {
         if (region == null || room == null)
         {
@@ -43,7 +43,7 @@ public sealed class CultivationRewardSystem : AbstractSystem
         return loot;
     }
 
-    public List<SaveItemStack> BuildClearLoot(WorldRegionDefinition region, MainMenuSaveData saveData)
+    public List<SaveItemStack> BuildClearLoot(WorldRegionDefinition region, CultivationSaveData saveData)
     {
         if (region == null)
         {
@@ -102,7 +102,7 @@ public sealed class CultivationRewardSystem : AbstractSystem
         }
     }
 
-    public RewardBankResult BankPendingLoot(MainMenuSaveData saveData, List<SaveItemStack> pendingItemRewards)
+    public RewardBankResult BankPendingLoot(CultivationSaveData saveData, List<SaveItemStack> pendingItemRewards)
     {
         var result = new RewardBankResult();
         if (saveData == null || pendingItemRewards == null || pendingItemRewards.Count == 0)
@@ -138,7 +138,7 @@ public sealed class CultivationRewardSystem : AbstractSystem
         return result;
     }
 
-    private void ApplyFactionPressureLoot(MainMenuSaveData saveData, WorldRegionDefinition region, List<ExpeditionEnemyState> encounter, List<SaveItemStack> loot)
+    private void ApplyFactionPressureLoot(CultivationSaveData saveData, WorldRegionDefinition region, List<ExpeditionEnemyState> encounter, List<SaveItemStack> loot)
     {
         if (saveData == null || region == null || encounter == null || loot == null)
         {
@@ -161,7 +161,7 @@ public sealed class CultivationRewardSystem : AbstractSystem
         }
     }
 
-    private int GetHighestPressure(MainMenuSaveData saveData)
+    private int GetHighestPressure(CultivationSaveData saveData)
     {
         var highest = 0;
         for (var i = 0; i < 5; i++)

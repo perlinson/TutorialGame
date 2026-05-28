@@ -4,7 +4,7 @@ using QFramework;
 public sealed class CompleteExpeditionRunCommand : AbstractCommand<ExpeditionResolutionResult>
 {
     private readonly int slotIndex;
-    private readonly MainMenuSaveData saveData;
+    private readonly CultivationSaveData saveData;
     private readonly WorldRegionDefinition region;
     private readonly ExpeditionHeroState hero;
     private readonly int torchlight;
@@ -12,7 +12,7 @@ public sealed class CompleteExpeditionRunCommand : AbstractCommand<ExpeditionRes
     private readonly int pendingCrystalGain;
     private readonly List<SaveItemStack> pendingItemRewards;
 
-    public CompleteExpeditionRunCommand(int slotIndex, MainMenuSaveData saveData, WorldRegionDefinition region, ExpeditionHeroState hero, int torchlight, int pendingQiGain, int pendingCrystalGain, List<SaveItemStack> pendingItemRewards)
+    public CompleteExpeditionRunCommand(int slotIndex, CultivationSaveData saveData, WorldRegionDefinition region, ExpeditionHeroState hero, int torchlight, int pendingQiGain, int pendingCrystalGain, List<SaveItemStack> pendingItemRewards)
     {
         this.slotIndex = slotIndex;
         this.saveData = saveData;
@@ -33,13 +33,13 @@ public sealed class CompleteExpeditionRunCommand : AbstractCommand<ExpeditionRes
 public sealed class RetreatExpeditionRunCommand : AbstractCommand<ExpeditionResolutionResult>
 {
     private readonly int slotIndex;
-    private readonly MainMenuSaveData saveData;
+    private readonly CultivationSaveData saveData;
     private readonly WorldRegionDefinition region;
     private readonly int pendingQiGain;
     private readonly int pendingCrystalGain;
     private readonly List<SaveItemStack> pendingItemRewards;
 
-    public RetreatExpeditionRunCommand(int slotIndex, MainMenuSaveData saveData, WorldRegionDefinition region, int pendingQiGain, int pendingCrystalGain, List<SaveItemStack> pendingItemRewards)
+    public RetreatExpeditionRunCommand(int slotIndex, CultivationSaveData saveData, WorldRegionDefinition region, int pendingQiGain, int pendingCrystalGain, List<SaveItemStack> pendingItemRewards)
     {
         this.slotIndex = slotIndex;
         this.saveData = saveData;
@@ -58,12 +58,12 @@ public sealed class RetreatExpeditionRunCommand : AbstractCommand<ExpeditionReso
 public sealed class FailExpeditionRunCommand : AbstractCommand<ExpeditionResolutionResult>
 {
     private readonly int slotIndex;
-    private readonly MainMenuSaveData saveData;
+    private readonly CultivationSaveData saveData;
     private readonly WorldRegionDefinition region;
     private readonly string reason;
     private readonly List<SaveItemStack> pendingItemRewards;
 
-    public FailExpeditionRunCommand(int slotIndex, MainMenuSaveData saveData, WorldRegionDefinition region, string reason, List<SaveItemStack> pendingItemRewards)
+    public FailExpeditionRunCommand(int slotIndex, CultivationSaveData saveData, WorldRegionDefinition region, string reason, List<SaveItemStack> pendingItemRewards)
     {
         this.slotIndex = slotIndex;
         this.saveData = saveData;
@@ -81,10 +81,10 @@ public sealed class FailExpeditionRunCommand : AbstractCommand<ExpeditionResolut
 public sealed class BuildExpeditionRoomsCommand : AbstractCommand<List<ExpeditionRoomState>>
 {
     private readonly WorldRegionDefinition region;
-    private readonly MainMenuSaveData saveData;
+    private readonly CultivationSaveData saveData;
     private readonly System.Random random;
 
-    public BuildExpeditionRoomsCommand(WorldRegionDefinition region, MainMenuSaveData saveData, System.Random random)
+    public BuildExpeditionRoomsCommand(WorldRegionDefinition region, CultivationSaveData saveData, System.Random random)
     {
         this.region = region;
         this.saveData = saveData;
@@ -101,10 +101,10 @@ public sealed class BuildEncounterEnemiesCommand : AbstractCommand<List<Expediti
 {
     private readonly WorldRegionDefinition region;
     private readonly ExpeditionRoomState room;
-    private readonly MainMenuSaveData saveData;
+    private readonly CultivationSaveData saveData;
     private readonly System.Random random;
 
-    public BuildEncounterEnemiesCommand(WorldRegionDefinition region, ExpeditionRoomState room, MainMenuSaveData saveData, System.Random random)
+    public BuildEncounterEnemiesCommand(WorldRegionDefinition region, ExpeditionRoomState room, CultivationSaveData saveData, System.Random random)
     {
         this.region = region;
         this.room = room;
@@ -136,9 +136,9 @@ public sealed class BuildEncounterLootCommand : AbstractCommand<List<SaveItemSta
 public sealed class BuildClearLootCommand : AbstractCommand<List<SaveItemStack>>
 {
     private readonly WorldRegionDefinition region;
-    private readonly MainMenuSaveData saveData;
+    private readonly CultivationSaveData saveData;
 
-    public BuildClearLootCommand(WorldRegionDefinition region, MainMenuSaveData saveData)
+    public BuildClearLootCommand(WorldRegionDefinition region, CultivationSaveData saveData)
     {
         this.region = region;
         this.saveData = saveData;
@@ -152,10 +152,10 @@ public sealed class BuildClearLootCommand : AbstractCommand<List<SaveItemStack>>
 
 public sealed class BankPendingLootCommand : AbstractCommand<RewardBankResult>
 {
-    private readonly MainMenuSaveData saveData;
+    private readonly CultivationSaveData saveData;
     private readonly List<SaveItemStack> pendingItemRewards;
 
-    public BankPendingLootCommand(MainMenuSaveData saveData, List<SaveItemStack> pendingItemRewards)
+    public BankPendingLootCommand(CultivationSaveData saveData, List<SaveItemStack> pendingItemRewards)
     {
         this.saveData = saveData;
         this.pendingItemRewards = pendingItemRewards;
@@ -164,23 +164,6 @@ public sealed class BankPendingLootCommand : AbstractCommand<RewardBankResult>
     protected override RewardBankResult OnExecute()
     {
         return this.GetSystem<CultivationRewardSystem>().BankPendingLoot(saveData, pendingItemRewards);
-    }
-}
-
-public sealed class MergePendingLootCommand : AbstractCommand
-{
-    private readonly List<SaveItemStack> target;
-    private readonly List<SaveItemStack> incoming;
-
-    public MergePendingLootCommand(List<SaveItemStack> target, List<SaveItemStack> incoming)
-    {
-        this.target = target;
-        this.incoming = incoming;
-    }
-
-    protected override void OnExecute()
-    {
-        this.GetSystem<CultivationRewardSystem>().MergeLoot(target, incoming);
     }
 }
 

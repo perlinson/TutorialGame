@@ -3,12 +3,23 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+[System.Serializable]
+public sealed class PlayerCompendiumSealView
+{
+    public Image backgroundImage;
+    public TextMeshProUGUI shortLabelText;
+    public TextMeshProUGUI titleText;
+    public TextMeshProUGUI valueText;
+}
+
 public sealed class PlayerCompendiumPanel : CultivationUIPanel
 {
     private static readonly Vector2 WindowDesignSize = new Vector2(1920f, 1080f);
     private static readonly string[] MainTabLabels = { "人物", "物品", "天赋", "修仙技艺" };
-    private static readonly Color SelectedTabColor = new Color(0.62f, 0.5f, 0.24f, 0.98f);
-    private static readonly Color NormalTabColor = new Color(0.2f, 0.18f, 0.14f, 0.96f);
+    private static readonly Color SelectedTabColor = new Color(0.3f, 0.48f, 0.42f, 0.98f);
+    private static readonly Color NormalTabColor = new Color(0.23f, 0.18f, 0.12f, 0.94f);
+    private static readonly Color HighlightSealColor = new Color(0.54f, 0.45f, 0.2f, 0.96f);
+    private static readonly Color NormalSealColor = new Color(0.21f, 0.18f, 0.12f, 0.94f);
 
     public Button closeButton;
     public Button[] mainTabButtons;
@@ -18,11 +29,24 @@ public sealed class PlayerCompendiumPanel : CultivationUIPanel
     public TextMeshProUGUI summaryText;
     public TextMeshProUGUI contentTitleText;
     public TextMeshProUGUI contentBodyText;
+    public GameObject contentBodyRoot;
     public GameObject visualNodeRoot;
     public TextMeshProUGUI visualTitleText;
     public PlayerCompendiumNodeView[] visualNodeViews;
     public Image previewImage;
     public TextMeshProUGUI previewLabelText;
+    public TextMeshProUGUI realmBadgeText;
+    public Image vitalityMeterFillImage;
+    public TextMeshProUGUI vitalityMeterText;
+    public Image qiMeterFillImage;
+    public TextMeshProUGUI qiMeterText;
+    public GameObject characterOverviewRoot;
+    public TextMeshProUGUI characterNarrativeText;
+    public TextMeshProUGUI characterPrimaryStatsText;
+    public TextMeshProUGUI characterSecondaryStatsText;
+    public TextMeshProUGUI characterGrowthStatusText;
+    public TextMeshProUGUI characterSectStatusText;
+    public PlayerCompendiumSealView[] characterSealViews;
     public RectTransform windowRect;
 
     private RectTransform rootRect;
@@ -132,8 +156,6 @@ public sealed class PlayerCompendiumPanel : CultivationUIPanel
             contentBodyText.text = snapshot.ContentBody;
         }
 
-        ApplyVisualNodes(snapshot.VisualTitle, snapshot.VisualNodes);
-
         if (snapshot.Preview != null)
         {
             GameSpriteLibrary.BindSpriteOrPlaceholder(
@@ -144,6 +166,8 @@ public sealed class PlayerCompendiumPanel : CultivationUIPanel
                 snapshot.Preview.PlaceholderColor);
         }
 
+        ApplyCharacterOverview(snapshot.CharacterOverview);
+        ApplyVisualNodes(snapshot.VisualTitle, snapshot.VisualNodes);
         ApplyMainTabs(selectedMainTab);
         ApplySectionTabs(snapshot.Sections, snapshot.ResolvedSectionId);
     }
@@ -253,11 +277,12 @@ public sealed class PlayerCompendiumPanel : CultivationUIPanel
 
     private void ApplyVisualNodes(string visualTitle, PlayerCompendiumVisualNodeSnapshot[] nodes)
     {
+        var overviewVisible = characterOverviewRoot != null && characterOverviewRoot.activeSelf;
         var hasNodes = nodes != null && nodes.Length > 0;
 
         if (visualNodeRoot != null)
         {
-            visualNodeRoot.SetActive(hasNodes);
+            visualNodeRoot.SetActive(hasNodes && !overviewVisible);
         }
 
         if (visualTitleText != null)
@@ -283,6 +308,131 @@ public sealed class PlayerCompendiumPanel : CultivationUIPanel
             if (visible)
             {
                 view.Bind(nodes[i]);
+            }
+        }
+    }
+
+    private void ApplyCharacterOverview(PlayerCompendiumCharacterOverviewSnapshot overview)
+    {
+        var visible = overview != null;
+
+        if (characterOverviewRoot != null)
+        {
+            characterOverviewRoot.SetActive(visible);
+        }
+
+        if (contentBodyRoot != null)
+        {
+            contentBodyRoot.SetActive(!visible);
+        }
+        else if (contentBodyText != null)
+        {
+            contentBodyText.gameObject.SetActive(!visible);
+        }
+
+        if (!visible)
+        {
+            return;
+        }
+
+        if (realmBadgeText != null)
+        {
+            realmBadgeText.text = overview.RealmBadgeText;
+        }
+
+        if (previewLabelText != null)
+        {
+            previewLabelText.text = overview.RealmBadgeText;
+        }
+
+        if (characterNarrativeText != null)
+        {
+            characterNarrativeText.text = overview.NarrativeText;
+        }
+
+        if (characterPrimaryStatsText != null)
+        {
+            characterPrimaryStatsText.text = overview.PrimaryStatsText;
+        }
+
+        if (characterSecondaryStatsText != null)
+        {
+            characterSecondaryStatsText.text = overview.SecondaryStatsText;
+        }
+
+        if (characterGrowthStatusText != null)
+        {
+            characterGrowthStatusText.text = overview.GrowthStatusText;
+        }
+
+        if (characterSectStatusText != null)
+        {
+            characterSectStatusText.text = overview.SectStatusText;
+        }
+
+        ApplyMeter(vitalityMeterFillImage, vitalityMeterText, overview.VitalityFillAmount, overview.VitalityMeterText);
+        ApplyMeter(qiMeterFillImage, qiMeterText, overview.QiFillAmount, overview.QiMeterText);
+        ApplySeals(overview.Seals);
+    }
+
+    private static void ApplyMeter(Image fillImage, TextMeshProUGUI labelText, float fillAmount, string label)
+    {
+        if (fillImage != null)
+        {
+            fillImage.fillAmount = Mathf.Clamp01(fillAmount);
+        }
+
+        if (labelText != null)
+        {
+            labelText.text = label;
+        }
+    }
+
+    private void ApplySeals(PlayerCompendiumOverviewSealSnapshot[] seals)
+    {
+        if (characterSealViews == null)
+        {
+            return;
+        }
+
+        for (var i = 0; i < characterSealViews.Length; i++)
+        {
+            var view = characterSealViews[i];
+            if (view == null)
+            {
+                continue;
+            }
+
+            var visible = seals != null && i < seals.Length && seals[i] != null;
+            if (view.backgroundImage != null)
+            {
+                view.backgroundImage.transform.parent.gameObject.SetActive(visible);
+            }
+
+            if (!visible)
+            {
+                continue;
+            }
+
+            var seal = seals[i];
+            if (view.backgroundImage != null)
+            {
+                view.backgroundImage.color = seal.IsHighlighted ? HighlightSealColor : NormalSealColor;
+            }
+
+            if (view.shortLabelText != null)
+            {
+                view.shortLabelText.text = seal.ShortLabel;
+            }
+
+            if (view.titleText != null)
+            {
+                view.titleText.text = seal.Title;
+            }
+
+            if (view.valueText != null)
+            {
+                view.valueText.text = seal.ValueText;
             }
         }
     }

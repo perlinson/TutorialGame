@@ -26,7 +26,7 @@ public sealed class CultivationSaveSystem : AbstractSystem
 
     public CultivationArchiveSnapshot BootstrapCurrentArchive()
     {
-        if (!MainMenuSaveStore.TryGetCurrentSave(out var slotIndex, out var saveData))
+        if (!CultivationLocalSaveStore.TryGetCurrentSave(out var slotIndex, out var saveData))
         {
             ClearModels();
             return null;
@@ -35,23 +35,23 @@ public sealed class CultivationSaveSystem : AbstractSystem
         return BuildSnapshotAndSync(slotIndex, saveData);
     }
 
-    public void SaveArchive(int slotIndex, MainMenuSaveData saveData)
+    public void SaveArchive(int slotIndex, CultivationSaveData saveData)
     {
         if (saveData == null)
         {
             return;
         }
 
-        saveData.EnsureDefaults();
-        MainMenuSaveStore.SaveSlot(slotIndex, saveData);
+        PrepareWorldState(saveData);
+        CultivationLocalSaveStore.SaveSlot(slotIndex, saveData);
         SyncModels(slotIndex, saveData);
     }
 
     public void DeleteArchive(int slotIndex)
     {
-        MainMenuSaveStore.DeleteSlot(slotIndex);
+        CultivationLocalSaveStore.DeleteSlot(slotIndex);
 
-        if (MainMenuSaveStore.TryGetCurrentSave(out var currentSlotIndex, out var currentSave))
+        if (CultivationLocalSaveStore.TryGetCurrentSave(out var currentSlotIndex, out var currentSave))
         {
             SyncModels(currentSlotIndex, currentSave);
         }
@@ -61,7 +61,7 @@ public sealed class CultivationSaveSystem : AbstractSystem
         }
     }
 
-    public string ResolveTaskBoard(int slotIndex, MainMenuSaveData saveData)
+    public string ResolveTaskBoard(int slotIndex, CultivationSaveData saveData)
     {
         if (saveData == null)
         {
@@ -69,59 +69,59 @@ public sealed class CultivationSaveSystem : AbstractSystem
             return string.Empty;
         }
 
-        saveData.EnsureDefaults();
+        PrepareWorldState(saveData);
         var message = this.GetSystem<CultivationTaskSystem>().ResolveTaskBoard(saveData);
-        MainMenuSaveStore.SaveCurrent(slotIndex, saveData);
+        CultivationLocalSaveStore.SaveCurrent(slotIndex, saveData);
         SyncModels(slotIndex, saveData, message);
         return message;
     }
 
-    public TaskContextSnapshot GetActiveTaskContext(MainMenuSaveData saveData)
+    public TaskContextSnapshot GetActiveTaskContext(CultivationSaveData saveData)
     {
         return this.GetSystem<CultivationTaskSystem>().GetActiveTaskContext(saveData);
     }
 
-    public string ClaimActiveTask(int slotIndex, MainMenuSaveData saveData)
+    public string ClaimActiveTask(int slotIndex, CultivationSaveData saveData)
     {
         if (saveData == null)
         {
             return "当前没有可领取的委托奖励。";
         }
 
-        saveData.EnsureDefaults();
+        PrepareWorldState(saveData);
         var message = this.GetSystem<CultivationTaskSystem>().ClaimActiveTask(saveData);
-        MainMenuSaveStore.SaveCurrent(slotIndex, saveData);
+        CultivationLocalSaveStore.SaveCurrent(slotIndex, saveData);
         SyncModels(slotIndex, saveData, message);
         return message;
     }
 
-    public TaskProgressResult RecordTaskProgress(int slotIndex, MainMenuSaveData saveData, TaskProgressSignal signal)
+    public TaskProgressResult RecordTaskProgress(int slotIndex, CultivationSaveData saveData, TaskProgressSignal signal)
     {
         if (saveData == null)
         {
             return new TaskProgressResult();
         }
 
-        saveData.EnsureDefaults();
+        PrepareWorldState(saveData);
         var result = this.GetSystem<CultivationTaskSystem>().RecordProgress(saveData, signal);
-        MainMenuSaveStore.SaveCurrent(slotIndex, saveData);
+        CultivationLocalSaveStore.SaveCurrent(slotIndex, saveData);
         SyncModels(slotIndex, saveData);
         return result;
     }
 
-    public void SyncArchiveState(int slotIndex, MainMenuSaveData saveData)
+    public void SyncArchiveState(int slotIndex, CultivationSaveData saveData)
     {
         SyncModels(slotIndex, saveData);
     }
 
-    private CultivationArchiveSnapshot BuildSnapshotAndSync(int slotIndex, MainMenuSaveData saveData)
+    private CultivationArchiveSnapshot BuildSnapshotAndSync(int slotIndex, CultivationSaveData saveData)
     {
         var syncedCopy = CloneSaveData(saveData);
         SyncModels(slotIndex, syncedCopy);
         return new CultivationArchiveSnapshot(slotIndex, CloneSaveData(syncedCopy));
     }
 
-    private void SyncModels(int slotIndex, MainMenuSaveData saveData, string boardMessage = null)
+    private void SyncModels(int slotIndex, CultivationSaveData saveData, string boardMessage = null)
     {
         var syncedCopy = CloneSaveData(saveData);
         archiveModel.Apply(slotIndex, syncedCopy);
@@ -147,21 +147,35 @@ public sealed class CultivationSaveSystem : AbstractSystem
         worldMapModel.Apply(null);
     }
 
-    private static MainMenuSaveData CloneSaveData(MainMenuSaveData saveData)
+    private CultivationSaveData CloneSaveData(CultivationSaveData saveData)
     {
         if (saveData == null)
         {
             return null;
         }
 
-        saveData.EnsureDefaults();
+        PrepareWorldState(saveData);
         var json = JsonUtility.ToJson(saveData);
-        var clone = JsonUtility.FromJson<MainMenuSaveData>(json);
+        var clone = JsonUtility.FromJson<CultivationSaveData>(json);
         if (clone != null)
         {
             clone.EnsureDefaults();
         }
 
         return clone;
+    }
+
+    private void PrepareWorldState(CultivationSaveData saveData)
+    {
+        if (saveData == null)
+        {
+            return;
+        }
+
+        saveData.EnsureDefaults();
+        var worldGenerationSystem = this.GetSystem<CultivationWorldGenerationSystem>();
+        worldGenerationSystem?.EnsureWorldGenerated(saveData);
+        var incidentSystem = this.GetSystem<CultivationWorldIncidentSystem>();
+        incidentSystem?.EnsureIncidents(saveData);
     }
 }

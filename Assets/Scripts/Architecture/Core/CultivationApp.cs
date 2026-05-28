@@ -48,12 +48,20 @@ public sealed class CultivationApp : Architecture<CultivationApp>
         RegisterSystem(new CultivationFactionSystem());
         RegisterSystem(new CultivationRewardSystem());
         RegisterSystem(new CultivationTaskSystem());
+        RegisterSystem(new CultivationCurrencySystem());
+        RegisterSystem(new CultivationTradeSystem());
         RegisterSystem(new CultivationSettlementSystem());
         RegisterSystem(new CultivationSectSystem());
+        RegisterSystem(new CultivationWorldGenerationSystem());
+        RegisterSystem(new CultivationWorldIncidentSystem());
+        RegisterSystem(new CultivationWorldSimulationSystem());
+        RegisterSystem(new CultivationDialogueBindingSystem());
+        RegisterSystem(new CultivationDialogueSystem());
         RegisterSystem(new CultivationNpcSystem());
         RegisterSystem(new CultivationEncounterDirectorSystem());
         RegisterSystem(new CultivationEnemyAiSystem());
         RegisterSystem(new CultivationWorldMapSystem());
+        RegisterSystem(new CultivationWorldMapSnapshotSystem());
         RegisterSystem(new CultivationDamageSystem());
         RegisterSystem(new CultivationBuffSystem());
         RegisterSystem(new CultivationSkillCastSystem());
@@ -71,6 +79,11 @@ public sealed class CultivationApp : Architecture<CultivationApp>
 
     public static void EnsureInitialized()
     {
+        if (RuntimeShutdownTracker.IsShuttingDown)
+        {
+            return;
+        }
+
         InitArchitecture();
     }
 
@@ -319,7 +332,7 @@ public sealed class CultivationApp : Architecture<CultivationApp>
     public static void DestroyAllGameUiPanels()
     {
         EnsureInitialized();
-        Interface.SendCommand(new DestroyAllGameUiPanelsCommand());
+        Interface.SendCommand(new CloseAllGameUiPanelsCommand());
     }
 
     public static void HideUiPanel(GameUiPanelId panelId)
@@ -358,7 +371,7 @@ public sealed class CultivationApp : Architecture<CultivationApp>
         return Interface.SendCommand(new BootstrapCurrentArchiveCommand());
     }
 
-    public static void SaveArchive(int slotIndex, MainMenuSaveData saveData)
+    public static void SaveArchive(int slotIndex, CultivationSaveData saveData)
     {
         EnsureInitialized();
         Interface.SendCommand(new SaveArchiveCommand(slotIndex, saveData));
@@ -382,79 +395,85 @@ public sealed class CultivationApp : Architecture<CultivationApp>
         Interface.SendCommand(new DeleteArchiveCommand(slotIndex));
     }
 
-    public static string ResolveTaskBoard(int slotIndex, MainMenuSaveData saveData)
+    public static string ResolveTaskBoard(int slotIndex, CultivationSaveData saveData)
     {
         EnsureInitialized();
         return Interface.SendCommand(new ResolveTaskBoardCommand(slotIndex, saveData));
     }
 
-    public static TaskContextSnapshot GetActiveTaskContext(MainMenuSaveData saveData)
+    public static TaskContextSnapshot GetActiveTaskContext(CultivationSaveData saveData)
     {
         EnsureInitialized();
         return Interface.SendCommand(new GetActiveTaskContextCommand(saveData));
     }
 
-    public static string ClaimActiveTask(int slotIndex, MainMenuSaveData saveData)
+    public static string ClaimActiveTask(int slotIndex, CultivationSaveData saveData)
     {
         EnsureInitialized();
         return Interface.SendCommand(new ClaimActiveTaskCommand(slotIndex, saveData));
     }
 
-    public static TaskProgressResult RecordTaskProgress(int slotIndex, MainMenuSaveData saveData, TaskProgressSignal signal)
+    public static TaskProgressResult RecordTaskProgress(int slotIndex, CultivationSaveData saveData, TaskProgressSignal signal)
     {
         EnsureInitialized();
         return Interface.SendCommand(new RecordTaskProgressCommand(slotIndex, saveData, signal));
     }
 
-    public static TaskProgressResult RecordTaskProgress(MainMenuSaveData saveData, TaskProgressSignal signal)
+    public static TaskProgressResult RecordTaskProgress(CultivationSaveData saveData, TaskProgressSignal signal)
     {
         EnsureInitialized();
         return Interface.SendCommand(new RecordTaskProgressDirectCommand(saveData, signal));
     }
 
-    public static FactionReputationSnapshot RecordFactionDefeat(MainMenuSaveData saveData, ExpeditionEnemyFaction faction, string regionId, int count)
+    public static FactionReputationSnapshot RecordFactionDefeat(CultivationSaveData saveData, ExpeditionEnemyFaction faction, string regionId, int count)
     {
         EnsureInitialized();
-        return Interface.SendCommand(new RecordFactionDefeatCommand(saveData, faction, regionId, count));
+        return Interface.GetSystem<CultivationFactionSystem>().RecordDefeat(saveData, faction, regionId, count);
     }
 
-    public static FactionReputationSnapshot GetFactionSnapshot(MainMenuSaveData saveData, ExpeditionEnemyFaction faction)
+    public static FactionReputationSnapshot GetFactionSnapshot(CultivationSaveData saveData, ExpeditionEnemyFaction faction)
     {
         EnsureInitialized();
-        return Interface.SendCommand(new GetFactionSnapshotCommand(saveData, faction));
+        return Interface.GetSystem<CultivationFactionSystem>().GetSnapshot(saveData, faction);
     }
 
-    public static StorySignalResult RecordStorySignal(MainMenuSaveData saveData, StorySignal signal)
+    public static StorySignalResult RecordStorySignal(CultivationSaveData saveData, StorySignal signal)
     {
         EnsureInitialized();
-        return Interface.SendCommand(new RecordStorySignalCommand(saveData, signal));
+        return Interface.GetSystem<CultivationStorySystem>().RecordSignal(saveData, signal);
     }
 
-    public static string BuildStorySummary(MainMenuSaveData saveData)
+    public static bool StartEventConversation(string conversationTitle, CultivationSaveData saveData, System.Action onEnd = null)
+    {
+        EnsureInitialized();
+        return Interface.SendCommand(new StartEventConversationCommand(conversationTitle, saveData, onEnd));
+    }
+
+    public static string BuildStorySummary(CultivationSaveData saveData)
     {
         EnsureInitialized();
         return Interface.SendCommand(new BuildStorySummaryCommand(saveData));
     }
 
-    public static string BuildSettlementSummary(MainMenuSaveData saveData)
+    public static string BuildSettlementSummary(CultivationSaveData saveData)
     {
         EnsureInitialized();
         return Interface.SendCommand(new BuildSettlementSummaryCommand(saveData));
     }
 
-    public static string BuildSectOverview(MainMenuSaveData saveData)
+    public static string BuildSectOverview(CultivationSaveData saveData)
     {
         EnsureInitialized();
         return Interface.SendCommand(new BuildSectOverviewCommand(saveData));
     }
 
-    public static SectHallSnapshot[] GetSectHallSnapshots(MainMenuSaveData saveData)
+    public static SectHallSnapshot[] GetSectHallSnapshots(CultivationSaveData saveData)
     {
         EnsureInitialized();
         return Interface.SendCommand(new GetSectHallSnapshotsCommand(saveData));
     }
 
-    public static SectActionResult ExecuteSectAction(int slotIndex, MainMenuSaveData saveData, string actionId)
+    public static SectActionResult ExecuteSectAction(int slotIndex, CultivationSaveData saveData, string actionId)
     {
         EnsureInitialized();
         return Interface.SendCommand(new ExecuteSectActionCommand(slotIndex, saveData, actionId));
@@ -469,34 +488,34 @@ public sealed class CultivationApp : Architecture<CultivationApp>
     public static MindStateResult ApplyTraversalMindStress(ExpeditionTraversalContext context, int amount)
     {
         EnsureInitialized();
-        return Interface.SendCommand(new ApplyTraversalMindStressCommand(context, amount));
+        return Interface.GetSystem<CultivationMindStateSystem>().ApplyStress(context, amount);
     }
 
-    public static void SyncArchiveState(int slotIndex, MainMenuSaveData saveData)
+    public static void SyncArchiveState(int slotIndex, CultivationSaveData saveData)
     {
         EnsureInitialized();
         Interface.SendCommand(new SyncArchiveStateCommand(slotIndex, saveData));
     }
 
-    public static WorldMapActionResult TravelToRegion(int slotIndex, MainMenuSaveData saveData, WorldRegionDefinition region)
+    public static WorldMapActionResult TravelToRegion(int slotIndex, CultivationSaveData saveData, WorldRegionDefinition region)
     {
         EnsureInitialized();
         return Interface.SendCommand(new TravelToRegionCommand(slotIndex, saveData, region));
     }
 
-    public static WorldMapActionResult UpgradeProtectiveRelic(int slotIndex, MainMenuSaveData saveData)
+    public static WorldMapActionResult UpgradeProtectiveRelic(int slotIndex, CultivationSaveData saveData)
     {
         EnsureInitialized();
         return Interface.SendCommand(new UpgradeProtectiveRelicCommand(slotIndex, saveData));
     }
 
-    public static WorldMapActionResult UpgradeMainArtifact(int slotIndex, MainMenuSaveData saveData)
+    public static WorldMapActionResult UpgradeMainArtifact(int slotIndex, CultivationSaveData saveData)
     {
         EnsureInitialized();
         return Interface.SendCommand(new UpgradeMainArtifactCommand(slotIndex, saveData));
     }
 
-    public static WorldMapActionResult CraftRecipe(int slotIndex, MainMenuSaveData saveData, string recipeId)
+    public static WorldMapActionResult CraftRecipe(int slotIndex, CultivationSaveData saveData, string recipeId)
     {
         EnsureInitialized();
         return Interface.SendCommand(new CraftWorldMapRecipeCommand(slotIndex, saveData, recipeId));
@@ -504,7 +523,7 @@ public sealed class CultivationApp : Architecture<CultivationApp>
 
     public static ExpeditionResolutionResult CompleteExpedition(
         int slotIndex,
-        MainMenuSaveData saveData,
+        CultivationSaveData saveData,
         WorldRegionDefinition region,
         ExpeditionHeroState hero,
         int torchlight,
@@ -518,7 +537,7 @@ public sealed class CultivationApp : Architecture<CultivationApp>
 
     public static ExpeditionResolutionResult RetreatExpedition(
         int slotIndex,
-        MainMenuSaveData saveData,
+        CultivationSaveData saveData,
         WorldRegionDefinition region,
         int pendingQiGain,
         int pendingCrystalGain,
@@ -528,19 +547,19 @@ public sealed class CultivationApp : Architecture<CultivationApp>
         return Interface.SendCommand(new RetreatExpeditionRunCommand(slotIndex, saveData, region, pendingQiGain, pendingCrystalGain, pendingItemRewards));
     }
 
-    public static ExpeditionResolutionResult FailExpedition(int slotIndex, MainMenuSaveData saveData, WorldRegionDefinition region, string reason, System.Collections.Generic.List<SaveItemStack> pendingItemRewards)
+    public static ExpeditionResolutionResult FailExpedition(int slotIndex, CultivationSaveData saveData, WorldRegionDefinition region, string reason, System.Collections.Generic.List<SaveItemStack> pendingItemRewards)
     {
         EnsureInitialized();
         return Interface.SendCommand(new FailExpeditionRunCommand(slotIndex, saveData, region, reason, pendingItemRewards));
     }
 
-    public static System.Collections.Generic.List<ExpeditionRoomState> BuildExpeditionRooms(WorldRegionDefinition region, MainMenuSaveData saveData, System.Random random)
+    public static System.Collections.Generic.List<ExpeditionRoomState> BuildExpeditionRooms(WorldRegionDefinition region, CultivationSaveData saveData, System.Random random)
     {
         EnsureInitialized();
         return Interface.SendCommand(new BuildExpeditionRoomsCommand(region, saveData, random));
     }
 
-    public static System.Collections.Generic.List<ExpeditionEnemyState> BuildEncounterEnemies(WorldRegionDefinition region, ExpeditionRoomState room, MainMenuSaveData saveData, System.Random random)
+    public static System.Collections.Generic.List<ExpeditionEnemyState> BuildEncounterEnemies(WorldRegionDefinition region, ExpeditionRoomState room, CultivationSaveData saveData, System.Random random)
     {
         EnsureInitialized();
         return Interface.SendCommand(new BuildEncounterEnemiesCommand(region, room, saveData, random));
@@ -552,13 +571,13 @@ public sealed class CultivationApp : Architecture<CultivationApp>
         return Interface.SendCommand(new BuildEncounterLootCommand(context));
     }
 
-    public static System.Collections.Generic.List<SaveItemStack> BuildClearLoot(WorldRegionDefinition region, MainMenuSaveData saveData)
+    public static System.Collections.Generic.List<SaveItemStack> BuildClearLoot(WorldRegionDefinition region, CultivationSaveData saveData)
     {
         EnsureInitialized();
         return Interface.SendCommand(new BuildClearLootCommand(region, saveData));
     }
 
-    public static RewardBankResult BankPendingLoot(MainMenuSaveData saveData, System.Collections.Generic.List<SaveItemStack> pendingItemRewards)
+    public static RewardBankResult BankPendingLoot(CultivationSaveData saveData, System.Collections.Generic.List<SaveItemStack> pendingItemRewards)
     {
         EnsureInitialized();
         return Interface.SendCommand(new BankPendingLootCommand(saveData, pendingItemRewards));
@@ -567,7 +586,7 @@ public sealed class CultivationApp : Architecture<CultivationApp>
     public static void MergePendingLoot(System.Collections.Generic.List<SaveItemStack> target, System.Collections.Generic.List<SaveItemStack> incoming)
     {
         EnsureInitialized();
-        Interface.SendCommand(new MergePendingLootCommand(target, incoming));
+        Interface.GetSystem<CultivationRewardSystem>().MergeLoot(target, incoming);
     }
 
     public static CombatTurnResult ResolveDirectAttackTurn(CombatTurnContext context, ExpeditionEnemyState target, int damage, string missSummary)

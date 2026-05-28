@@ -19,7 +19,7 @@ public sealed partial class MainMenuController : CultivationUIPanel
     public Button settingsButton;
     public Button quitButton;
 
-    private readonly List<MainMenuArchetype> archetypes = new List<MainMenuArchetype>();
+    private readonly List<HeroArchetypeOption> archetypes = new List<HeroArchetypeOption>();
 
     private MainMenuConfig config;
     private RectTransform rootRect;
@@ -96,7 +96,7 @@ public sealed partial class MainMenuController : CultivationUIPanel
                     continue;
                 }
 
-                archetypes.Add(new MainMenuArchetype
+                archetypes.Add(new HeroArchetypeOption
                 {
                     id = record.id,
                     name = string.IsNullOrWhiteSpace(record.displayName) ? record.id : record.displayName,
@@ -113,7 +113,7 @@ public sealed partial class MainMenuController : CultivationUIPanel
 
         if (archetypes.Count == 0)
         {
-            archetypes.Add(new MainMenuArchetype
+            archetypes.Add(new HeroArchetypeOption
             {
                 id = "sword",
                 name = "流云剑修",
@@ -126,7 +126,7 @@ public sealed partial class MainMenuController : CultivationUIPanel
                 portraitSprite = LoadArchetypePortrait("sword")
             });
 
-            archetypes.Add(new MainMenuArchetype
+            archetypes.Add(new HeroArchetypeOption
             {
                 id = "alchemist",
                 name = "离火丹修",
@@ -139,7 +139,7 @@ public sealed partial class MainMenuController : CultivationUIPanel
                 portraitSprite = LoadArchetypePortrait("alchemist")
             });
 
-            archetypes.Add(new MainMenuArchetype
+            archetypes.Add(new HeroArchetypeOption
             {
                 id = "wanderer",
                 name = "幽谷散修",
@@ -202,9 +202,9 @@ public sealed partial class MainMenuController : CultivationUIPanel
         sfxVolume = GetSfxVolume();
         voiceVolume = GetVoiceVolume();
         isFullscreen = IsFullscreen();
-        selectedArchetypeIndex = Mathf.Clamp(MainMenuSaveStore.LoadSelectedArchetype(), 0, archetypes.Count - 1);
-        selectedLoadSlotIndex = MainMenuSaveStore.GetPreferredLoadSlot();
-        selectedCharacterSlotIndex = MainMenuSaveStore.GetPreferredNewGameSlot();
+        selectedArchetypeIndex = Mathf.Clamp(CultivationLocalSaveStore.LoadSelectedArchetype(), 0, archetypes.Count - 1);
+        selectedLoadSlotIndex = CultivationLocalSaveStore.GetPreferredLoadSlot();
+        selectedCharacterSlotIndex = CultivationLocalSaveStore.GetPreferredNewGameSlot();
         pendingHeroName = ResolveDefaultHeroName();
 
         ApplyUserSettings();
@@ -220,7 +220,7 @@ public sealed partial class MainMenuController : CultivationUIPanel
     {
         if (continueButton != null)
         {
-            continueButton.interactable = MainMenuSaveStore.HasAnySave();
+            continueButton.interactable = CultivationLocalSaveStore.HasAnySave();
         }
     }
 
@@ -247,12 +247,12 @@ public sealed partial class MainMenuController : CultivationUIPanel
             return;
         }
 
-        if (MainMenuSaveStore.TryGetCurrentSave(out var slotIndex, out var data))
+        if (CultivationLocalSaveStore.TryGetCurrentSave(out var slotIndex, out var data))
         {
             recentSaveText.text = "当前活跃档位：第 " + (slotIndex + 1) + " 档\n" +
                                   data.heroName + " / " + data.archetypeName + "\n" +
                                   data.realm + " · " + data.location + " · " + data.sectName + "\n" +
-                                  "灵石：" + data.spiritCrystals + " · " + CultivationLoadoutLibrary.BuildCompactProgressSummary(data) + "\n" +
+                                  "灵石：" + data.wallet.ToDisplayString() + " · " + CultivationLoadoutLibrary.BuildCompactProgressSummary(data) + "\n" +
                                   "上次游历：" + data.lastPlayed;
         }
         else
@@ -263,10 +263,10 @@ public sealed partial class MainMenuController : CultivationUIPanel
 
     public MainMenuLoadSnapshot BuildLoadSnapshot()
     {
-        var slots = new MainMenuSlotSnapshot[MainMenuSaveStore.SaveSlotCount];
+        var slots = new MainMenuSlotSnapshot[CultivationLocalSaveStore.SaveSlotCount];
         for (var i = 0; i < slots.Length; i++)
         {
-            var occupied = MainMenuSaveStore.TryLoadSlot(i, out var data);
+            var occupied = CultivationLocalSaveStore.TryLoadSlot(i, out var data);
             slots[i] = new MainMenuSlotSnapshot
             {
                 SlotIndex = i,
@@ -292,7 +292,7 @@ public sealed partial class MainMenuController : CultivationUIPanel
 
     private LoadDetailSnapshot BuildLoadDetailSnapshot()
     {
-        if (MainMenuSaveStore.TryLoadSlot(selectedLoadSlotIndex, out var data))
+        if (CultivationLocalSaveStore.TryLoadSlot(selectedLoadSlotIndex, out var data))
         {
             return new LoadDetailSnapshot
             {
@@ -302,7 +302,7 @@ public sealed partial class MainMenuController : CultivationUIPanel
                        "门派：" + data.sectName + "\n" +
                        "境界：" + data.realm + "\n" +
                        "位置：" + data.location + "\n" +
-                       "灵石：" + data.spiritCrystals + " · " + CultivationLoadoutLibrary.BuildCompactProgressSummary(data) + "\n" +
+                       "灵石：" + data.wallet.ToDisplayString() + " · " + CultivationLoadoutLibrary.BuildCompactProgressSummary(data) + "\n" +
                        "上次游历：" + data.lastPlayed + "\n\n" +
                        CultivationLoadoutLibrary.BuildEquipmentOverview(data) + "\n\n" +
                        data.description,
@@ -324,10 +324,10 @@ public sealed partial class MainMenuController : CultivationUIPanel
 
     public MainMenuCharacterSnapshot BuildCharacterSnapshot()
     {
-        var slots = new MainMenuSlotSnapshot[MainMenuSaveStore.SaveSlotCount];
+        var slots = new MainMenuSlotSnapshot[CultivationLocalSaveStore.SaveSlotCount];
         for (var i = 0; i < slots.Length; i++)
         {
-            var occupied = MainMenuSaveStore.TryLoadSlot(i, out var data);
+            var occupied = CultivationLocalSaveStore.TryLoadSlot(i, out var data);
             slots[i] = new MainMenuSlotSnapshot
             {
                 SlotIndex = i,
@@ -364,7 +364,7 @@ public sealed partial class MainMenuController : CultivationUIPanel
 
         var archetype = archetypes[selectedArchetypeIndex];
         var slotIndex = Mathf.Max(0, selectedCharacterSlotIndex);
-        var slotSummary = MainMenuSaveStore.TryLoadSlot(slotIndex, out var existingSave)
+        var slotSummary = CultivationLocalSaveStore.TryLoadSlot(slotIndex, out var existingSave)
             ? "档位状态：第 " + (slotIndex + 1) + " 档将覆盖现有存档 " + existingSave.heroName
             : "档位状态：第 " + (slotIndex + 1) + " 档为空，将新建修士";
 
@@ -438,7 +438,7 @@ public sealed partial class MainMenuController : CultivationUIPanel
         var isSectDisciple = archetype.id != "wanderer";
         var sectId = isSectDisciple ? "qingxuan_sect" : "rogue";
         var sectName = isSectDisciple ? "青玄山门" : "散修";
-        var saveData = new MainMenuSaveData
+        var saveData = new CultivationSaveData
         {
             heroName = heroName,
             archetypeId = archetype.id,
@@ -459,7 +459,7 @@ public sealed partial class MainMenuController : CultivationUIPanel
         saveData.currentRegionId = WorldRegionLibrary.StartingRegionId;
         saveData.unlockedRegionIds = new[] { WorldRegionLibrary.StartingRegionId };
         saveData.clearedRegionIds = System.Array.Empty<string>();
-        saveData.spiritCrystals = 0;
+        saveData.wallet = default;
         saveData.attackLevel = 0;
         saveData.vitalityLevel = 0;
         saveData.mainArtifactLevel = 0;
@@ -470,10 +470,11 @@ public sealed partial class MainMenuController : CultivationUIPanel
         saveData.storageItems = System.Array.Empty<SaveItemStack>();
         saveData.activeTaskId = string.Empty;
         saveData.taskStates = System.Array.Empty<SaveTaskState>();
+        saveData.worldSeed = Mathf.Abs((int)(System.DateTime.UtcNow.Ticks % int.MaxValue)) + selectedCharacterSlotIndex + 1;
         saveData.EnsureDefaults();
 
         SaveArchive(selectedCharacterSlotIndex, saveData);
-        MainMenuSaveStore.SaveSelectedArchetype(selectedArchetypeIndex);
+        CultivationLocalSaveStore.SaveSelectedArchetype(selectedArchetypeIndex);
         CloseCharacterPanel();
         RefreshAll();
         SetStatus("已立下新档案：" + heroName + " / " + archetype.name);
@@ -483,7 +484,7 @@ public sealed partial class MainMenuController : CultivationUIPanel
 
     public void LoadSelectedSave()
     {
-        if (!MainMenuSaveStore.TryLoadSlot(selectedLoadSlotIndex, out var saveData))
+        if (!CultivationLocalSaveStore.TryLoadSlot(selectedLoadSlotIndex, out var saveData))
         {
             SetStatus("所选档位暂无存档");
             ShowWarningMessage("所选档位暂无存档。");
@@ -495,7 +496,7 @@ public sealed partial class MainMenuController : CultivationUIPanel
 
     public void DeleteSelectedSave()
     {
-        if (!MainMenuSaveStore.TryLoadSlot(selectedLoadSlotIndex, out var saveData))
+        if (!CultivationLocalSaveStore.TryLoadSlot(selectedLoadSlotIndex, out var saveData))
         {
             SetStatus("空档位无需删除");
             ShowInfoMessage("空档位无需删除。");
@@ -503,7 +504,7 @@ public sealed partial class MainMenuController : CultivationUIPanel
         }
 
         DeleteArchive(selectedLoadSlotIndex);
-        selectedLoadSlotIndex = MainMenuSaveStore.GetPreferredLoadSlot();
+        selectedLoadSlotIndex = CultivationLocalSaveStore.GetPreferredLoadSlot();
         RefreshAll();
         SetStatus("已删除存档：" + saveData.heroName);
         ShowSuccessMessage("已删除存档：" + saveData.heroName);
@@ -559,18 +560,18 @@ public sealed partial class MainMenuController : CultivationUIPanel
 
     public void SelectLoadSlot(int slotIndex)
     {
-        selectedLoadSlotIndex = Mathf.Clamp(slotIndex, 0, MainMenuSaveStore.SaveSlotCount - 1);
+        selectedLoadSlotIndex = Mathf.Clamp(slotIndex, 0, CultivationLocalSaveStore.SaveSlotCount - 1);
     }
 
     public void SelectCharacterSlot(int slotIndex)
     {
-        selectedCharacterSlotIndex = Mathf.Clamp(slotIndex, 0, MainMenuSaveStore.SaveSlotCount - 1);
+        selectedCharacterSlotIndex = Mathf.Clamp(slotIndex, 0, CultivationLocalSaveStore.SaveSlotCount - 1);
     }
 
     public void SelectArchetype(int archetypeIndex)
     {
         selectedArchetypeIndex = Mathf.Clamp(archetypeIndex, 0, archetypes.Count - 1);
-        MainMenuSaveStore.SaveSelectedArchetype(selectedArchetypeIndex);
+        CultivationLocalSaveStore.SaveSelectedArchetype(selectedArchetypeIndex);
         if (string.IsNullOrWhiteSpace(pendingHeroName) || MatchesAnyDefaultName(pendingHeroName))
         {
             pendingHeroName = ResolveDefaultHeroName();
@@ -592,7 +593,7 @@ public sealed partial class MainMenuController : CultivationUIPanel
         return archetypes.Count > 0 ? archetypes[Mathf.Clamp(selectedArchetypeIndex, 0, archetypes.Count - 1)].defaultHeroName : "无名修士";
     }
 
-    private void EnterGameplay(int slotIndex, MainMenuSaveData saveData, string source)
+    private void EnterGameplay(int slotIndex, CultivationSaveData saveData, string source)
     {
         saveData.lastPlayed = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm");
         SaveArchive(slotIndex, saveData);

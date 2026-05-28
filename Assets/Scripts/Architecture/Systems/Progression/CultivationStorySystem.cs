@@ -7,7 +7,7 @@ public sealed class CultivationStorySystem : AbstractSystem
     {
     }
 
-    public StorySignalResult RecordSignal(MainMenuSaveData saveData, StorySignal signal)
+    public StorySignalResult RecordSignal(CultivationSaveData saveData, StorySignal signal)
     {
         var result = new StorySignalResult();
         if (saveData == null || signal == null || string.IsNullOrWhiteSpace(signal.StoryId))
@@ -27,7 +27,7 @@ public sealed class CultivationStorySystem : AbstractSystem
         return result;
     }
 
-    public string BuildStorySummary(MainMenuSaveData saveData)
+    public string BuildStorySummary(CultivationSaveData saveData)
     {
         if (saveData == null || saveData.storyLog == null || saveData.storyLog.Length == 0)
         {

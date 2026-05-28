@@ -18,7 +18,7 @@ public static class CultivationGameTime
         "亥时"
     };
 
-    public static void EnsureDefaults(MainMenuSaveData saveData)
+    public static void EnsureDefaults(CultivationSaveData saveData)
     {
         if (saveData == null)
         {
@@ -36,7 +36,7 @@ public static class CultivationGameTime
         }
     }
 
-    public static void Advance(MainMenuSaveData saveData, int segments)
+    public static void Advance(CultivationSaveData saveData, int segments)
     {
         if (saveData == null || segments <= 0)
         {
@@ -49,7 +49,7 @@ public static class CultivationGameTime
         saveData.worldTimeIndex = total % TimeLabels.Length;
     }
 
-    public static string Format(MainMenuSaveData saveData)
+    public static string Format(CultivationSaveData saveData)
     {
         if (saveData == null)
         {

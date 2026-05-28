@@ -82,7 +82,7 @@ public sealed partial class MainMenuController
     private void EnterLoadState()
     {
         SetMusicDuck(ModalMusicDuckReason, true, 6f);
-        selectedLoadSlotIndex = MainMenuSaveStore.GetPreferredLoadSlot();
+        selectedLoadSlotIndex = CultivationLocalSaveStore.GetPreferredLoadSlot();
         OpenGameUiPanel(GameUiPanelId.MainMenuLoad, new MainMenuLoadPanelData(this));
         SetStatus("已展开存档卷轴");
     }
@@ -90,8 +90,8 @@ public sealed partial class MainMenuController
     private void EnterCharacterCreateState()
     {
         SetMusicDuck(ModalMusicDuckReason, true, 6f);
-        selectedCharacterSlotIndex = MainMenuSaveStore.GetPreferredNewGameSlot();
-        selectedArchetypeIndex = Mathf.Clamp(MainMenuSaveStore.LoadSelectedArchetype(), 0, archetypes.Count - 1);
+        selectedCharacterSlotIndex = CultivationLocalSaveStore.GetPreferredNewGameSlot();
+        selectedArchetypeIndex = Mathf.Clamp(CultivationLocalSaveStore.LoadSelectedArchetype(), 0, archetypes.Count - 1);
         if (string.IsNullOrWhiteSpace(GetPendingHeroName()) || MatchesAnyDefaultName(GetPendingHeroName()))
         {
             SetPendingHeroName(string.Empty);

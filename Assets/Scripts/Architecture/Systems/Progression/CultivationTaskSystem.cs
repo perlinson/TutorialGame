@@ -3,13 +3,15 @@ using QFramework;
 public sealed class CultivationTaskSystem : AbstractSystem
 {
     private CultivationRewardSystem rewardSystem;
+    private CultivationCurrencySystem currencySystem;
 
     protected override void OnInit()
     {
         rewardSystem = this.GetSystem<CultivationRewardSystem>();
+        currencySystem = this.GetSystem<CultivationCurrencySystem>();
     }
 
-    public string ResolveTaskBoard(MainMenuSaveData saveData)
+    public string ResolveTaskBoard(CultivationSaveData saveData)
     {
         saveData.EnsureDefaults();
 
@@ -34,12 +36,12 @@ public sealed class CultivationTaskSystem : AbstractSystem
         return string.Empty;
     }
 
-    public string BuildActiveTaskSummary(MainMenuSaveData saveData)
+    public string BuildActiveTaskSummary(CultivationSaveData saveData)
     {
         return TaskLibrary.BuildActiveTaskSummary(saveData);
     }
 
-    public TaskContextSnapshot GetActiveTaskContext(MainMenuSaveData saveData)
+    public TaskContextSnapshot GetActiveTaskContext(CultivationSaveData saveData)
     {
         saveData.EnsureDefaults();
         TaskDefinition definition;
@@ -57,6 +59,9 @@ public sealed class CultivationTaskSystem : AbstractSystem
                 TriggeredEventIds = new string[0],
                 ChosenOptionIds = new string[0],
                 InjectEventIds = new string[0],
+                InjectLocationIds = new string[0],
+                InjectIncidentTemplateIds = new string[0],
+                RequiredNpcTags = new string[0],
                 SuppressEventTags = new string[0]
             };
         }
@@ -97,6 +102,9 @@ public sealed class CultivationTaskSystem : AbstractSystem
             TriggeredEventIds = state != null && state.triggeredEventIds != null ? state.triggeredEventIds : new string[0],
             ChosenOptionIds = state != null && state.chosenOptionIds != null ? state.chosenOptionIds : new string[0],
             InjectEventIds = injectEventIds.ToArray(),
+            InjectLocationIds = definition.InjectLocationIds ?? new string[0],
+            InjectIncidentTemplateIds = definition.InjectIncidentTemplateIds ?? new string[0],
+            RequiredNpcTags = definition.RequiredNpcTags ?? new string[0],
             SuppressEventTags = suppressEventTags.ToArray(),
             CanClaim = TaskLibrary.GetProgressValue(saveData, definition, state) >= definition.RequiredCount,
             IllustrationImage = definition.IllustrationImage
@@ -104,7 +112,7 @@ public sealed class CultivationTaskSystem : AbstractSystem
         return snapshot;
     }
 
-    public TaskProgressResult RecordProgress(MainMenuSaveData saveData, TaskProgressSignal signal)
+    public TaskProgressResult RecordProgress(CultivationSaveData saveData, TaskProgressSignal signal)
     {
         saveData.EnsureDefaults();
         var result = new TaskProgressResult();
@@ -193,7 +201,7 @@ public sealed class CultivationTaskSystem : AbstractSystem
         return result;
     }
 
-    public void AddTaskFlag(MainMenuSaveData saveData, string taskId, string flagId)
+    public void AddTaskFlag(CultivationSaveData saveData, string taskId, string flagId)
     {
         saveData.EnsureDefaults();
         var state = saveData.GetOrCreateTaskState(taskId);
@@ -203,7 +211,7 @@ public sealed class CultivationTaskSystem : AbstractSystem
         }
     }
 
-    public void MarkTriggeredEvent(MainMenuSaveData saveData, string taskId, string eventId)
+    public void MarkTriggeredEvent(CultivationSaveData saveData, string taskId, string eventId)
     {
         saveData.EnsureDefaults();
         var state = saveData.GetOrCreateTaskState(taskId);
@@ -213,7 +221,7 @@ public sealed class CultivationTaskSystem : AbstractSystem
         }
     }
 
-    public void MarkChosenOption(MainMenuSaveData saveData, string taskId, string optionId)
+    public void MarkChosenOption(CultivationSaveData saveData, string taskId, string optionId)
     {
         saveData.EnsureDefaults();
         var state = saveData.GetOrCreateTaskState(taskId);
@@ -223,7 +231,7 @@ public sealed class CultivationTaskSystem : AbstractSystem
         }
     }
 
-    public bool CanClaimActiveTask(MainMenuSaveData saveData, out string reason)
+    public bool CanClaimActiveTask(CultivationSaveData saveData, out string reason)
     {
         TaskDefinition definition;
         SaveTaskState state;
@@ -244,7 +252,7 @@ public sealed class CultivationTaskSystem : AbstractSystem
         return true;
     }
 
-    public string ClaimActiveTask(MainMenuSaveData saveData)
+    public string ClaimActiveTask(CultivationSaveData saveData)
     {
         saveData.EnsureDefaults();
         TaskDefinition definition;
@@ -264,7 +272,7 @@ public sealed class CultivationTaskSystem : AbstractSystem
         }
 
         saveData.qi += definition.RewardQi;
-        saveData.spiritCrystals += definition.RewardCrystals;
+        currencySystem.AddCrystals(saveData, definition.RewardCrystals);
         if (definition.RewardBagCapacity > 0)
         {
             saveData.bagCapacity += definition.RewardBagCapacity;
@@ -299,14 +307,14 @@ public sealed class CultivationTaskSystem : AbstractSystem
 
         if (!string.IsNullOrWhiteSpace(bankResult.OverflowSummary))
         {
-            saveData.spiritCrystals += bankResult.OverflowCrystalGain;
-            message += "\n储物袋已满，" + bankResult.OverflowSummary + " 已折成灵石 +" + bankResult.OverflowCrystalGain + "。";
+            currencySystem.AddCrystals(saveData, bankResult.OverflowCrystalGain);
+            message += "\n储物袋已满，" + bankResult.OverflowSummary + " 已折成" + CultivationCurrencySystem.GradeName(currencySystem.GetPlayerGrade(saveData)) + " +" + bankResult.OverflowCrystalGain + "。";
         }
 
         return message;
     }
 
-    private static bool EnsureActiveTask(MainMenuSaveData saveData)
+    private static bool EnsureActiveTask(CultivationSaveData saveData)
     {
         saveData.EnsureDefaults();
         if (!string.IsNullOrWhiteSpace(saveData.activeTaskId))
@@ -342,7 +350,7 @@ public sealed class CultivationTaskSystem : AbstractSystem
         return false;
     }
 
-    private static bool IsTaskUnlocked(MainMenuSaveData saveData, TaskDefinition definition)
+    private static bool IsTaskUnlocked(CultivationSaveData saveData, TaskDefinition definition)
     {
         return saveData.realmTier >= definition.UnlockRealmTier &&
                (string.IsNullOrWhiteSpace(definition.UnlockRegionId) || saveData.IsRegionUnlocked(definition.UnlockRegionId));

@@ -11,7 +11,7 @@ public sealed class CultivationWorldMapSystem : AbstractSystem
         settlementSystem = this.GetSystem<CultivationSettlementSystem>();
     }
 
-    public WorldMapActionResult TravelToRegion(int slotIndex, MainMenuSaveData saveData, WorldRegionDefinition region)
+    public WorldMapActionResult TravelToRegion(int slotIndex, CultivationSaveData saveData, WorldRegionDefinition region)
     {
         if (saveData == null || region == null)
         {
@@ -26,23 +26,23 @@ public sealed class CultivationWorldMapSystem : AbstractSystem
 
         saveData.currentRegionId = region.Id;
         saveData.location = region.DisplayName;
-        CultivationGameTime.Advance(saveData, 1);
+        GameTime.Advance(saveData, 1);
         saveData.lastPlayed = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm");
         saveSystem.SaveArchive(slotIndex, saveData);
         return new WorldMapActionResult(true, "已整备路引，准备前往 " + region.DisplayName + "。");
     }
 
-    public WorldMapActionResult UpgradeProtectiveRelic(int slotIndex, MainMenuSaveData saveData)
+    public WorldMapActionResult UpgradeProtectiveRelic(int slotIndex, CultivationSaveData saveData)
     {
         return settlementSystem.UpgradeProtectiveRelic(slotIndex, saveData);
     }
 
-    public WorldMapActionResult UpgradeMainArtifact(int slotIndex, MainMenuSaveData saveData)
+    public WorldMapActionResult UpgradeMainArtifact(int slotIndex, CultivationSaveData saveData)
     {
         return settlementSystem.UpgradeMainArtifact(slotIndex, saveData);
     }
 
-    public WorldMapActionResult CraftRecipe(int slotIndex, MainMenuSaveData saveData, string recipeId)
+    public WorldMapActionResult CraftRecipe(int slotIndex, CultivationSaveData saveData, string recipeId)
     {
         return settlementSystem.CraftRecipe(slotIndex, saveData, recipeId);
     }

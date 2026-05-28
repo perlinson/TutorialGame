@@ -4,7 +4,7 @@ using UnityEngine;
 
 /// <summary>
 /// S1 RealmSystem：修炼 / 突破 / 瓶颈 / 心魔 业务下沉。
-/// 负责对 <see cref="MainMenuSaveData"/> 上的 realmTier / qi / atBottleneck / breakthroughCount / heartDemonMark
+/// 负责对 <see cref="CultivationSaveData"/> 上的 realmTier / qi / atBottleneck / breakthroughCount / heartDemonMark
 /// 进行加减并同步到 <see cref="CultivationRealmModel"/>。不直接负责存盘，由调用方在合适的时机
 /// （Command / SaveSystem）触发 <see cref="ISaveSystem"/>.SaveArchive。
 /// </summary>
@@ -33,7 +33,7 @@ public sealed class CultivationRealmSystem : AbstractSystem
     /// 增加修为，自动尝试连环突破，返回实际突破次数。
     /// 当 <paramref name="autoBreakthrough"/> 为 false 时仅累加修为，不触发突破。
     /// </summary>
-    public RealmGainResult GainQi(MainMenuSaveData saveData, int amount, bool autoBreakthrough = true)
+    public RealmGainResult GainQi(CultivationSaveData saveData, int amount, bool autoBreakthrough = true)
     {
         if (saveData == null || amount <= 0)
         {
@@ -78,7 +78,7 @@ public sealed class CultivationRealmSystem : AbstractSystem
     }
 
     /// <summary>显式尝试一次突破（用于"打坐 / 闭关 / 服丹"等主动行为）。</summary>
-    public RealmBreakthroughResult TryBreakthrough(MainMenuSaveData saveData)
+    public RealmBreakthroughResult TryBreakthrough(CultivationSaveData saveData)
     {
         if (saveData == null)
         {
@@ -121,7 +121,7 @@ public sealed class CultivationRealmSystem : AbstractSystem
     }
 
     /// <summary>进入瓶颈状态，后续修为获取不会触发自动突破。</summary>
-    public void EnterBottleneck(MainMenuSaveData saveData, string reason = null)
+    public void EnterBottleneck(CultivationSaveData saveData, string reason = null)
     {
         if (saveData == null)
         {
@@ -133,7 +133,7 @@ public sealed class CultivationRealmSystem : AbstractSystem
         SyncModel(saveData);
     }
 
-    public void ExitBottleneck(MainMenuSaveData saveData)
+    public void ExitBottleneck(CultivationSaveData saveData)
     {
         if (saveData == null)
         {
@@ -145,7 +145,7 @@ public sealed class CultivationRealmSystem : AbstractSystem
         SyncModel(saveData);
     }
 
-    public void AddHeartDemonMark(MainMenuSaveData saveData, int delta)
+    public void AddHeartDemonMark(CultivationSaveData saveData, int delta)
     {
         if (saveData == null || delta == 0)
         {
@@ -157,7 +157,7 @@ public sealed class CultivationRealmSystem : AbstractSystem
         SyncModel(saveData);
     }
 
-    public void ClearHeartDemonMark(MainMenuSaveData saveData)
+    public void ClearHeartDemonMark(CultivationSaveData saveData)
     {
         if (saveData == null)
         {
@@ -169,7 +169,7 @@ public sealed class CultivationRealmSystem : AbstractSystem
         SyncModel(saveData);
     }
 
-    public string BuildSummary(MainMenuSaveData saveData)
+    public string BuildSummary(CultivationSaveData saveData)
     {
         if (saveData == null)
         {
@@ -203,7 +203,7 @@ public sealed class CultivationRealmSystem : AbstractSystem
         return builder.ToString();
     }
 
-    private void SyncModel(MainMenuSaveData saveData)
+    private void SyncModel(CultivationSaveData saveData)
     {
         var model = this.GetModel<CultivationRealmModel>();
         if (model != null)

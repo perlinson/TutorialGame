@@ -32,51 +32,6 @@ public sealed class OpenMainMenuPanelCommand : AbstractCommand<MainMenuControlle
     }
 }
 
-public sealed class OpenMainMenuSettingsPanelCommand : AbstractCommand<MainMenuSettingsPanel>
-{
-    private readonly MainMenuController owner;
-
-    public OpenMainMenuSettingsPanelCommand(MainMenuController owner)
-    {
-        this.owner = owner;
-    }
-
-    protected override MainMenuSettingsPanel OnExecute()
-    {
-        return this.GetUtility<IGameUiService>().OpenPanel(GameUiPanelId.MainMenuSettings, new MainMenuSettingsPanelData(owner)) as MainMenuSettingsPanel;
-    }
-}
-
-public sealed class OpenMainMenuLoadPanelCommand : AbstractCommand<MainMenuLoadPanel>
-{
-    private readonly MainMenuController owner;
-
-    public OpenMainMenuLoadPanelCommand(MainMenuController owner)
-    {
-        this.owner = owner;
-    }
-
-    protected override MainMenuLoadPanel OnExecute()
-    {
-        return this.GetUtility<IGameUiService>().OpenPanel(GameUiPanelId.MainMenuLoad, new MainMenuLoadPanelData(owner)) as MainMenuLoadPanel;
-    }
-}
-
-public sealed class OpenMainMenuCharacterCreatePanelCommand : AbstractCommand<MainMenuCharacterCreatePanel>
-{
-    private readonly MainMenuController owner;
-
-    public OpenMainMenuCharacterCreatePanelCommand(MainMenuController owner)
-    {
-        this.owner = owner;
-    }
-
-    protected override MainMenuCharacterCreatePanel OnExecute()
-    {
-        return this.GetUtility<IGameUiService>().OpenPanel(GameUiPanelId.MainMenuCharacterCreate, new MainMenuCharacterCreatePanelData(owner)) as MainMenuCharacterCreatePanel;
-    }
-}
-
 public sealed class OpenWorldMapPanelCommand : AbstractCommand<WorldMapController>
 {
     private readonly string gameplaySceneName;
@@ -140,15 +95,6 @@ public sealed class DestroyGameUiPanelCommand : AbstractCommand
     {
         GameUiStateCommandUtility.SyncBeforeHideOrClose(this, panelId);
         this.GetUtility<IGameUiService>().DestroyPanel(panelId);
-    }
-}
-
-public sealed class DestroyAllGameUiPanelsCommand : AbstractCommand
-{
-    protected override void OnExecute()
-    {
-        GameUiStateCommandUtility.SyncAllHidden(this);
-        this.GetUtility<IGameUiService>().DestroyAllPanels();
     }
 }
 

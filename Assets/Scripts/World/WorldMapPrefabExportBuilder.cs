@@ -219,72 +219,191 @@ public static class WorldMapPrefabExportBuilder
 
         var panel = root.AddComponent<PlayerCompendiumPanel>();
 
-        var blocker = CreatePanel("Blocker", root.transform, Vector2.zero, Vector2.zero, new Color(0.02f, 0.03f, 0.04f, 0.82f));
+        var blocker = CreatePanel("Blocker", root.transform, Vector2.zero, Vector2.zero, new Color(0.02f, 0.05f, 0.06f, 0.86f));
         Stretch(blocker);
 
-        var window = CreatePanel("Window", root.transform, Vector2.zero, new Vector2(1920f, 1080f), PaperMid);
+        var atmosphere = CreateImage("Atmosphere", root.transform, new Color(0.16f, 0.26f, 0.22f, 0.22f));
+        Stretch(atmosphere);
+        atmosphere.offsetMin = new Vector2(-120f, -80f);
+        atmosphere.offsetMax = new Vector2(120f, 80f);
+
+        var window = CreatePanel("Window", root.transform, Vector2.zero, new Vector2(1920f, 1080f), new Color(0.08f, 0.1f, 0.09f, 0.9f));
         SetAnchors(window, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
         AddOutline(window, AccentGold);
         ApplyOptionalSprite(window.GetComponent<Image>(), DetailPanelArtPath);
-        CreateAccentStrip(window, 10f);
+        CreateAccentStrip(window, 12f);
 
-        var panelTitle = CreateText("CompendiumTitle", window, new Vector2(36f, -24f), new Vector2(520f, 38f), 34, FontStyle.Bold, TextAnchor.MiddleLeft);
+        var panelTitle = CreateText("CompendiumTitle", window, new Vector2(36f, -24f), new Vector2(360f, 40f), 36, FontStyle.Bold, TextAnchor.MiddleLeft);
         panelTitle.text = "修士志";
-        var panelSubtitle = CreateText("CompendiumSubtitle", window, new Vector2(36f, -66f), new Vector2(720f, 24f), 18, FontStyle.Normal, TextAnchor.MiddleLeft);
-        panelSubtitle.text = "人物 / 物品 / 天赋 / 修仙技艺";
-        var closeButton = CreateButton("CompendiumCloseButton", window, new Vector2(1640f, -28f), new Vector2(180f, 42f), "合上卷册", 18);
+        panelTitle.color = new Color(0.94f, 0.9f, 0.78f, 0.98f);
+        var panelSubtitle = CreateText("CompendiumSubtitle", window, new Vector2(36f, -68f), new Vector2(420f, 24f), 18, FontStyle.Normal, TextAnchor.MiddleLeft);
+        panelSubtitle.text = "观命火 / 察道途 / 整行藏";
+        panelSubtitle.color = new Color(0.74f, 0.8f, 0.72f, 0.94f);
+        var closeButton = CreateButton("CompendiumCloseButton", window, new Vector2(1656f, -26f), new Vector2(160f, 42f), "收起卷册", 18);
 
-        var mainTabsPanel = CreatePanel("MainTabsPanel", window, new Vector2(36f, -112f), new Vector2(1780f, 82f), new Color(0.09f, 0.1f, 0.11f, 0.9f));
+        var mainTabsPanel = CreatePanel("MainTabsPanel", window, new Vector2(36f, -114f), new Vector2(1780f, 78f), new Color(0.16f, 0.12f, 0.08f, 0.92f));
         SetAnchors(mainTabsPanel, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f));
-        AddOutline(mainTabsPanel, new Color(0.44f, 0.37f, 0.22f, 0.8f));
+        AddOutline(mainTabsPanel, new Color(0.42f, 0.56f, 0.48f, 0.72f));
 
         var mainTabButtons = new Button[4];
         for (var i = 0; i < mainTabButtons.Length; i++)
         {
-            mainTabButtons[i] = CreateButton("MainTabButton" + i, mainTabsPanel, new Vector2(18f + i * 440f, -18f), new Vector2(412f, 48f), "主标签", 18);
+            mainTabButtons[i] = CreateButton("MainTabButton" + i, mainTabsPanel, new Vector2(18f + i * 436f, -16f), new Vector2(408f, 46f), "主标签", 18);
         }
 
-        var summaryPanel = CreatePanel("SummaryPanel", window, new Vector2(36f, -206f), new Vector2(620f, 820f), new Color(0.09f, 0.1f, 0.11f, 0.88f));
+        var summaryPanel = CreatePanel("SummaryPanel", window, new Vector2(36f, -194f), new Vector2(560f, 848f), new Color(0.08f, 0.11f, 0.1f, 0.88f));
         SetAnchors(summaryPanel, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f));
         AddOutline(summaryPanel, new Color(0.44f, 0.37f, 0.22f, 0.8f));
-        CreateText("SummaryPanelTitle", summaryPanel, new Vector2(20f, -18f), new Vector2(220f, 26f), 22, FontStyle.Bold, TextAnchor.MiddleLeft).text = "卷首摘要";
-        var preview = CreateImage("CompendiumPreview", summaryPanel, new Color(0.2f, 0.18f, 0.13f, 1f));
-        SetAnchors(preview, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f));
-        preview.anchoredPosition = new Vector2(20f, -58f);
-        preview.sizeDelta = new Vector2(580f, 280f);
-        preview.GetComponent<Image>().sprite = GameSpriteLibrary.WhiteSquareSprite;
-        var previewLabel = CreateText("CompendiumPreviewLabel", summaryPanel, new Vector2(20f, -182f), new Vector2(580f, 30f), 20, FontStyle.Bold, TextAnchor.MiddleCenter);
-        var summaryText = CreateScrollTextArea("CompendiumSummaryScroll", summaryPanel, new Vector2(18f, -366f), new Vector2(584f, 430f), 18);
+        CreateText("SummaryPanelTitle", summaryPanel, new Vector2(20f, -18f), new Vector2(220f, 26f), 24, FontStyle.Bold, TextAnchor.MiddleLeft).text = "命火与法相";
+        var realmBadge = CreateText("RealmBadge", summaryPanel, new Vector2(302f, -20f), new Vector2(236f, 24f), 18, FontStyle.Bold, TextAnchor.MiddleRight);
+        realmBadge.color = new Color(0.76f, 0.84f, 0.75f, 0.96f);
 
-        var sectionPanel = CreatePanel("SectionPanel", window, new Vector2(692f, -206f), new Vector2(292f, 820f), new Color(0.09f, 0.1f, 0.11f, 0.88f));
+        var auraBack = CreateImage("AuraBack", summaryPanel, new Color(0.78f, 0.64f, 0.22f, 0.08f));
+        SetAnchors(auraBack, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f));
+        auraBack.anchoredPosition = new Vector2(110f, -110f);
+        auraBack.sizeDelta = new Vector2(340f, 340f);
+        var auraFront = CreateImage("AuraFront", summaryPanel, new Color(0.4f, 0.67f, 0.56f, 0.06f));
+        SetAnchors(auraFront, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f));
+        auraFront.anchoredPosition = new Vector2(136f, -136f);
+        auraFront.sizeDelta = new Vector2(288f, 288f);
+
+        var preview = CreateImage("CompendiumPreview", summaryPanel, new Color(0.18f, 0.2f, 0.16f, 1f));
+        SetAnchors(preview, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f));
+        preview.anchoredPosition = new Vector2(104f, -108f);
+        preview.sizeDelta = new Vector2(352f, 436f);
+        var previewImage = preview.GetComponent<Image>();
+        previewImage.sprite = GameSpriteLibrary.WhiteSquareSprite;
+        previewImage.preserveAspect = true;
+        var previewLabel = CreateText("CompendiumPreviewLabel", summaryPanel, new Vector2(94f, -566f), new Vector2(372f, 28f), 18, FontStyle.Bold, TextAnchor.MiddleCenter);
+        previewLabel.color = new Color(0.86f, 0.82f, 0.72f, 0.96f);
+
+        var vitalityMeterRoot = CreatePanel("VitalityMeterRoot", summaryPanel, new Vector2(22f, -142f), new Vector2(62f, 196f), new Color(0.16f, 0.11f, 0.08f, 0.86f));
+        SetAnchors(vitalityMeterRoot, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f));
+        AddOutline(vitalityMeterRoot, new Color(0.66f, 0.48f, 0.22f, 0.72f));
+        var vitalityMeterFill = CreateImage("Fill", vitalityMeterRoot, new Color(0.88f, 0.56f, 0.24f, 0.98f));
+        Stretch(vitalityMeterFill);
+        vitalityMeterFill.offsetMin = new Vector2(8f, 8f);
+        vitalityMeterFill.offsetMax = new Vector2(-8f, -8f);
+        var vitalityFillImage = vitalityMeterFill.GetComponent<Image>();
+        vitalityFillImage.sprite = GameSpriteLibrary.WhiteSquareSprite;
+        vitalityFillImage.type = Image.Type.Filled;
+        vitalityFillImage.fillMethod = Image.FillMethod.Vertical;
+        vitalityFillImage.fillOrigin = (int) Image.OriginVertical.Bottom;
+        vitalityFillImage.fillAmount = 1f;
+        var vitalityMeterText = CreateText("VitalityMeterText", summaryPanel, new Vector2(18f, -350f), new Vector2(72f, 62f), 14, FontStyle.Bold, TextAnchor.UpperLeft);
+        vitalityMeterText.color = new Color(0.93f, 0.87f, 0.78f, 0.98f);
+        EnableWrapping(vitalityMeterText);
+
+        var qiMeterRoot = CreatePanel("QiMeterRoot", summaryPanel, new Vector2(22f, -392f), new Vector2(62f, 196f), new Color(0.09f, 0.14f, 0.16f, 0.86f));
+        SetAnchors(qiMeterRoot, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f));
+        AddOutline(qiMeterRoot, new Color(0.38f, 0.66f, 0.64f, 0.72f));
+        var qiMeterFill = CreateImage("Fill", qiMeterRoot, new Color(0.3f, 0.82f, 0.88f, 0.96f));
+        Stretch(qiMeterFill);
+        qiMeterFill.offsetMin = new Vector2(8f, 8f);
+        qiMeterFill.offsetMax = new Vector2(-8f, -8f);
+        var qiFillImage = qiMeterFill.GetComponent<Image>();
+        qiFillImage.sprite = GameSpriteLibrary.WhiteSquareSprite;
+        qiFillImage.type = Image.Type.Filled;
+        qiFillImage.fillMethod = Image.FillMethod.Vertical;
+        qiFillImage.fillOrigin = (int) Image.OriginVertical.Bottom;
+        qiFillImage.fillAmount = 0.42f;
+        var qiMeterText = CreateText("QiMeterText", summaryPanel, new Vector2(18f, -600f), new Vector2(72f, 62f), 14, FontStyle.Bold, TextAnchor.UpperLeft);
+        qiMeterText.color = new Color(0.82f, 0.92f, 0.9f, 0.98f);
+        EnableWrapping(qiMeterText);
+
+        var summaryText = CreateScrollTextArea("CompendiumSummaryScroll", summaryPanel, new Vector2(18f, -632f), new Vector2(524f, 186f), 17);
+
+        var sectionPanel = CreatePanel("SectionPanel", window, new Vector2(622f, -194f), new Vector2(238f, 848f), new Color(0.1f, 0.11f, 0.1f, 0.88f));
         SetAnchors(sectionPanel, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f));
         AddOutline(sectionPanel, new Color(0.44f, 0.37f, 0.22f, 0.8f));
-        CreateText("SectionPanelTitle", sectionPanel, new Vector2(20f, -18f), new Vector2(220f, 26f), 22, FontStyle.Bold, TextAnchor.MiddleLeft).text = "分页索引";
+        CreateText("SectionPanelTitle", sectionPanel, new Vector2(18f, -18f), new Vector2(180f, 26f), 22, FontStyle.Bold, TextAnchor.MiddleLeft).text = "分页索引";
 
         var sectionTabButtons = new Button[4];
         for (var i = 0; i < sectionTabButtons.Length; i++)
         {
-            sectionTabButtons[i] = CreateButton("SectionTabButton" + i, sectionPanel, new Vector2(20f, -72f - i * 64f), new Vector2(252f, 48f), "纵向标签", 17);
+            sectionTabButtons[i] = CreateButton("SectionTabButton" + i, sectionPanel, new Vector2(18f, -72f - i * 64f), new Vector2(202f, 48f), "纵向标签", 17);
         }
 
-        var contentPanel = CreatePanel("ContentPanel", window, new Vector2(1020f, -206f), new Vector2(796f, 820f), new Color(0.09f, 0.1f, 0.11f, 0.88f));
+        var contentPanel = CreatePanel("ContentPanel", window, new Vector2(886f, -194f), new Vector2(930f, 848f), new Color(0.08f, 0.11f, 0.1f, 0.9f));
         SetAnchors(contentPanel, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f));
         AddOutline(contentPanel, new Color(0.44f, 0.37f, 0.22f, 0.8f));
-        var contentTitle = CreateText("ContentTitle", contentPanel, new Vector2(20f, -18f), new Vector2(520f, 28f), 24, FontStyle.Bold, TextAnchor.MiddleLeft);
+        var contentTitle = CreateText("ContentTitle", contentPanel, new Vector2(24f, -18f), new Vector2(520f, 28f), 26, FontStyle.Bold, TextAnchor.MiddleLeft);
         contentTitle.text = "条目内容";
-        var visualPanel = CreatePanel("VisualPanel", contentPanel, new Vector2(18f, -60f), new Vector2(760f, 328f), new Color(0.11f, 0.11f, 0.12f, 0.7f));
+
+        var characterOverviewRoot = CreateUiObject("CharacterOverviewRoot", contentPanel).GetComponent<RectTransform>();
+        SetAnchors(characterOverviewRoot, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f));
+        characterOverviewRoot.anchoredPosition = new Vector2(0f, 0f);
+        characterOverviewRoot.sizeDelta = new Vector2(930f, 848f);
+
+        var overviewNarrativePanel = CreatePanel("OverviewNarrativePanel", characterOverviewRoot, new Vector2(20f, -64f), new Vector2(890f, 176f), new Color(0.12f, 0.13f, 0.11f, 0.78f));
+        SetAnchors(overviewNarrativePanel, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f));
+        AddOutline(overviewNarrativePanel, new Color(0.4f, 0.34f, 0.22f, 0.72f));
+        CreateText("OverviewNarrativeTitle", overviewNarrativePanel, new Vector2(20f, -18f), new Vector2(220f, 24f), 20, FontStyle.Bold, TextAnchor.MiddleLeft).text = "道途札记";
+        var characterNarrative = CreateText("OverviewNarrativeText", overviewNarrativePanel, new Vector2(20f, -56f), new Vector2(850f, 96f), 17, FontStyle.Normal, TextAnchor.UpperLeft);
+        EnableWrapping(characterNarrative);
+
+        var overviewStatsPanel = CreatePanel("OverviewStatsPanel", characterOverviewRoot, new Vector2(20f, -262f), new Vector2(438f, 212f), new Color(0.11f, 0.14f, 0.13f, 0.8f));
+        SetAnchors(overviewStatsPanel, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f));
+        AddOutline(overviewStatsPanel, new Color(0.36f, 0.6f, 0.54f, 0.68f));
+        CreateText("OverviewStatsTitle", overviewStatsPanel, new Vector2(20f, -18f), new Vector2(220f, 24f), 20, FontStyle.Bold, TextAnchor.MiddleLeft).text = "基础属性";
+        var characterPrimaryStats = CreateText("PrimaryStatsText", overviewStatsPanel, new Vector2(20f, -58f), new Vector2(188f, 128f), 18, FontStyle.Bold, TextAnchor.UpperLeft);
+        EnableWrapping(characterPrimaryStats);
+        var characterSecondaryStats = CreateText("SecondaryStatsText", overviewStatsPanel, new Vector2(226f, -58f), new Vector2(188f, 128f), 18, FontStyle.Bold, TextAnchor.UpperLeft);
+        EnableWrapping(characterSecondaryStats);
+
+        var overviewGrowthPanel = CreatePanel("OverviewGrowthPanel", characterOverviewRoot, new Vector2(474f, -262f), new Vector2(436f, 132f), new Color(0.14f, 0.12f, 0.1f, 0.8f));
+        SetAnchors(overviewGrowthPanel, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f));
+        AddOutline(overviewGrowthPanel, new Color(0.54f, 0.44f, 0.24f, 0.68f));
+        CreateText("OverviewGrowthTitle", overviewGrowthPanel, new Vector2(18f, -16f), new Vector2(220f, 24f), 19, FontStyle.Bold, TextAnchor.MiddleLeft).text = "成长状态";
+        var characterGrowthStatus = CreateText("GrowthStatusText", overviewGrowthPanel, new Vector2(18f, -48f), new Vector2(400f, 72f), 17, FontStyle.Bold, TextAnchor.UpperLeft);
+        EnableWrapping(characterGrowthStatus);
+
+        var overviewSectPanel = CreatePanel("OverviewSectPanel", characterOverviewRoot, new Vector2(474f, -406f), new Vector2(436f, 132f), new Color(0.1f, 0.13f, 0.14f, 0.8f));
+        SetAnchors(overviewSectPanel, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f));
+        AddOutline(overviewSectPanel, new Color(0.32f, 0.58f, 0.62f, 0.68f));
+        CreateText("OverviewSectTitle", overviewSectPanel, new Vector2(18f, -16f), new Vector2(220f, 24f), 19, FontStyle.Bold, TextAnchor.MiddleLeft).text = "宗门与行藏";
+        var characterSectStatus = CreateText("SectStatusText", overviewSectPanel, new Vector2(18f, -48f), new Vector2(400f, 72f), 17, FontStyle.Bold, TextAnchor.UpperLeft);
+        EnableWrapping(characterSectStatus);
+
+        var overviewSealPanel = CreatePanel("OverviewSealPanel", characterOverviewRoot, new Vector2(20f, -554f), new Vector2(890f, 250f), new Color(0.11f, 0.11f, 0.1f, 0.82f));
+        SetAnchors(overviewSealPanel, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f));
+        AddOutline(overviewSealPanel, new Color(0.44f, 0.37f, 0.22f, 0.72f));
+        CreateText("OverviewSealTitle", overviewSealPanel, new Vector2(20f, -18f), new Vector2(220f, 24f), 20, FontStyle.Bold, TextAnchor.MiddleLeft).text = "修行根基";
+
+        var sealViews = new PlayerCompendiumSealView[5];
+        for (var i = 0; i < sealViews.Length; i++)
+        {
+            var sealRoot = CreatePanel("Seal" + i, overviewSealPanel, new Vector2(18f + i * 174f, -64f), new Vector2(162f, 160f), new Color(0.22f, 0.18f, 0.12f, 0.94f));
+            SetAnchors(sealRoot, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f));
+            AddOutline(sealRoot, new Color(0.54f, 0.44f, 0.22f, 0.7f));
+            var sealShort = CreateText("ShortLabel", sealRoot, new Vector2(16f, -16f), new Vector2(40f, 32f), 24, FontStyle.Bold, TextAnchor.MiddleLeft);
+            sealShort.color = new Color(0.94f, 0.88f, 0.72f, 0.98f);
+            var sealTitle = CreateText("Title", sealRoot, new Vector2(16f, -54f), new Vector2(128f, 22f), 16, FontStyle.Bold, TextAnchor.MiddleLeft);
+            sealTitle.color = new Color(0.78f, 0.84f, 0.74f, 0.94f);
+            var sealValue = CreateText("Value", sealRoot, new Vector2(16f, -94f), new Vector2(128f, 34f), 20, FontStyle.Bold, TextAnchor.MiddleLeft);
+            sealValue.color = new Color(0.92f, 0.88f, 0.8f, 0.98f);
+            sealViews[i] = new PlayerCompendiumSealView
+            {
+                backgroundImage = sealRoot.GetComponent<Image>(),
+                shortLabelText = sealShort,
+                titleText = sealTitle,
+                valueText = sealValue
+            };
+        }
+
+        var visualPanel = CreatePanel("VisualPanel", contentPanel, new Vector2(20f, -64f), new Vector2(890f, 298f), new Color(0.11f, 0.13f, 0.11f, 0.78f));
         SetAnchors(visualPanel, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f));
         AddOutline(visualPanel, new Color(0.4f, 0.34f, 0.22f, 0.72f));
         var visualTitle = CreateText("VisualTitle", visualPanel, new Vector2(18f, -16f), new Vector2(280f, 24f), 20, FontStyle.Bold, TextAnchor.MiddleLeft);
         visualTitle.text = "技艺节点";
 
         var visualNodeViews = new PlayerCompendiumNodeView[4];
-        var nodeWidth = 176f;
-        var nodeHeight = 232f;
+        var nodeWidth = 212f;
+        var nodeHeight = 198f;
         var nodeGap = 12f;
         for (var i = 0; i < visualNodeViews.Length; i++)
         {
-            var nodeRoot = CreatePanel("VisualNode" + i, visualPanel, new Vector2(18f + i * (nodeWidth + nodeGap), -52f), new Vector2(nodeWidth, nodeHeight), new Color(0.18f, 0.16f, 0.12f, 0.94f));
+            var nodeRoot = CreatePanel("VisualNode" + i, visualPanel, new Vector2(18f + i * (nodeWidth + nodeGap), -56f), new Vector2(nodeWidth, nodeHeight), new Color(0.18f, 0.16f, 0.12f, 0.94f));
             SetAnchors(nodeRoot, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f));
             AddOutline(nodeRoot, new Color(0.56f, 0.46f, 0.24f, 0.82f));
             var nodeView = nodeRoot.gameObject.AddComponent<PlayerCompendiumNodeView>();
@@ -297,7 +416,7 @@ public static class WorldMapPrefabExportBuilder
             nodeView.titleText = CreateText("Title", nodeRoot, new Vector2(12f, -18f), new Vector2(nodeWidth - 24f, 24f), 18, FontStyle.Bold, TextAnchor.MiddleLeft);
             nodeView.subtitleText = CreateText("Subtitle", nodeRoot, new Vector2(12f, -48f), new Vector2(nodeWidth - 24f, 22f), 13, FontStyle.Normal, TextAnchor.MiddleLeft);
             nodeView.stateText = CreateText("State", nodeRoot, new Vector2(12f, -76f), new Vector2(nodeWidth - 24f, 22f), 14, FontStyle.Bold, TextAnchor.MiddleLeft);
-            nodeView.descriptionText = CreateText("Description", nodeRoot, new Vector2(12f, -104f), new Vector2(nodeWidth - 24f, 116f), 13, FontStyle.Normal, TextAnchor.UpperLeft);
+            nodeView.descriptionText = CreateText("Description", nodeRoot, new Vector2(12f, -102f), new Vector2(nodeWidth - 24f, 82f), 13, FontStyle.Normal, TextAnchor.UpperLeft);
             EnableWrapping(nodeView.descriptionText);
             visualNodeViews[i] = nodeView;
 
@@ -305,12 +424,12 @@ public static class WorldMapPrefabExportBuilder
             {
                 var edge = CreateImage("Connector" + i, visualPanel, new Color(0.5f, 0.44f, 0.26f, 0.62f));
                 SetAnchors(edge, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 0.5f));
-                edge.anchoredPosition = new Vector2(18f + nodeWidth + i * (nodeWidth + nodeGap), -166f);
+                edge.anchoredPosition = new Vector2(18f + nodeWidth + i * (nodeWidth + nodeGap), -154f);
                 edge.sizeDelta = new Vector2(nodeGap, 4f);
             }
         }
 
-        var contentBody = CreateScrollTextArea("ContentBodyScroll", contentPanel, new Vector2(18f, -402f), new Vector2(760f, 392f), 18);
+        var contentBody = CreateScrollTextArea("ContentBodyScroll", contentPanel, new Vector2(20f, -384f), new Vector2(890f, 430f), 18);
 
         panel.closeButton = closeButton;
         panel.mainTabButtons = mainTabButtons;
@@ -320,11 +439,24 @@ public static class WorldMapPrefabExportBuilder
         panel.summaryText = summaryText;
         panel.contentTitleText = contentTitle;
         panel.contentBodyText = contentBody;
+        panel.contentBodyRoot = contentBody.rectTransform.parent.parent.parent.gameObject;
         panel.visualNodeRoot = visualPanel.gameObject;
         panel.visualTitleText = visualTitle;
         panel.visualNodeViews = visualNodeViews;
-        panel.previewImage = preview.GetComponent<Image>();
+        panel.previewImage = previewImage;
         panel.previewLabelText = previewLabel;
+        panel.realmBadgeText = realmBadge;
+        panel.vitalityMeterFillImage = vitalityFillImage;
+        panel.vitalityMeterText = vitalityMeterText;
+        panel.qiMeterFillImage = qiFillImage;
+        panel.qiMeterText = qiMeterText;
+        panel.characterOverviewRoot = characterOverviewRoot.gameObject;
+        panel.characterNarrativeText = characterNarrative;
+        panel.characterPrimaryStatsText = characterPrimaryStats;
+        panel.characterSecondaryStatsText = characterSecondaryStats;
+        panel.characterGrowthStatusText = characterGrowthStatus;
+        panel.characterSectStatusText = characterSectStatus;
+        panel.characterSealViews = sealViews;
         panel.windowRect = window;
         return panel;
     }
@@ -435,6 +567,11 @@ public static class WorldMapPrefabExportBuilder
         var actionButton1 = CreateButton("SectActionButton1", actionPanel, new Vector2(20f, -144f), new Vector2(416f, 56f), "殿堂事务", 18);
         var actionButton2 = CreateButton("SectActionButton2", actionPanel, new Vector2(20f, -214f), new Vector2(416f, 56f), "殿堂事务", 18);
         var actionButton3 = CreateButton("SectActionButton3", actionPanel, new Vector2(20f, -284f), new Vector2(416f, 56f), "殿堂事务", 18);
+        CreateText("SectLocationTitle", actionPanel, new Vector2(20f, -358f), new Vector2(220f, 24f), 20, FontStyle.Bold, TextAnchor.MiddleLeft).text = "殿堂支点";
+        var locationButton0 = CreateButton("SectLocationButton0", actionPanel, new Vector2(20f, -396f), new Vector2(416f, 58f), "别院 / 偏室", 17);
+        var locationButton1 = CreateButton("SectLocationButton1", actionPanel, new Vector2(20f, -466f), new Vector2(416f, 58f), "别院 / 偏室", 17);
+        var locationButton2 = CreateButton("SectLocationButton2", actionPanel, new Vector2(20f, -536f), new Vector2(416f, 58f), "别院 / 偏室", 17);
+        actionPanel.sizeDelta = new Vector2(464f, 620f);
 
         panel.closeButton = closeButton;
         panel.dialogueButton = dialogueButton;
@@ -447,6 +584,7 @@ public static class WorldMapPrefabExportBuilder
         panel.statusText = status;
         panel.previewImage = preview.GetComponent<Image>();
         panel.previewLabelText = previewLabel;
+        panel.locationButtons = new[] { locationButton0, locationButton1, locationButton2 };
         panel.windowRect = window;
         return panel;
     }
@@ -484,6 +622,12 @@ public static class WorldMapPrefabExportBuilder
         for (var i = 0; i < entryButtons.Length; i++)
         {
             entryButtons[i] = CreateButton("NpcEntryButton" + i, rosterPanel, new Vector2(20f, -72f - i * 108f), new Vector2(252f, 92f), "人物", 18);
+        }
+        CreateText("NpcIncidentTitle", rosterPanel, new Vector2(20f, -714f), new Vector2(220f, 22f), 18, FontStyle.Bold, TextAnchor.MiddleLeft).text = "当前风闻";
+        var incidentButtons = new Button[2];
+        for (var i = 0; i < incidentButtons.Length; i++)
+        {
+            incidentButtons[i] = CreateButton("NpcIncidentButton" + i, rosterPanel, new Vector2(20f, -744f - i * 48f), new Vector2(252f, 40f), "风闻入口", 15);
         }
 
         var preview = CreateImage("NpcPreview", window, new Color(0.2f, 0.18f, 0.13f, 1f));
@@ -532,6 +676,7 @@ public static class WorldMapPrefabExportBuilder
         panel.blockerButton = blockerButton;
         panel.closeButton = closeButton;
         panel.entryButtons = entryButtons;
+        panel.incidentButtons = incidentButtons;
         panel.choiceButtons = choiceButtons;
         panel.panelTitleText = panelTitle;
         panel.panelSubtitleText = panelSubtitle;
@@ -596,6 +741,10 @@ public static class WorldMapPrefabExportBuilder
         var workshopButton = CreateButton("SettlementWorkshopButton", actionPanel, new Vector2(20f, -136f), new Vector2(744f, 52f), "打开炼制台", 18);
         var vitalityButton = CreateButton("SettlementVitalityButton", actionPanel, new Vector2(20f, -220f), new Vector2(744f, 52f), "温养护身法器", 18);
         var attackButton = CreateButton("SettlementAttackButton", actionPanel, new Vector2(20f, -284f), new Vector2(744f, 52f), "祭炼主法器", 18);
+        CreateText("SettlementLocationTitle", actionPanel, new Vector2(20f, -356f), new Vector2(220f, 24f), 20, FontStyle.Bold, TextAnchor.MiddleLeft).text = "坊市分区";
+        var locationButton0 = CreateButton("SettlementLocationButton0", actionPanel, new Vector2(20f, -394f), new Vector2(232f, 92f), "临时地点", 17);
+        var locationButton1 = CreateButton("SettlementLocationButton1", actionPanel, new Vector2(266f, -394f), new Vector2(232f, 92f), "临时地点", 17);
+        var locationButton2 = CreateButton("SettlementLocationButton2", actionPanel, new Vector2(512f, -394f), new Vector2(232f, 92f), "临时地点", 17);
 
         var summaryPanel = CreatePanel("SettlementSummaryPanel", window, new Vector2(36f, -430f), new Vector2(1024f, 514f), new Color(0.09f, 0.1f, 0.11f, 0.88f));
         SetAnchors(summaryPanel, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f));
@@ -620,6 +769,7 @@ public static class WorldMapPrefabExportBuilder
         panel.attackButtonLabel = attackButton.GetComponentInChildren<Text>(true);
         panel.previewImage = preview.GetComponent<Image>();
         panel.previewLabelText = previewLabel;
+        panel.locationButtons = new[] { locationButton0, locationButton1, locationButton2 };
         panel.windowRect = window;
         return panel;
     }
@@ -673,7 +823,12 @@ public static class WorldMapPrefabExportBuilder
         var dialogueInlineButton = CreateButton("RegionDialogueInlineButton", statusPanel, new Vector2(320f, -258f), new Vector2(304f, 44f), "人物与线索", 18);
         var vitalityButton = CreateButton("RegionVitalityButton", statusPanel, new Vector2(20f, -312f), new Vector2(604f, 44f), "护身法器", 17);
         var attackButton = CreateButton("RegionAttackButton", statusPanel, new Vector2(20f, -366f), new Vector2(604f, 44f), "主法器", 17);
-        statusPanel.sizeDelta = new Vector2(644f, 420f);
+        CreateText("RegionLocationTitle", statusPanel, new Vector2(20f, -420f), new Vector2(220f, 24f), 20, FontStyle.Bold, TextAnchor.MiddleLeft).text = "前沿驻点";
+        var locationButton0 = CreateButton("RegionLocationButton0", statusPanel, new Vector2(20f, -456f), new Vector2(286f, 84f), "临时驻点", 16);
+        var locationButton1 = CreateButton("RegionLocationButton1", statusPanel, new Vector2(318f, -456f), new Vector2(286f, 84f), "临时驻点", 16);
+        var locationButton2 = CreateButton("RegionLocationButton2", statusPanel, new Vector2(20f, -550f), new Vector2(286f, 84f), "临时驻点", 16);
+        var locationButton3 = CreateButton("RegionLocationButton3", statusPanel, new Vector2(318f, -550f), new Vector2(286f, 84f), "临时驻点", 16);
+        statusPanel.sizeDelta = new Vector2(644f, 640f);
 
         var descriptionPanel = CreatePanel("DescriptionPanel", window, new Vector2(36f, -478f), new Vector2(1848f, 566f), new Color(0.09f, 0.1f, 0.11f, 0.88f));
         SetAnchors(descriptionPanel, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f));
@@ -696,6 +851,7 @@ public static class WorldMapPrefabExportBuilder
         panel.attackButtonLabel = attackButton.GetComponentInChildren<Text>(true);
         panel.previewImage = preview.GetComponent<Image>();
         panel.previewLabelText = previewLabel;
+        panel.locationButtons = new[] { locationButton0, locationButton1, locationButton2, locationButton3 };
         panel.windowRect = window;
         return panel;
     }

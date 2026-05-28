@@ -69,7 +69,7 @@ public sealed class MainMenuLoadPanel : CultivationUIPanel
             return;
         }
 
-        while (loadSlotViews.Count < MainMenuSaveStore.SaveSlotCount)
+        while (loadSlotViews.Count < CultivationLocalSaveStore.SaveSlotCount)
         {
             loadSlotViews.Add(Object.Instantiate(loadSlotPrefab, loadSlotsParent));
         }

@@ -12,6 +12,7 @@ public sealed partial class CultivationBattleSystem : AbstractSystem
     private CultivationDamageSystem damageSystem;
     private CultivationBuffSystem buffSystem;
     private CultivationRealmSystem realmSystem;
+    private CultivationCurrencySystem currencySystem;
 
     protected override void OnInit()
     {
@@ -25,5 +26,6 @@ public sealed partial class CultivationBattleSystem : AbstractSystem
         damageSystem = this.GetSystem<CultivationDamageSystem>();
         buffSystem = this.GetSystem<CultivationBuffSystem>();
         realmSystem = this.GetSystem<CultivationRealmSystem>();
+        currencySystem = this.GetSystem<CultivationCurrencySystem>();
     }
 }

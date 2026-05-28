@@ -14,9 +14,9 @@ public interface IGameTimeService : IUtility
     IReadonlyBindableProperty<float> TimeScale { get; }
     IReadonlyBindableProperty<bool> Paused { get; }
 
-    void EnsureDefaults(MainMenuSaveData saveData);
-    void Advance(MainMenuSaveData saveData, int segments);
-    string Format(MainMenuSaveData saveData);
+    void EnsureDefaults(CultivationSaveData saveData);
+    void Advance(CultivationSaveData saveData, int segments);
+    string Format(CultivationSaveData saveData);
     string GetTimeLabel(int timeIndex);
 
     void SetTimeScale(float scale);
@@ -37,17 +37,28 @@ public sealed class GameTimeService : IGameTimeService
     public IReadonlyBindableProperty<float> TimeScale => timeScale;
     public IReadonlyBindableProperty<bool> Paused => paused;
 
-    public void EnsureDefaults(MainMenuSaveData saveData)
+    public void EnsureDefaults(CultivationSaveData saveData)
     {
         CultivationGameTime.EnsureDefaults(saveData);
     }
 
-    public void Advance(MainMenuSaveData saveData, int segments)
+    public void Advance(CultivationSaveData saveData, int segments)
     {
+        if (saveData == null || segments <= 0)
+        {
+            return;
+        }
+
+        var previousDay = saveData.worldDay;
         CultivationGameTime.Advance(saveData, segments);
+        var advancedDays = saveData.worldDay - previousDay;
+        if (advancedDays > 0)
+        {
+            CultivationApp.Interface.GetSystem<CultivationWorldSimulationSystem>()?.AdvanceWorldDay(saveData, advancedDays);
+        }
     }
 
-    public string Format(MainMenuSaveData saveData)
+    public string Format(CultivationSaveData saveData)
     {
         return CultivationGameTime.Format(saveData);
     }

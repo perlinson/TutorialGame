@@ -6,13 +6,13 @@ public sealed class CultivationArchiveModel : AbstractModel
     public readonly BindableProperty<string> HeroName = new BindableProperty<string>(string.Empty);
     public readonly BindableProperty<string> ArchetypeName = new BindableProperty<string>(string.Empty);
 
-    public MainMenuSaveData CurrentSaveData { get; private set; }
+    public CultivationSaveData CurrentSaveData { get; private set; }
 
     protected override void OnInit()
     {
     }
 
-    public void Apply(int slotIndex, MainMenuSaveData saveData)
+    public void Apply(int slotIndex, CultivationSaveData saveData)
     {
         CurrentSlotIndex.Value = slotIndex;
         CurrentSaveData = saveData;

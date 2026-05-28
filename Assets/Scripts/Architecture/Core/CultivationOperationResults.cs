@@ -26,7 +26,7 @@ public sealed class ExpeditionResolutionResult
 
 public sealed class CombatTurnContext
 {
-    public MainMenuSaveData SaveData;
+    public CultivationSaveData SaveData;
     public WorldRegionDefinition Region;
     public ExpeditionRoomState Room;
     public ExpeditionHeroState Hero;
@@ -178,6 +178,9 @@ public sealed class TaskContextSnapshot
     public string[] TriggeredEventIds;
     public string[] ChosenOptionIds;
     public string[] InjectEventIds;
+    public string[] InjectLocationIds;
+    public string[] InjectIncidentTemplateIds;
+    public string[] RequiredNpcTags;
     public string[] SuppressEventTags;
     public bool CanClaim;
     public Sprite IllustrationImage;

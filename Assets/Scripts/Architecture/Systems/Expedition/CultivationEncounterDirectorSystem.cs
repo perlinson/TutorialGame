@@ -13,7 +13,7 @@ public sealed class CultivationEncounterDirectorSystem : AbstractSystem
         factionSystem = this.GetSystem<CultivationFactionSystem>();
     }
 
-    public List<ExpeditionRoomState> BuildRooms(WorldRegionDefinition region, MainMenuSaveData saveData, System.Random random)
+    public List<ExpeditionRoomState> BuildRooms(WorldRegionDefinition region, CultivationSaveData saveData, System.Random random)
     {
         var rooms = ExpeditionRoomFactory.Build(region, saveData, random);
         if (region == null || saveData == null || rooms == null || rooms.Count <= 2)
@@ -36,7 +36,7 @@ public sealed class CultivationEncounterDirectorSystem : AbstractSystem
         return rooms;
     }
 
-    public List<ExpeditionEnemyState> BuildEnemies(WorldRegionDefinition region, ExpeditionRoomState room, MainMenuSaveData saveData, System.Random random)
+    public List<ExpeditionEnemyState> BuildEnemies(WorldRegionDefinition region, ExpeditionRoomState room, CultivationSaveData saveData, System.Random random)
     {
         var taskContext = saveData != null ? taskSystem.GetActiveTaskContext(saveData) : null;
         var preferredFaction = taskContext != null && taskContext.HasLinkedFaction ? taskContext.TaskLinkedFaction : (ExpeditionEnemyFaction?)null;
@@ -78,7 +78,7 @@ public sealed class CultivationEncounterDirectorSystem : AbstractSystem
         }
     }
 
-    private int GetHighestFactionPressure(MainMenuSaveData saveData)
+    private int GetHighestFactionPressure(CultivationSaveData saveData)
     {
         var highest = 0;
         for (var i = 0; i < 5; i++)

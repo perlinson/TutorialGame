@@ -19,7 +19,7 @@ public sealed class GameHudController : MonoBehaviour
         }
     }
 
-    public void SetStats(string realm, int qi, int qiRequired, int currentHp, int maxHp, int spiritCrystals, int attackLevel, int vitalityLevel)
+    public void SetStats(string realm, int qi, int qiRequired, int currentHp, int maxHp, string spiritCrystals, int attackLevel, int vitalityLevel)
     {
         if (hpText != null)
         {

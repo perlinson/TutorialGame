@@ -15,7 +15,7 @@ public sealed class CultivationGameModel : AbstractModel
     {
     }
 
-    public void Apply(MainMenuSaveData saveData)
+    public void Apply(CultivationSaveData saveData)
     {
         if (saveData == null)
         {

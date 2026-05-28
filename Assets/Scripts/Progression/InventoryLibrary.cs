@@ -24,7 +24,7 @@ public static class InventoryLibrary
         return definition != null ? definition.ArtworkImage : null;
     }
 
-    public static string BuildBagSummary(MainMenuSaveData saveData, int maxEntries)
+    public static string BuildBagSummary(CultivationSaveData saveData, int maxEntries)
     {
         saveData.EnsureDefaults();
         var lines = new List<string>
@@ -53,7 +53,7 @@ public static class InventoryLibrary
         return string.Join("\n", lines.ToArray());
     }
 
-    public static string BuildDetailedBagSummary(MainMenuSaveData saveData)
+    public static string BuildDetailedBagSummary(CultivationSaveData saveData)
     {
         saveData.EnsureDefaults();
         var lines = new List<string>

@@ -156,6 +156,36 @@ public static class UiPrefabGenerationUtility
         }
     }
 
+    [MenuItem("Cultivation/UI/Generate Player Compendium Prefab")]
+    public static void GeneratePlayerCompendiumPrefab()
+    {
+        EnsureFolder("Assets/Resources/UI/Game");
+
+        PlayerCompendiumPanel compendiumPanel = null;
+        try
+        {
+            compendiumPanel = WorldMapPrefabExportBuilder.BuildCompendiumPanelExport();
+            if (compendiumPanel == null)
+            {
+                Debug.LogError("Failed to build player compendium prefab export instance.");
+                return;
+            }
+
+            compendiumPanel.name = "PlayerCompendiumPanel";
+            PrefabUtility.SaveAsPrefabAsset(compendiumPanel.gameObject, PlayerCompendiumPrefabPath);
+            Debug.Log("Generated UI prefab: " + PlayerCompendiumPrefabPath);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+        }
+        finally
+        {
+            if (compendiumPanel != null)
+            {
+                Object.DestroyImmediate(compendiumPanel.gameObject);
+            }
+        }
+    }
+
     [MenuItem("Cultivation/UI/Generate Expedition Prefab")]
     public static void GenerateExpeditionPrefab()
     {

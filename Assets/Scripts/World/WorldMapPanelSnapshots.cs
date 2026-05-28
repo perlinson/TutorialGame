@@ -27,6 +27,21 @@ public sealed class WorldMapPreviewSnapshot
     public Color PlaceholderColor;
 }
 
+public sealed class WorldMapLocationEntrySnapshot
+{
+    public string LocationId;
+    public string DisplayName;
+    public string Subtitle;
+    public string StatusText;
+    public string ButtonLabel;
+    public string TooltipTitle;
+    public string TooltipBody;
+    public bool IsVisible;
+    public bool IsInteractable;
+    public bool IsTemporary;
+    public bool IsSelected;
+}
+
 public sealed class WorldMapRegionSnapshot
 {
     public string PanelTitle;
@@ -35,12 +50,15 @@ public sealed class WorldMapRegionSnapshot
     public string Status;
     public string TaskSummary;
     public string TravelButtonLabel;
+    public string DialogueButtonLabel;
+    public string DialogueButtonTooltip;
     public string VitalityButtonLabel;
     public string AttackButtonLabel;
     public bool CanTravel;
     public bool CanUpgradeVitality;
     public bool CanUpgradeAttack;
     public WorldMapPreviewSnapshot Preview;
+    public WorldMapLocationEntrySnapshot[] LocationEntries;
 }
 
 public sealed class WorldMapSettlementSnapshot
@@ -52,11 +70,14 @@ public sealed class WorldMapSettlementSnapshot
     public string ActionHintText;
     public string InventoryButtonLabel;
     public string WorkshopButtonLabel;
+    public string DialogueButtonLabel;
+    public string DialogueButtonTooltip;
     public string VitalityButtonLabel;
     public string AttackButtonLabel;
     public bool CanUpgradeVitality;
     public bool CanUpgradeAttack;
     public WorldMapPreviewSnapshot Preview;
+    public WorldMapLocationEntrySnapshot[] LocationEntries;
 }
 
 public enum PlayerCompendiumMainTab
@@ -84,6 +105,29 @@ public sealed class PlayerCompendiumVisualNodeSnapshot
     public bool IsFocused;
 }
 
+public sealed class PlayerCompendiumOverviewSealSnapshot
+{
+    public string ShortLabel;
+    public string Title;
+    public string ValueText;
+    public bool IsHighlighted;
+}
+
+public sealed class PlayerCompendiumCharacterOverviewSnapshot
+{
+    public string RealmBadgeText;
+    public string NarrativeText;
+    public string PrimaryStatsText;
+    public string SecondaryStatsText;
+    public string GrowthStatusText;
+    public string SectStatusText;
+    public string VitalityMeterText;
+    public string QiMeterText;
+    public float VitalityFillAmount;
+    public float QiFillAmount;
+    public PlayerCompendiumOverviewSealSnapshot[] Seals;
+}
+
 public sealed class PlayerCompendiumSnapshot
 {
     public string PanelTitle;
@@ -96,6 +140,7 @@ public sealed class PlayerCompendiumSnapshot
     public WorldMapPreviewSnapshot Preview;
     public PlayerCompendiumSectionSnapshot[] Sections;
     public PlayerCompendiumVisualNodeSnapshot[] VisualNodes;
+    public PlayerCompendiumCharacterOverviewSnapshot CharacterOverview;
 }
 
 public sealed class WorldMapInventorySnapshot
@@ -143,9 +188,14 @@ public sealed class WorldMapSectResidenceSnapshot
     public string HallTitle;
     public string Description;
     public string Status;
+    public string DialogueButtonLabel;
+    public string DialogueButtonTooltip;
+    public int ResolvedSelectedHallIndex;
+    public string SelectedHallId;
     public WorldMapPreviewSnapshot Preview;
     public WorldMapSectHallButtonSnapshot[] HallButtons;
     public WorldMapSectActionButtonSnapshot[] ActionButtons;
+    public WorldMapLocationEntrySnapshot[] LocationEntries;
 }
 
 public sealed class WorldMapNpcEntrySnapshot
@@ -169,6 +219,18 @@ public sealed class WorldMapNpcChoiceSnapshot
     public string TooltipBody;
 }
 
+public sealed class WorldMapIncidentEntrySnapshot
+{
+    public string IncidentId;
+    public string ButtonLabel;
+    public string Description;
+    public string TooltipTitle;
+    public string TooltipBody;
+    public bool IsVisible;
+    public bool IsInteractable;
+    public bool HasConversation;
+}
+
 public sealed class WorldMapNpcDialogueSnapshot
 {
     public string PanelTitle;
@@ -182,5 +244,6 @@ public sealed class WorldMapNpcDialogueSnapshot
     public string SelectedNpcId;
     public WorldMapPreviewSnapshot Preview;
     public WorldMapNpcEntrySnapshot[] Entries;
+    public WorldMapIncidentEntrySnapshot[] Incidents;
     public WorldMapNpcChoiceSnapshot[] Choices;
 }

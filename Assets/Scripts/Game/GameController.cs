@@ -18,7 +18,7 @@ public sealed partial class GameController : CultivationController, ICanSendEven
     private readonly List<ExpeditionEnemyState> enemies = new List<ExpeditionEnemyState>();
     private readonly List<EnemyActorBinding> enemyActorBindings = new List<EnemyActorBinding>();
 
-    private MainMenuSaveData saveData;
+    private CultivationSaveData saveData;
     private WorldRegionDefinition region;
     private ExpeditionView view;
     private ExpeditionHeroState hero;
@@ -48,7 +48,7 @@ public sealed partial class GameController : CultivationController, ICanSendEven
 
     public int RoomCount => rooms.Count;
 
-    public void Initialize(int slotIndex, MainMenuSaveData activeSave, WorldRegionDefinition activeRegion)
+    public void Initialize(int slotIndex, CultivationSaveData activeSave, WorldRegionDefinition activeRegion)
     {
         currentSlotIndex = slotIndex;
         saveData = activeSave;

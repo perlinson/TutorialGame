@@ -2,7 +2,7 @@ using QFramework;
 
 /// <summary>
 /// M1 RealmModel：境界 / 修为 / 瓶颈 / 突破 / 心魔 状态。
-/// 持久化字段位于 <see cref="MainMenuSaveData"/>，本 Model 只在运行时承载 BindableProperty 表现层订阅。
+/// 持久化字段位于 <see cref="CultivationSaveData"/>，本 Model 只在运行时承载 BindableProperty 表现层订阅。
 /// 所有"突破 / 上修为 / 进入或解除瓶颈"业务请通过 <see cref="CultivationRealmSystem"/> 操作。
 /// </summary>
 public sealed class CultivationRealmModel : AbstractModel
@@ -15,13 +15,13 @@ public sealed class CultivationRealmModel : AbstractModel
     public readonly BindableProperty<int> BreakthroughCount = new BindableProperty<int>(0);
     public readonly BindableProperty<int> HeartDemonMark = new BindableProperty<int>(0);
 
-    public MainMenuSaveData CurrentSaveData { get; private set; }
+    public CultivationSaveData CurrentSaveData { get; private set; }
 
     protected override void OnInit()
     {
     }
 
-    public void Apply(MainMenuSaveData saveData)
+    public void Apply(CultivationSaveData saveData)
     {
         CurrentSaveData = saveData;
         if (saveData == null)

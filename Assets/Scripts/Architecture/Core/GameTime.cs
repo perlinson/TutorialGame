@@ -18,9 +18,9 @@ public static class GameTime
     public static IReadonlyBindableProperty<float> TimeScale => Service.TimeScale;
     public static IReadonlyBindableProperty<bool> Paused => Service.Paused;
 
-    public static void EnsureDefaults(MainMenuSaveData saveData) => Service.EnsureDefaults(saveData);
-    public static void Advance(MainMenuSaveData saveData, int segments) => Service.Advance(saveData, segments);
-    public static string Format(MainMenuSaveData saveData) => Service.Format(saveData);
+    public static void EnsureDefaults(CultivationSaveData saveData) => Service.EnsureDefaults(saveData);
+    public static void Advance(CultivationSaveData saveData, int segments) => Service.Advance(saveData, segments);
+    public static string Format(CultivationSaveData saveData) => Service.Format(saveData);
     public static string GetTimeLabel(int timeIndex) => Service.GetTimeLabel(timeIndex);
 
     public static void SetTimeScale(float scale) => Service.SetTimeScale(scale);

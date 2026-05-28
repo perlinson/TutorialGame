@@ -7,7 +7,7 @@ public sealed class CultivationFactionSystem : AbstractSystem
     {
     }
 
-    public FactionReputationSnapshot GetSnapshot(MainMenuSaveData saveData, ExpeditionEnemyFaction faction)
+    public FactionReputationSnapshot GetSnapshot(CultivationSaveData saveData, ExpeditionEnemyFaction faction)
     {
         if (saveData == null)
         {
@@ -33,7 +33,7 @@ public sealed class CultivationFactionSystem : AbstractSystem
         };
     }
 
-    public int GetFactionPressure(MainMenuSaveData saveData, ExpeditionEnemyFaction faction)
+    public int GetFactionPressure(CultivationSaveData saveData, ExpeditionEnemyFaction faction)
     {
         if (saveData == null)
         {
@@ -45,7 +45,7 @@ public sealed class CultivationFactionSystem : AbstractSystem
         return Mathf.Clamp(state.hostility / 3 + state.defeatedCount / 5, 0, 5);
     }
 
-    public FactionReputationSnapshot RecordDefeat(MainMenuSaveData saveData, ExpeditionEnemyFaction faction, string regionId, int count)
+    public FactionReputationSnapshot RecordDefeat(CultivationSaveData saveData, ExpeditionEnemyFaction faction, string regionId, int count)
     {
         if (saveData == null)
         {

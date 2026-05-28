@@ -68,7 +68,7 @@ public sealed class CultivationBattleSystemEditModeTests
     {
         return new CombatTurnContext
         {
-            SaveData = new MainMenuSaveData
+            SaveData = new CultivationSaveData
             {
                 heroName = "测试修士",
                 archetypeId = "sword",

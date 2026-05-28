@@ -43,7 +43,7 @@ public static class TaskLibrary
         return false;
     }
 
-    public static bool TryGetActiveTask(MainMenuSaveData saveData, out TaskDefinition definition, out SaveTaskState state)
+    public static bool TryGetActiveTask(CultivationSaveData saveData, out TaskDefinition definition, out SaveTaskState state)
     {
         saveData.EnsureDefaults();
         definition = null;
@@ -62,7 +62,7 @@ public static class TaskLibrary
         return true;
     }
 
-    public static string BuildActiveTaskSummary(MainMenuSaveData saveData)
+    public static string BuildActiveTaskSummary(CultivationSaveData saveData)
     {
         TaskDefinition definition;
         SaveTaskState state;
@@ -81,7 +81,7 @@ public static class TaskLibrary
                (definition.RewardBagCapacity > 0 ? " / 储物袋 +" + definition.RewardBagCapacity + " 格" : string.Empty);
     }
 
-    public static int GetProgressValue(MainMenuSaveData saveData, TaskDefinition definition, SaveTaskState state)
+    public static int GetProgressValue(CultivationSaveData saveData, TaskDefinition definition, SaveTaskState state)
     {
         saveData.EnsureDefaults();
         if (definition == null)
@@ -117,6 +117,9 @@ public static class TaskLibrary
                 UnlockRegionId = "green_stone_gate",
                 TaskTags = new[] { "bandit", "evidence", "trail" },
                 LinkedRegionIds = new[] { "green_stone_gate" },
+                InjectLocationIds = new[] { "green_stone_gate_black_market" },
+                InjectIncidentTemplateIds = new[] { "incident_black_market_tipoff" },
+                RequiredNpcTags = new[] { "消息灵通", "灰市" },
                 HasLinkedFaction = true,
                 LinkedFaction = ExpeditionEnemyFaction.Bandit,
                 EventRules = new[]
@@ -142,6 +145,9 @@ public static class TaskLibrary
                 UnlockRegionId = "misty_forest",
                 TaskTags = new[] { "herb", "gathering" },
                 LinkedRegionIds = new[] { "misty_forest" },
+                InjectLocationIds = new[] { "misty_forest_herb_camp" },
+                InjectIncidentTemplateIds = new[] { "incident_herb_seekers" },
+                RequiredNpcTags = new[] { "采药", "药理" },
                 RewardQi = 3,
                 RewardCrystals = 2,
                 RewardItems = new[] { new SaveItemStack("mind_cleansing_incense", 2) }
@@ -159,6 +165,9 @@ public static class TaskLibrary
                 UnlockRegionId = "crimson_valley",
                 TaskTags = new[] { "cultivator", "evil_cult", "evidence" },
                 LinkedRegionIds = new[] { "crimson_valley" },
+                InjectLocationIds = new[] { "crimson_valley_watch_post" },
+                InjectIncidentTemplateIds = new[] { "incident_valley_watchfire" },
+                RequiredNpcTags = new[] { "巡哨", "血战" },
                 HasLinkedFaction = true,
                 LinkedFaction = ExpeditionEnemyFaction.Cultivator,
                 EventRules = new[]
@@ -183,6 +192,9 @@ public static class TaskLibrary
                 UnlockRegionId = "deep_springs",
                 TaskTags = new[] { "array", "ruins" },
                 LinkedRegionIds = new[] { "deep_springs" },
+                InjectLocationIds = new[] { "deep_springs_array_rest" },
+                InjectIncidentTemplateIds = new[] { "incident_array_resonance" },
+                RequiredNpcTags = new[] { "阵法", "洞天" },
                 RewardQi = 4,
                 RewardCrystals = 3,
                 RewardItems = new[] { new SaveItemStack("spring_jade_dew", 1) }

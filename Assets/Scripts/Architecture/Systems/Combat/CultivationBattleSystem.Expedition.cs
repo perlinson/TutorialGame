@@ -129,7 +129,7 @@ public sealed partial class CultivationBattleSystem
 
     public ExpeditionResolutionResult CompleteExpedition(
         int slotIndex,
-        MainMenuSaveData saveData,
+        CultivationSaveData saveData,
         WorldRegionDefinition region,
         ExpeditionHeroState hero,
         int torchlight,
@@ -170,7 +170,7 @@ public sealed partial class CultivationBattleSystem
             out var unlockedRegions);
         saveSystem.SaveArchive(slotIndex, saveData);
 
-        var logMessage = "远征成功：修为 +" + (totalQi + region.ClearQiReward) + " / 灵石 +" + (totalCrystals + region.ClearCrystalReward);
+        var logMessage = "远征成功：修为 +" + (totalQi + region.ClearQiReward) + " / " + CultivationCurrencySystem.GradeName(currencySystem.GetPlayerGrade(saveData)) + " +" + (totalCrystals + region.ClearCrystalReward);
         if (!string.IsNullOrEmpty(bankSummary))
         {
             logMessage += "\n带回物资：" + bankSummary + "。";
@@ -178,7 +178,7 @@ public sealed partial class CultivationBattleSystem
 
         if (!string.IsNullOrEmpty(overflowSummary))
         {
-            logMessage += "\n储物袋已满，" + overflowSummary + " 已折成灵石 +" + overflowCrystalGain + "。";
+            logMessage += "\n储物袋已满，" + overflowSummary + " 已折成" + CultivationCurrencySystem.GradeName(currencySystem.GetPlayerGrade(saveData)) + " +" + overflowCrystalGain + "。";
         }
 
         if (breakthroughs > 0)
@@ -201,7 +201,7 @@ public sealed partial class CultivationBattleSystem
 
     public ExpeditionResolutionResult RetreatExpedition(
         int slotIndex,
-        MainMenuSaveData saveData,
+        CultivationSaveData saveData,
         WorldRegionDefinition region,
         int pendingQiGain,
         int pendingCrystalGain,
@@ -222,7 +222,7 @@ public sealed partial class CultivationBattleSystem
         ApplyPartialRewards(saveData, region, qiGain, crystalGain + overflowCrystalGain);
         saveSystem.SaveArchive(slotIndex, saveData);
 
-        var logMessage = "你选择提前撤离，保住了部分收获：修为 +" + qiGain + " / 灵石 +" + (crystalGain + overflowCrystalGain) + "。";
+        var logMessage = "你选择提前撤离，保住了部分收获：修为 +" + qiGain + " / " + CultivationCurrencySystem.GradeName(currencySystem.GetPlayerGrade(saveData)) + " +" + (crystalGain + overflowCrystalGain) + "。";
         if (!string.IsNullOrEmpty(bankSummary))
         {
             logMessage += "\n带回物资：" + bankSummary + "。";
@@ -230,13 +230,13 @@ public sealed partial class CultivationBattleSystem
 
         if (!string.IsNullOrEmpty(overflowSummary))
         {
-            logMessage += "\n储物袋已满，" + overflowSummary + " 已折成灵石 +" + overflowCrystalGain + "。";
+            logMessage += "\n储物袋已满，" + overflowSummary + " 已折成" + CultivationCurrencySystem.GradeName(currencySystem.GetPlayerGrade(saveData)) + " +" + overflowCrystalGain + "。";
         }
 
         return new ExpeditionResolutionResult(logMessage, "主动撤离不会清理地域，但能保存本次搜刮到的部分资源。");
     }
 
-    public ExpeditionResolutionResult FailExpedition(int slotIndex, MainMenuSaveData saveData, WorldRegionDefinition region, string reason, List<SaveItemStack> pendingItemRewards)
+    public ExpeditionResolutionResult FailExpedition(int slotIndex, CultivationSaveData saveData, WorldRegionDefinition region, string reason, List<SaveItemStack> pendingItemRewards)
     {
         if (pendingItemRewards != null)
         {
@@ -281,10 +281,10 @@ public sealed partial class CultivationBattleSystem
         return result;
     }
 
-    private static void ApplyPartialRewards(MainMenuSaveData saveData, WorldRegionDefinition region, int qiGain, int crystalGain)
+    private void ApplyPartialRewards(CultivationSaveData saveData, WorldRegionDefinition region, int qiGain, int crystalGain)
     {
         saveData.qi += Mathf.Max(0, qiGain);
-        saveData.spiritCrystals += Mathf.Max(0, crystalGain);
+        currencySystem.AddCrystals(saveData, Mathf.Max(0, crystalGain));
         saveData.currentRegionId = region.Id;
         saveData.location = region.DisplayName;
         saveData.lastPlayed = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm");

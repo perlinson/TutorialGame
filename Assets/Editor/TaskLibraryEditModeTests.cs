@@ -5,7 +5,7 @@ public sealed class TaskLibraryEditModeTests
     [Test]
     public void BuildActiveTaskSummary_ReturnsFallbackTextWhenNoActiveTask()
     {
-        var saveData = new MainMenuSaveData
+        var saveData = new CultivationSaveData
         {
             heroName = "测试修士",
             archetypeId = "sword",
@@ -21,7 +21,7 @@ public sealed class TaskLibraryEditModeTests
     [Test]
     public void TryGetActiveTask_CreatesStateForExistingActiveTask()
     {
-        var saveData = new MainMenuSaveData
+        var saveData = new CultivationSaveData
         {
             heroName = "测试修士",
             archetypeId = "sword",
@@ -42,7 +42,7 @@ public sealed class TaskLibraryEditModeTests
     [Test]
     public void GetProgressValue_UsesInventoryCountForCollectItemObjectives()
     {
-        var saveData = new MainMenuSaveData
+        var saveData = new CultivationSaveData
         {
             heroName = "测试修士",
             archetypeId = "sword",
@@ -64,7 +64,7 @@ public sealed class TaskLibraryEditModeTests
     [Test]
     public void BuildActiveTaskSummary_IncludesCompletionMarkerWhenProgressIsEnough()
     {
-        var saveData = new MainMenuSaveData
+        var saveData = new CultivationSaveData
         {
             heroName = "测试修士",
             archetypeId = "sword",

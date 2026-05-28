@@ -40,7 +40,7 @@ public sealed class GameSceneBootstrap : CultivationController
         }
 
         PersistentExpeditionRuntimeSnapshot runtimeSnapshot = null;
-        if (MainMenuSaveStore.TryLoadExpeditionRuntime(out var storedSnapshot))
+        if (CultivationLocalSaveStore.TryLoadExpeditionRuntime(out var storedSnapshot))
         {
             if (IsCompatibleSnapshot(storedSnapshot, slotIndex, saveData, region))
             {
@@ -48,7 +48,7 @@ public sealed class GameSceneBootstrap : CultivationController
             }
             else
             {
-                MainMenuSaveStore.ClearExpeditionRuntime();
+                CultivationLocalSaveStore.ClearExpeditionRuntime();
             }
         }
 
@@ -84,7 +84,7 @@ public sealed class GameSceneBootstrap : CultivationController
         controller.SetView(view);
     }
 
-    private static bool IsCompatibleSnapshot(PersistentExpeditionRuntimeSnapshot snapshot, int slotIndex, MainMenuSaveData saveData, WorldRegionDefinition region)
+    private static bool IsCompatibleSnapshot(PersistentExpeditionRuntimeSnapshot snapshot, int slotIndex, CultivationSaveData saveData, WorldRegionDefinition region)
     {
         if (snapshot == null || saveData == null || region == null)
         {

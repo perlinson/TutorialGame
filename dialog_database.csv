@@ -1,0 +1,274 @@
+﻿Database
+Name,Version,Author,Description,Emphasis1,Emphasis2,Emphasis3,Emphasis4
+CultivationDialogueDatabase,,,,#ffffffff ---,#ff0000ff ---,#00ff00ff ---,#0000ffff ---
+Global User Script
+-- Generated for TutorialGame DSU integration
+-- Conversation title conventions:
+--   NPC display-name conversations: 直接使用 NPC 名称，例如 "清岚长老"
+--   Region intro conversations:     region_intro_<regionId>
+--   Region scout conversations:     region_scout_<regionId>
+-- Story signal conventions:
+--   首次地区见闻统一由运行时补记为 region_intro:<regionId>
+--   节点内更细的见闻记录可使用 Story_RecordSignal(storyId, nodeId, resultText)
+Actors
+ID,Portrait,AltPortraits,SpritePortrait,AltSpritePortraits,Name,Pictures,Description,IsPlayer
+Number,Special,Special,Special,Special,Text,Files,Text,Boolean
+1,,[],,[],Player,[],,True
+2,,[],,[],清岚长老,{{omit}},藏经阁值守长老，寡言却句句切中修行要害。,False
+3,,[],,[],何执事,{{omit}},勤功殿执笔，擅长把纷乱卷宗理出主次。,False
+4,,[],,[],裴惊鸿,{{omit}},演武坪同门，嘴硬心直，最爱用切磋检验长进。,False
+5,,[],,[],邱行商,{{omit}},往来坊市与外路之间的行商，消息比货物还灵活。,False
+6,,[],,[],蓝药娘,{{omit}},药铺坐堂，对草药与心神损耗都很敏锐。,False
+7,,[],,[],山海见闻,{{omit}},用于地区初见事件的旁白角色。,False
+8,,[],,[],雾泽斥候,{{omit}},常年出入雾泽林边缘，对瘴气与兽道异常敏感。,False
+9,,[],,[],赤霞谷旧碑,{{omit}},残碑留声，像在向后来者复述谷中的旧战。,False
+10,,[],,[],玄泉泉灵,{{omit}},洞天泉眼中残留的一缕灵性回响。,False
+11,,[],,[],北冥行旅,{{omit}},风雪古道上的旅人传闻，被风一遍遍吹回耳边。,False
+12,,[],,[],天外残响,{{omit}},灵墟深处未散尽的古老回音。,False
+13,,[],,[],青石巡守,{{omit}},巡看山门外围的守望弟子，最清楚近山路与外来痕迹的变化。,False
+14,,[],,[],雾泽老斥候,{{omit}},常年在雾泽林边缘探路，连哪一阵雾先翻哪一丛草都记得。,False
+15,,[],,[],赤霞采火人,{{omit}},在赤霞谷讨生活的采火人，比旁人更早察觉岩壁与热流的脾气。,False
+16,,[],,[],泉眼守望,{{omit}},守着玄泉支洞与泉路的人，能从水声里分出危险和活路。,False
+17,,[],,[],雪路驿使,{{omit}},行走北冥古道的消息递送者，熟悉暴雪、失温与回头路的代价。,False
+18,,[],,[],灵墟勘阵师,{{omit}},专门勘查残阵与遗迹结构的修士，对灵墟每一处断裂都极为敏感。,False
+Items
+ID,Name,Pictures,Description,Success Description,Failure Description,State,Is Item
+Number,Text,Files,Text,Text,Text,Text,Boolean
+1,新手任务,[],山门发下的入门试炼委托,,,unassigned,False
+2,青灵草,[],一种基础草药，可用于丹炉和药铺整备。,{{omit}},{{omit}},{{omit}},True
+3,青石灵砂,[],山门附近最常见的灵砂，可用于稳固练气期根基。,{{omit}},{{omit}},{{omit}},True
+4,清心香灰,[],祭台余烬中的香灰，对稳定心境略有帮助。,{{omit}},{{omit}},{{omit}},True
+Locations
+ID,Name,Description
+Number,Text,Text
+1,青石山门,偏安一隅的启程之地，适合刚踏上仙途的修士打磨根基。
+2,雾泽林,瘴雾与异草并生，林泽交错，适合积攒材料与谨慎试炼。
+3,赤霞谷,旧战遗痕未散，岩壁与谷火映出一层不安的赤光。
+4,玄泉洞天,水灵浓郁，泉鸣不断，既能养气也暗藏回响与迷踪。
+5,北冥古道,风雪古道漫长寂寥，最考验修士的心志与脚力。
+6,天外灵墟,坠落遗迹与残阵交叠的深处，是更高层次试炼的入口。
+7,勤功殿,负责山门委托、卷宗归档与功绩核验的地方。
+8,藏经阁,宗门典籍与修行心得汇聚之所。
+9,演武坪,同门切磋与验证功法的地方。
+10,山门坊市,行商、药铺与散修消息集散的所在。
+Variables
+ID,Name,Initial Value,Description,InitialValueType
+Number,Text,Text,Text,Text
+1,Alert,,,Text
+2,StoryBeat,,,Text
+3,ActiveRegionIntro,,,Text
+4,RegionThreatFocus,,,Text
+5,SectRumorFocus,,,Text
+Conversations
+ID,Title,Actor,Conversant,Description,Overrides
+Number,Text,Actor,Actor,Text,JSON
+1,清岚长老,2,1,藏经阁中的修行点拨。,"{""useOverrides"":false,""overrideSubtitleSettings"":false,""showNPCSubtitlesDuringLine"":true,""showNPCSubtitlesWithResponses"":true,""showPCSubtitlesDuringLine"":false,""skipPCSubtitleAfterResponseMenu"":false,""subtitleCharsPerSecond"":30.0,""minSubtitleSeconds"":2.0,""continueButton"":0,""overrideSequenceSettings"":false,""defaultSequence"":"""",""defaultPlayerSequence"":"""",""defaultResponseMenuSequence"":"""",""overrideInputSettings"":false,""alwaysForceResponseMenu"":true,""includeInvalidEntries"":false,""responseTimeout"":0.0,""emTagForOldResponses"":0,""emTagForInvalidResponses"":0,""cancelSubtitle"":{""key"":27,""buttonName"":"""",""inputAction"":{""instanceID"":0}},""cancelConversation"":{""key"":27,""buttonName"":"""",""inputAction"":{""instanceID"":0}},""actorSubtitlePanelOverrides"":[]}"
+2,何执事,3,1,勤功殿中的委托与宗门事务问答。,"{""useOverrides"":false,""overrideSubtitleSettings"":false,""showNPCSubtitlesDuringLine"":true,""showNPCSubtitlesWithResponses"":true,""showPCSubtitlesDuringLine"":false,""skipPCSubtitleAfterResponseMenu"":false,""subtitleCharsPerSecond"":30.0,""minSubtitleSeconds"":2.0,""continueButton"":0,""overrideSequenceSettings"":false,""defaultSequence"":"""",""defaultPlayerSequence"":"""",""defaultResponseMenuSequence"":"""",""overrideInputSettings"":false,""alwaysForceResponseMenu"":true,""includeInvalidEntries"":false,""responseTimeout"":0.0,""emTagForOldResponses"":0,""emTagForInvalidResponses"":0,""cancelSubtitle"":{""key"":27,""buttonName"":"""",""inputAction"":{""instanceID"":0}},""cancelConversation"":{""key"":27,""buttonName"":"""",""inputAction"":{""instanceID"":0}},""actorSubtitlePanelOverrides"":[]}"
+3,裴惊鸿,4,1,演武坪同门的切磋与提醒。,"{""useOverrides"":false,""overrideSubtitleSettings"":false,""showNPCSubtitlesDuringLine"":true,""showNPCSubtitlesWithResponses"":true,""showPCSubtitlesDuringLine"":false,""skipPCSubtitleAfterResponseMenu"":false,""subtitleCharsPerSecond"":30.0,""minSubtitleSeconds"":2.0,""continueButton"":0,""overrideSequenceSettings"":false,""defaultSequence"":"""",""defaultPlayerSequence"":"""",""defaultResponseMenuSequence"":"""",""overrideInputSettings"":false,""alwaysForceResponseMenu"":true,""includeInvalidEntries"":false,""responseTimeout"":0.0,""emTagForOldResponses"":0,""emTagForInvalidResponses"":0,""cancelSubtitle"":{""key"":27,""buttonName"":"""",""inputAction"":{""instanceID"":0}},""cancelConversation"":{""key"":27,""buttonName"":"""",""inputAction"":{""instanceID"":0}},""actorSubtitlePanelOverrides"":[]}"
+4,邱行商,5,1,山门坊市里的风声与顺手补给。,"{""useOverrides"":false,""overrideSubtitleSettings"":false,""showNPCSubtitlesDuringLine"":true,""showNPCSubtitlesWithResponses"":true,""showPCSubtitlesDuringLine"":false,""skipPCSubtitleAfterResponseMenu"":false,""subtitleCharsPerSecond"":30.0,""minSubtitleSeconds"":2.0,""continueButton"":0,""overrideSequenceSettings"":false,""defaultSequence"":"""",""defaultPlayerSequence"":"""",""defaultResponseMenuSequence"":"""",""overrideInputSettings"":false,""alwaysForceResponseMenu"":true,""includeInvalidEntries"":false,""responseTimeout"":0.0,""emTagForOldResponses"":0,""emTagForInvalidResponses"":0,""cancelSubtitle"":{""key"":27,""buttonName"":"""",""inputAction"":{""instanceID"":0}},""cancelConversation"":{""key"":27,""buttonName"":"""",""inputAction"":{""instanceID"":0}},""actorSubtitlePanelOverrides"":[]}"
+5,蓝药娘,6,1,药铺坐堂的安神药引与后患诊断。,"{""useOverrides"":false,""overrideSubtitleSettings"":false,""showNPCSubtitlesDuringLine"":true,""showNPCSubtitlesWithResponses"":true,""showPCSubtitlesDuringLine"":false,""skipPCSubtitleAfterResponseMenu"":false,""subtitleCharsPerSecond"":30.0,""minSubtitleSeconds"":2.0,""continueButton"":0,""overrideSequenceSettings"":false,""defaultSequence"":"""",""defaultPlayerSequence"":"""",""defaultResponseMenuSequence"":"""",""overrideInputSettings"":false,""alwaysForceResponseMenu"":true,""includeInvalidEntries"":false,""responseTimeout"":0.0,""emTagForOldResponses"":0,""emTagForInvalidResponses"":0,""cancelSubtitle"":{""key"":27,""buttonName"":"""",""inputAction"":{""instanceID"":0}},""cancelConversation"":{""key"":27,""buttonName"":"""",""inputAction"":{""instanceID"":0}},""actorSubtitlePanelOverrides"":[]}"
+6,region_intro_green_stone_gate,7,1,首次抵达青石山门时的地域见闻。,"{""useOverrides"":false,""overrideSubtitleSettings"":false,""showNPCSubtitlesDuringLine"":true,""showNPCSubtitlesWithResponses"":true,""showPCSubtitlesDuringLine"":false,""skipPCSubtitleAfterResponseMenu"":false,""subtitleCharsPerSecond"":30.0,""minSubtitleSeconds"":2.0,""continueButton"":0,""overrideSequenceSettings"":false,""defaultSequence"":"""",""defaultPlayerSequence"":"""",""defaultResponseMenuSequence"":"""",""overrideInputSettings"":false,""alwaysForceResponseMenu"":true,""includeInvalidEntries"":false,""responseTimeout"":0.0,""emTagForOldResponses"":0,""emTagForInvalidResponses"":0,""cancelSubtitle"":{""key"":27,""buttonName"":"""",""inputAction"":{""instanceID"":0}},""cancelConversation"":{""key"":27,""buttonName"":"""",""inputAction"":{""instanceID"":0}},""actorSubtitlePanelOverrides"":[]}"
+7,region_intro_misty_forest,8,1,首次抵达雾泽林时的地域见闻。,"{""useOverrides"":false,""overrideSubtitleSettings"":false,""showNPCSubtitlesDuringLine"":true,""showNPCSubtitlesWithResponses"":true,""showPCSubtitlesDuringLine"":false,""skipPCSubtitleAfterResponseMenu"":false,""subtitleCharsPerSecond"":30.0,""minSubtitleSeconds"":2.0,""continueButton"":0,""overrideSequenceSettings"":false,""defaultSequence"":"""",""defaultPlayerSequence"":"""",""defaultResponseMenuSequence"":"""",""overrideInputSettings"":false,""alwaysForceResponseMenu"":true,""includeInvalidEntries"":false,""responseTimeout"":0.0,""emTagForOldResponses"":0,""emTagForInvalidResponses"":0,""cancelSubtitle"":{""key"":27,""buttonName"":"""",""inputAction"":{""instanceID"":0}},""cancelConversation"":{""key"":27,""buttonName"":"""",""inputAction"":{""instanceID"":0}},""actorSubtitlePanelOverrides"":[]}"
+8,region_intro_crimson_valley,9,1,首次抵达赤霞谷时的地域见闻。,"{""useOverrides"":false,""overrideSubtitleSettings"":false,""showNPCSubtitlesDuringLine"":true,""showNPCSubtitlesWithResponses"":true,""showPCSubtitlesDuringLine"":false,""skipPCSubtitleAfterResponseMenu"":false,""subtitleCharsPerSecond"":30.0,""minSubtitleSeconds"":2.0,""continueButton"":0,""overrideSequenceSettings"":false,""defaultSequence"":"""",""defaultPlayerSequence"":"""",""defaultResponseMenuSequence"":"""",""overrideInputSettings"":false,""alwaysForceResponseMenu"":true,""includeInvalidEntries"":false,""responseTimeout"":0.0,""emTagForOldResponses"":0,""emTagForInvalidResponses"":0,""cancelSubtitle"":{""key"":27,""buttonName"":"""",""inputAction"":{""instanceID"":0}},""cancelConversation"":{""key"":27,""buttonName"":"""",""inputAction"":{""instanceID"":0}},""actorSubtitlePanelOverrides"":[]}"
+9,region_intro_deep_springs,10,1,首次抵达玄泉洞天时的地域见闻。,"{""useOverrides"":false,""overrideSubtitleSettings"":false,""showNPCSubtitlesDuringLine"":true,""showNPCSubtitlesWithResponses"":true,""showPCSubtitlesDuringLine"":false,""skipPCSubtitleAfterResponseMenu"":false,""subtitleCharsPerSecond"":30.0,""minSubtitleSeconds"":2.0,""continueButton"":0,""overrideSequenceSettings"":false,""defaultSequence"":"""",""defaultPlayerSequence"":"""",""defaultResponseMenuSequence"":"""",""overrideInputSettings"":false,""alwaysForceResponseMenu"":true,""includeInvalidEntries"":false,""responseTimeout"":0.0,""emTagForOldResponses"":0,""emTagForInvalidResponses"":0,""cancelSubtitle"":{""key"":27,""buttonName"":"""",""inputAction"":{""instanceID"":0}},""cancelConversation"":{""key"":27,""buttonName"":"""",""inputAction"":{""instanceID"":0}},""actorSubtitlePanelOverrides"":[]}"
+10,region_intro_northern_pass,11,1,首次抵达北冥古道时的地域见闻。,"{""useOverrides"":false,""overrideSubtitleSettings"":false,""showNPCSubtitlesDuringLine"":true,""showNPCSubtitlesWithResponses"":true,""showPCSubtitlesDuringLine"":false,""skipPCSubtitleAfterResponseMenu"":false,""subtitleCharsPerSecond"":30.0,""minSubtitleSeconds"":2.0,""continueButton"":0,""overrideSequenceSettings"":false,""defaultSequence"":"""",""defaultPlayerSequence"":"""",""defaultResponseMenuSequence"":"""",""overrideInputSettings"":false,""alwaysForceResponseMenu"":true,""includeInvalidEntries"":false,""responseTimeout"":0.0,""emTagForOldResponses"":0,""emTagForInvalidResponses"":0,""cancelSubtitle"":{""key"":27,""buttonName"":"""",""inputAction"":{""instanceID"":0}},""cancelConversation"":{""key"":27,""buttonName"":"""",""inputAction"":{""instanceID"":0}},""actorSubtitlePanelOverrides"":[]}"
+11,region_intro_celestial_ruins,12,1,首次抵达天外灵墟时的地域见闻。,"{""useOverrides"":false,""overrideSubtitleSettings"":false,""showNPCSubtitlesDuringLine"":true,""showNPCSubtitlesWithResponses"":true,""showPCSubtitlesDuringLine"":false,""skipPCSubtitleAfterResponseMenu"":false,""subtitleCharsPerSecond"":30.0,""minSubtitleSeconds"":2.0,""continueButton"":0,""overrideSequenceSettings"":false,""defaultSequence"":"""",""defaultPlayerSequence"":"""",""defaultResponseMenuSequence"":"""",""overrideInputSettings"":false,""alwaysForceResponseMenu"":true,""includeInvalidEntries"":false,""responseTimeout"":0.0,""emTagForOldResponses"":0,""emTagForInvalidResponses"":0,""cancelSubtitle"":{""key"":27,""buttonName"":"""",""inputAction"":{""instanceID"":0}},""cancelConversation"":{""key"":27,""buttonName"":"""",""inputAction"":{""instanceID"":0}},""actorSubtitlePanelOverrides"":[]}"
+12,region_scout_green_stone_gate,13,1,青石山门外围斥候提供的路线与异动情报。,"{""useOverrides"":false,""overrideSubtitleSettings"":false,""showNPCSubtitlesDuringLine"":true,""showNPCSubtitlesWithResponses"":true,""showPCSubtitlesDuringLine"":false,""skipPCSubtitleAfterResponseMenu"":false,""subtitleCharsPerSecond"":30.0,""minSubtitleSeconds"":2.0,""continueButton"":0,""overrideSequenceSettings"":false,""defaultSequence"":"""",""defaultPlayerSequence"":"""",""defaultResponseMenuSequence"":"""",""overrideInputSettings"":false,""alwaysForceResponseMenu"":true,""includeInvalidEntries"":false,""responseTimeout"":0.0,""emTagForOldResponses"":0,""emTagForInvalidResponses"":0,""cancelSubtitle"":{""key"":27,""buttonName"":"""",""inputAction"":{""instanceID"":0}},""cancelConversation"":{""key"":27,""buttonName"":"""",""inputAction"":{""instanceID"":0}},""actorSubtitlePanelOverrides"":[]}"
+13,region_scout_misty_forest,14,1,雾泽林斥候提供的路线与异动情报。,"{""useOverrides"":false,""overrideSubtitleSettings"":false,""showNPCSubtitlesDuringLine"":true,""showNPCSubtitlesWithResponses"":true,""showPCSubtitlesDuringLine"":false,""skipPCSubtitleAfterResponseMenu"":false,""subtitleCharsPerSecond"":30.0,""minSubtitleSeconds"":2.0,""continueButton"":0,""overrideSequenceSettings"":false,""defaultSequence"":"""",""defaultPlayerSequence"":"""",""defaultResponseMenuSequence"":"""",""overrideInputSettings"":false,""alwaysForceResponseMenu"":true,""includeInvalidEntries"":false,""responseTimeout"":0.0,""emTagForOldResponses"":0,""emTagForInvalidResponses"":0,""cancelSubtitle"":{""key"":27,""buttonName"":"""",""inputAction"":{""instanceID"":0}},""cancelConversation"":{""key"":27,""buttonName"":"""",""inputAction"":{""instanceID"":0}},""actorSubtitlePanelOverrides"":[]}"
+14,region_scout_crimson_valley,15,1,赤霞谷斥候提供的路线与异动情报。,"{""useOverrides"":false,""overrideSubtitleSettings"":false,""showNPCSubtitlesDuringLine"":true,""showNPCSubtitlesWithResponses"":true,""showPCSubtitlesDuringLine"":false,""skipPCSubtitleAfterResponseMenu"":false,""subtitleCharsPerSecond"":30.0,""minSubtitleSeconds"":2.0,""continueButton"":0,""overrideSequenceSettings"":false,""defaultSequence"":"""",""defaultPlayerSequence"":"""",""defaultResponseMenuSequence"":"""",""overrideInputSettings"":false,""alwaysForceResponseMenu"":true,""includeInvalidEntries"":false,""responseTimeout"":0.0,""emTagForOldResponses"":0,""emTagForInvalidResponses"":0,""cancelSubtitle"":{""key"":27,""buttonName"":"""",""inputAction"":{""instanceID"":0}},""cancelConversation"":{""key"":27,""buttonName"":"""",""inputAction"":{""instanceID"":0}},""actorSubtitlePanelOverrides"":[]}"
+15,region_scout_deep_springs,16,1,玄泉洞天斥候提供的路线与异动情报。,"{""useOverrides"":false,""overrideSubtitleSettings"":false,""showNPCSubtitlesDuringLine"":true,""showNPCSubtitlesWithResponses"":true,""showPCSubtitlesDuringLine"":false,""skipPCSubtitleAfterResponseMenu"":false,""subtitleCharsPerSecond"":30.0,""minSubtitleSeconds"":2.0,""continueButton"":0,""overrideSequenceSettings"":false,""defaultSequence"":"""",""defaultPlayerSequence"":"""",""defaultResponseMenuSequence"":"""",""overrideInputSettings"":false,""alwaysForceResponseMenu"":true,""includeInvalidEntries"":false,""responseTimeout"":0.0,""emTagForOldResponses"":0,""emTagForInvalidResponses"":0,""cancelSubtitle"":{""key"":27,""buttonName"":"""",""inputAction"":{""instanceID"":0}},""cancelConversation"":{""key"":27,""buttonName"":"""",""inputAction"":{""instanceID"":0}},""actorSubtitlePanelOverrides"":[]}"
+16,region_scout_northern_pass,17,1,北冥古道斥候提供的路线与异动情报。,"{""useOverrides"":false,""overrideSubtitleSettings"":false,""showNPCSubtitlesDuringLine"":true,""showNPCSubtitlesWithResponses"":true,""showPCSubtitlesDuringLine"":false,""skipPCSubtitleAfterResponseMenu"":false,""subtitleCharsPerSecond"":30.0,""minSubtitleSeconds"":2.0,""continueButton"":0,""overrideSequenceSettings"":false,""defaultSequence"":"""",""defaultPlayerSequence"":"""",""defaultResponseMenuSequence"":"""",""overrideInputSettings"":false,""alwaysForceResponseMenu"":true,""includeInvalidEntries"":false,""responseTimeout"":0.0,""emTagForOldResponses"":0,""emTagForInvalidResponses"":0,""cancelSubtitle"":{""key"":27,""buttonName"":"""",""inputAction"":{""instanceID"":0}},""cancelConversation"":{""key"":27,""buttonName"":"""",""inputAction"":{""instanceID"":0}},""actorSubtitlePanelOverrides"":[]}"
+17,region_scout_celestial_ruins,18,1,天外灵墟斥候提供的路线与异动情报。,"{""useOverrides"":false,""overrideSubtitleSettings"":false,""showNPCSubtitlesDuringLine"":true,""showNPCSubtitlesWithResponses"":true,""showPCSubtitlesDuringLine"":false,""skipPCSubtitleAfterResponseMenu"":false,""subtitleCharsPerSecond"":30.0,""minSubtitleSeconds"":2.0,""continueButton"":0,""overrideSequenceSettings"":false,""defaultSequence"":"""",""defaultPlayerSequence"":"""",""defaultResponseMenuSequence"":"""",""overrideInputSettings"":false,""alwaysForceResponseMenu"":true,""includeInvalidEntries"":false,""responseTimeout"":0.0,""emTagForOldResponses"":0,""emTagForInvalidResponses"":0,""cancelSubtitle"":{""key"":27,""buttonName"":"""",""inputAction"":{""instanceID"":0}},""cancelConversation"":{""key"":27,""buttonName"":"""",""inputAction"":{""instanceID"":0}},""actorSubtitlePanelOverrides"":[]}"
+DialogueEntries
+entrytag,ConvID,ID,Actor,Conversant,Title,MenuText,DialogueText,IsGroup,FalseConditionAction,ConditionPriority,Conditions,Script,Sequence,Description,canvasRect
+Text,Number,Number,Number,Number,Text,Text,Text,Boolean,Special,Special,Text,Text,Text,Text,Text
+Player_1_0,1,0,1,2,START,,,False,,Normal,,,,{{omit}},40;40
+清岚长老_1_1,1,1,2,1,Opening,你来得正好。经阁静，正适合把心念捋顺。你想问哪一处修行关窍？,你来得正好。经阁静，正适合把心念捋顺。你想问哪一处修行关窍？,False,,Normal,,,,{{omit}},230;160
+Player_1_2,1,2,1,2,AskQi,请教吐纳运气,弟子近来气机浮动，想请长老点拨吐纳转运之法。,False,,Normal,,"GameState_AddQi(2); GameState_SetFlag(""met_qinglan""); Story_RecordSignal(""sect_mentor"", ""qi_guidance"", ""清岚长老指点了吐纳运气的关窍。"");",,{{omit}},420;40
+Player_1_3,1,3,1,2,AskHeart,请教守心定神,弟子担心杂念滋长，想请长老指点如何定心守神。,False,,Normal,,"GameState_SetFlag(""met_qinglan""); Story_RecordSignal(""sect_mentor"", ""heart_guidance"", ""清岚长老提醒你先守心，再谈破境。"");",,{{omit}},610;160
+清岚长老_1_4,1,4,2,1,ReplyQi,气先顺，意才稳。你回去后先把周天走慢半拍，宁缓勿乱，自会多出两分火候。,气先顺，意才稳。你回去后先把周天走慢半拍，宁缓勿乱，自会多出两分火候。,False,,Normal,,,,{{omit}},800;40
+清岚长老_1_5,1,5,2,1,ReplyHeart,心若先急，法便先乱。记住今日这句话，往后每临关口，先问自己是否还守得住本心。,心若先急，法便先乱。记住今日这句话，往后每临关口，先问自己是否还守得住本心。,False,,Normal,,,,{{omit}},990;160
+Player_2_0,2,0,1,3,START,,,False,,Normal,,,,{{omit}},40;40
+何执事_2_1,2,1,3,1,Opening,卷宗都在这儿。你想先看委托，还是想听听山门近况？,卷宗都在这儿。你想先看委托，还是想听听山门近况？,False,,Normal,,,,{{omit}},230;160
+Player_2_2,2,2,1,3,AskTasks,先看近期委托,请执事替我拣出这几日最该优先处理的委托。,False,,Normal,,"Story_RecordSignal(""sect_steward"", ""task_board"", ""何执事替你理清了近期委托的轻重缓急。"");",,{{omit}},420;40
+Player_2_3,2,3,1,3,AskSect,问问宗门近况,最近山门里哪几件事最值得留意？,False,,Normal,,"GameState_SetFlag(""heard_steward_briefing""); Story_RecordSignal(""sect_steward"", ""sect_briefing"", ""何执事提醒了近期山门内外最值得留心的动向。"");",,{{omit}},610;160
+何执事_2_4,2,4,3,1,ReplyTasks,轻重不是看声势，是看后续牵出来的人和物。你先盯紧最短那条线，常能扯出最长的麻烦。,轻重不是看声势，是看后续牵出来的人和物。你先盯紧最短那条线，常能扯出最长的麻烦。,False,,Normal,,,,{{omit}},800;40
+何执事_2_5,2,5,3,1,ReplySect,外头风声越乱，山门里越要守住节奏。别只看谁闹得大，先看谁忽然安静下来。,外头风声越乱，山门里越要守住节奏。别只看谁闹得大，先看谁忽然安静下来。,False,,Normal,,,,{{omit}},990;160
+Player_3_0,3,0,1,4,START,,,False,,Normal,,,,{{omit}},40;40
+裴惊鸿_3_1,3,1,4,1,Opening,你最近出手比前些日子稳了些。要不要趁热来一场，看看你到底长了几分真本事？,你最近出手比前些日子稳了些。要不要趁热来一场，看看你到底长了几分真本事？,False,,Normal,,,,{{omit}},230;160
+Player_3_2,3,2,1,4,AcceptSpar,应下切磋,那就演武坪见，让我看看你今日还嘴不嘴硬。,False,,Normal,,"GameState_AddQi(1); GameState_AddCrystals(1); Story_RecordSignal(""sect_rival"", ""spar"", ""裴惊鸿与你狠狠干了一场，彼此都看清了眼下的火候。"");",,{{omit}},420;40
+Player_3_3,3,3,1,4,TakeWarning,先记下提醒,先不急着动手，你看我这几式里最虚的是哪一处？,False,,Normal,,"GameState_SetFlag(""pei_warning""); Story_RecordSignal(""sect_rival"", ""warning"", ""裴惊鸿点出了你招式中最容易被人抓住的空当。"");",,{{omit}},610;160
+裴惊鸿_3_4,3,4,4,1,ReplySpar,别光逞口舌。真动起手来，能多抢半口气机，就够把胜负从我这边拖去你那边。,别光逞口舌。真动起手来，能多抢半口气机，就够把胜负从我这边拖去你那边。,False,,Normal,,,,{{omit}},800;40
+裴惊鸿_3_5,3,5,4,1,ReplyWarning,你最容易在第二次变招时发急。记住，想压人先得压住自己，不然气势都是空的。,你最容易在第二次变招时发急。记住，想压人先得压住自己，不然气势都是空的。,False,,Normal,,,,{{omit}},990;160
+Player_4_0,4,0,1,5,START,,,False,,Normal,,,,{{omit}},40;40
+邱行商_4_1,4,1,5,1,Opening,货可以慢慢挑，风声却不会等人。你是想听些外路消息，还是顺手拿点小补给？,货可以慢慢挑，风声却不会等人。你是想听些外路消息，还是顺手拿点小补给？,False,,Normal,,,,{{omit}},230;160
+Player_4_2,4,2,1,5,HearRumor,听黑市风声,近来外头有没有什么不合常理的动静？,False,,Normal,,"GameState_AddCrystals(1); Story_RecordSignal(""market_merchant"", ""rumor"", ""邱行商透出了几条外路上正在悄悄发酵的风声。"");",,{{omit}},420;40
+Player_4_3,4,3,1,5,TakeSupply,收一包灵砂,先给我来一包顺手能用上的东西，别太扎眼。,False,,Normal,,"GameState_GrantItem(""green_spirit_sand"", 1); Story_RecordSignal(""market_merchant"", ""supply"", ""邱行商塞给你一包不算起眼却很实用的青石灵砂。"");",,{{omit}},610;160
+邱行商_4_4,4,4,5,1,ReplyRumor,风越小，越说明有人在捂事。你若真要追线索，先去看哪处忽然少了人说话。,风越小，越说明有人在捂事。你若真要追线索，先去看哪处忽然少了人说话。,False,,Normal,,,,{{omit}},800;40
+邱行商_4_5,4,5,5,1,ReplySupply,拿着吧。真正值钱的不是这点灵砂，是你知道该在什么时机把它用出去。,拿着吧。真正值钱的不是这点灵砂，是你知道该在什么时机把它用出去。,False,,Normal,,,,{{omit}},990;160
+Player_5_0,5,0,1,6,START,,,False,,Normal,,,,{{omit}},40;40
+蓝药娘_5_1,5,1,6,1,Opening,你身上药气和煞气都没散净。是要讨一味安神药引，还是想让我替你看看斗法后的后患？,你身上药气和煞气都没散净。是要讨一味安神药引，还是想让我替你看看斗法后的后患？,False,,Normal,,,,{{omit}},230;160
+Player_5_2,5,2,1,6,AskTonic,讨一味安神药引,给我一点能稳住心神的东西，别叫杂念趁虚而入。,False,,Normal,,"GameState_GrantItem(""mind_cleansing_incense"", 1); Story_RecordSignal(""market_healer"", ""tonic"", ""蓝药娘给了你一份可暂时安抚心神的香灰药引。"");",,{{omit}},420;40
+Player_5_3,5,3,1,6,AskConsult,请她看看后患,我近来斗法之后总觉气机滞住，你替我看一眼。,False,,Normal,,"GameState_SetFlag(""consulted_lan""); Story_RecordSignal(""market_healer"", ""consult"", ""蓝药娘替你辨出斗法后最容易积下的后患所在。"");",,{{omit}},610;160
+蓝药娘_5_4,5,4,6,1,ReplyTonic,先别急着求猛药。把这点香灰带回去，今晚静坐时缓缓焚了，比你硬压杂念更见效。,先别急着求猛药。把这点香灰带回去，今晚静坐时缓缓焚了，比你硬压杂念更见效。,False,,Normal,,,,{{omit}},800;40
+蓝药娘_5_5,5,5,6,1,ReplyConsult,你不是气机不动，是每次收功都太仓促。人能扛住一时狠劲，未必扛得住日积月累的漏口。,你不是气机不动，是每次收功都太仓促。人能扛住一时狠劲，未必扛得住日积月累的漏口。,False,,Normal,,,,{{omit}},990;160
+Player_6_0,6,0,1,7,START,,,False,,Normal,,,,{{omit}},40;40
+山海见闻_6_1,6,1,7,1,Opening,山门旧石被晨雾打湿，连钟声都显得慢了半拍。你第一次踏到这里时，几乎能听见自己气息里那点尚未安稳的浮动。,山门旧石被晨雾打湿，连钟声都显得慢了半拍。你第一次踏到这里时，几乎能听见自己气息里那点尚未安稳的浮动。,False,,Normal,,,,{{omit}},230;160
+Player_6_2,6,2,1,7,AskAura,记下此地气象,这里像个适合把根基重新压实的地方。,False,,Normal,,"Story_RecordSignal(""region_intro_detail"", ""green_stone_gate_aura"", ""你记下了青石山门安稳却不松懈的地脉气象。"");",,{{omit}},420;40
+Player_6_3,6,3,1,7,AskPeople,留意门中人心,安稳归安稳，可人心未必都和石阶一样平。,False,,Normal,,"Story_RecordSignal(""region_intro_detail"", ""green_stone_gate_people"", ""你敏锐地察觉到山门表面的平静下仍有各自压着的话头。"");",,{{omit}},610;160
+山海见闻_6_4,6,4,7,1,ReplyAura,越是灵气稀薄之地，越适合看清一个人到底靠什么在修行。这里先教会人的，从来不是锋芒，而是分寸。,越是灵气稀薄之地，越适合看清一个人到底靠什么在修行。这里先教会人的，从来不是锋芒，而是分寸。,False,,Normal,,,,{{omit}},800;40
+山海见闻_6_5,6,5,7,1,ReplyPeople,你会慢慢发现，真正让山门维持下去的，不是某一位前辈，而是许多人各自守住的一小步。,你会慢慢发现，真正让山门维持下去的，不是某一位前辈，而是许多人各自守住的一小步。,False,,Normal,,,,{{omit}},990;160
+Player_7_0,7,0,1,8,START,,,False,,Normal,,,,{{omit}},40;40
+雾泽斥候_7_1,7,1,8,1,Opening,雾泽林的路从来不写在地上，而是写在风向、鸟声和你肯不肯多停一瞬的脚步里。第一次来的人，往往先输给自己的心急。,雾泽林的路从来不写在地上，而是写在风向、鸟声和你肯不肯多停一瞬的脚步里。第一次来的人，往往先输给自己的心急。,False,,Normal,,,,{{omit}},230;160
+Player_7_2,7,2,1,8,AskMist,记下瘴雾变化,先认清雾，再谈往里走。,False,,Normal,,"Story_RecordSignal(""region_intro_detail"", ""misty_forest_mist"", ""你记下了雾泽林中瘴雾与风向交替的规律。"");",,{{omit}},420;40
+Player_7_3,7,3,1,8,AskBeasts,留意兽道异常,越看不清路，越该看清是什么在路上先走过。,False,,Normal,,"Story_RecordSignal(""region_intro_detail"", ""misty_forest_tracks"", ""你记下了雾泽林里几条最不寻常的兽道与回避方向。"");",,{{omit}},610;160
+雾泽斥候_7_4,7,4,8,1,ReplyMist,雾不是要把人挡在外头，它只是逼你先学会慢。肯慢下来的人，往往能在林里多活几日。,雾不是要把人挡在外头，它只是逼你先学会慢。肯慢下来的人，往往能在林里多活几日。,False,,Normal,,,,{{omit}},800;40
+雾泽斥候_7_5,7,5,8,1,ReplyBeasts,林中异兽比人更早知道哪里不对劲。若连它们都忽然换了路，前头多半已有更大的东西在动。,林中异兽比人更早知道哪里不对劲。若连它们都忽然换了路，前头多半已有更大的东西在动。,False,,Normal,,,,{{omit}},990;160
+Player_8_0,8,0,1,9,START,,,False,,Normal,,,,{{omit}},40;40
+赤霞谷旧碑_8_1,8,1,9,1,Opening,赤霞谷的石壁像被旧火反复灼过，连风刮过去都带着一点金铁味。谷里最先扑面的不是热，而是还没散尽的旧战余声。,赤霞谷的石壁像被旧火反复灼过，连风刮过去都带着一点金铁味。谷里最先扑面的不是热，而是还没散尽的旧战余声。,False,,Normal,,,,{{omit}},230;160
+Player_8_2,8,2,1,9,AskBattle,记下旧战痕迹,这里不像只是天火灼出来的，更像有人曾在这里拼到尽头。,False,,Normal,,"Story_RecordSignal(""region_intro_detail"", ""crimson_valley_battle"", ""你记下了赤霞谷中人力与天火交叠留下的旧战痕迹。"");",,{{omit}},420;40
+Player_8_3,8,3,1,9,AskDanger,留意谷中危兆,若旧火未散，今日的路就不该只按地形来走。,False,,Normal,,"Story_RecordSignal(""region_intro_detail"", ""crimson_valley_danger"", ""你记下了赤霞谷里最容易被忽略却最致命的热流与塌壁征兆。"");",,{{omit}},610;160
+赤霞谷旧碑_8_4,8,4,9,1,ReplyBattle,真正可怕的从来不是谁败了，而是那些胜负过去之后仍留在地里的执念。谷中的热，很多时候就是它们烧出来的。,真正可怕的从来不是谁败了，而是那些胜负过去之后仍留在地里的执念。谷中的热，很多时候就是它们烧出来的。,False,,Normal,,,,{{omit}},800;40
+赤霞谷旧碑_8_5,8,5,9,1,ReplyDanger,热流会骗人，碎石也会骗人。你若只盯脚下，往往来不及看到真正压下来的那一道赤影。,热流会骗人，碎石也会骗人。你若只盯脚下，往往来不及看到真正压下来的那一道赤影。,False,,Normal,,,,{{omit}},990;160
+Player_9_0,9,0,1,10,START,,,False,,Normal,,,,{{omit}},40;40
+玄泉泉灵_9_1,9,1,10,1,Opening,玄泉洞天的水声会顺着岩脉一层层往心里渗。第一次踏入这里的人，若分不清自己听到的是泉鸣还是杂念，就容易被洞天牵着走。,玄泉洞天的水声会顺着岩脉一层层往心里渗。第一次踏入这里的人，若分不清自己听到的是泉鸣还是杂念，就容易被洞天牵着走。,False,,Normal,,,,{{omit}},230;160
+Player_9_2,9,2,1,10,AskWater,记下水灵脉动,这里的水像在慢慢教人如何把呼吸放稳。,False,,Normal,,"Story_RecordSignal(""region_intro_detail"", ""deep_springs_water"", ""你记下了玄泉洞天中最适合调息与养气的水灵脉动。"");",,{{omit}},420;40
+Player_9_3,9,3,1,10,AskEcho,留意回响真假,越安静的地方，越要分清哪些声音是真的。,False,,Normal,,"Story_RecordSignal(""region_intro_detail"", ""deep_springs_echo"", ""你记下了玄泉洞天里最容易诱人误判方向的回响变化。"");",,{{omit}},610;160
+玄泉泉灵_9_4,9,4,10,1,ReplyWater,若能在这里学会让心念和呼吸一起慢下来，很多在外头过不去的关口，回头看也不过是一层急浪。,若能在这里学会让心念和呼吸一起慢下来，很多在外头过不去的关口，回头看也不过是一层急浪。,False,,Normal,,,,{{omit}},800;40
+玄泉泉灵_9_5,9,5,10,1,ReplyEcho,洞天最会拿你的念头回给你自己。怕什么，听见的就往往是什么；想太多，走出的路也会跟着绕远。,洞天最会拿你的念头回给你自己。怕什么，听见的就往往是什么；想太多，走出的路也会跟着绕远。,False,,Normal,,,,{{omit}},990;160
+Player_10_0,10,0,1,11,START,,,False,,Normal,,,,{{omit}},40;40
+北冥行旅_10_1,10,1,11,1,Opening,北冥古道上最先耗掉人的不是灵力，而是那股总想尽快走出风雪的急劲。路越长，越得学会把心神收成一线。,北冥古道上最先耗掉人的不是灵力，而是那股总想尽快走出风雪的急劲。路越长，越得学会把心神收成一线。,False,,Normal,,,,{{omit}},230;160
+Player_10_2,10,2,1,11,AskRoute,记下古道走法,先把能走到最后的节奏记住。,False,,Normal,,"Story_RecordSignal(""region_intro_detail"", ""northern_pass_route"", ""你记下了北冥古道上更适合长途推进的呼吸与脚程节奏。"");",,{{omit}},420;40
+Player_10_3,10,3,1,11,AskWill,留意心志考验,这地方真正想磨掉人的，怕不是脚下的雪。,False,,Normal,,"Story_RecordSignal(""region_intro_detail"", ""northern_pass_will"", ""你记下了北冥古道如何一点点消磨修士心志的迹象。"");",,{{omit}},610;160
+北冥行旅_10_4,10,4,11,1,ReplyRoute,在这里，快与慢从来不是脚程的事，而是你有没有本事把每一步都走成同一口气。,在这里，快与慢从来不是脚程的事，而是你有没有本事把每一步都走成同一口气。,False,,Normal,,,,{{omit}},800;40
+北冥行旅_10_5,10,5,11,1,ReplyWill,很多人不是败在路上，而是败在还没看到尽头时，先替自己想象出了一个过不去的尽头。,很多人不是败在路上，而是败在还没看到尽头时，先替自己想象出了一个过不去的尽头。,False,,Normal,,,,{{omit}},990;160
+Player_11_0,11,0,1,12,START,,,False,,Normal,,,,{{omit}},40;40
+天外残响_11_1,11,1,12,1,Opening,天外灵墟并不欢迎后来者，它只是还没有来得及把所有遗痕都彻底埋进尘里。你站在这里时，像是踩在另一段岁月的裂缝边上。,天外灵墟并不欢迎后来者，它只是还没有来得及把所有遗痕都彻底埋进尘里。你站在这里时，像是踩在另一段岁月的裂缝边上。,False,,Normal,,,,{{omit}},230;160
+Player_11_2,11,2,1,12,AskRuins,记下遗迹结构,先看清这地方是怎么碎掉的，再想怎么进去。,False,,Normal,,"Story_RecordSignal(""region_intro_detail"", ""celestial_ruins_layout"", ""你记下了天外灵墟中遗迹与残阵彼此咬合的结构。"");",,{{omit}},420;40
+Player_11_3,11,3,1,12,AskEcho,留意古老残响,这里若真有声音留下，必然不是给所有人听的。,False,,Normal,,"Story_RecordSignal(""region_intro_detail"", ""celestial_ruins_echo"", ""你记下了天外灵墟里那些并非人人都能捕捉到的古老回响。"");",,{{omit}},610;160
+天外残响_11_4,11,4,12,1,ReplyRuins,越高明的遗迹，碎掉以后越像一个仍在缓慢运转的陷阱。你若看不懂它原先如何成立，就更看不懂它如今如何伤人。,越高明的遗迹，碎掉以后越像一个仍在缓慢运转的陷阱。你若看不懂它原先如何成立，就更看不懂它如今如何伤人。,False,,Normal,,,,{{omit}},800;40
+天外残响_11_5,11,5,12,1,ReplyEcho,有些回响不是在回答你，而是在试着确认你是否配得上听见它。真正危险的，往往是那些你听懂了却又不肯承认的部分。,有些回响不是在回答你，而是在试着确认你是否配得上听见它。真正危险的，往往是那些你听懂了却又不肯承认的部分。,False,,Normal,,,,{{omit}},990;160
+Player_12_0,12,0,1,13,START,,,False,,Normal,,,,{{omit}},40;40
+青石巡守_12_1,12,1,13,1,Opening,山门外这片地界表面平顺，其实最容易让人掉以轻心。你若是要往外探，不如先听我说哪几处最近有了变化。,山门外这片地界表面平顺，其实最容易让人掉以轻心。你若是要往外探，不如先听我说哪几处最近有了变化。,False,,Normal,,,,{{omit}},230;160
+Player_12_2,12,2,1,13,AskClue,询问地界异动,最近外围有没有什么值得特别留意的异动？,False,,Normal,,"Story_RecordSignal(""region_scout"", ""green_stone_gate"", ""青石山门外围最近的地界异动已记入经历。"");",,{{omit}},420;40
+Player_12_3,12,3,1,13,AskRoute,确认安全路线,我想先走一条稳一点的路，把风险压到最低。,False,,Normal,,"Story_RecordSignal(""region_scout"", ""route_green_stone_gate"", ""青石山门外围更稳妥的推进路线已记入经历。"");",,{{omit}},610;160
+青石巡守_12_4,12,4,13,1,ReplyClue,近山路上多了几处陌生踩痕，像有人故意绕开正路探查山门。若你看见石阶边忽然干净得不自然，反倒要多留一分心。,近山路上多了几处陌生踩痕，像有人故意绕开正路探查山门。若你看见石阶边忽然干净得不自然，反倒要多留一分心。,False,,Normal,,,,{{omit}},800;40
+青石巡守_12_5,12,5,13,1,ReplyRoute,想稳，就沿旧巡山道走。那条路灵气薄些，但视野开，真出了事也更容易提前半步看见。,想稳，就沿旧巡山道走。那条路灵气薄些，但视野开，真出了事也更容易提前半步看见。,False,,Normal,,,,{{omit}},990;160
+Player_13_0,13,0,1,14,START,,,False,,Normal,,,,{{omit}},40;40
+雾泽老斥候_13_1,13,1,14,1,Opening,雾泽林没什么路是永远安全的，只有哪一阵雾里还勉强能走。你若想少吃亏，就先学会问风和听草。,雾泽林没什么路是永远安全的，只有哪一阵雾里还勉强能走。你若想少吃亏，就先学会问风和听草。,False,,Normal,,,,{{omit}},230;160
+Player_13_2,13,2,1,14,AskClue,询问地界异动,林里最近有没有什么和往常不一样的征兆？,False,,Normal,,"Story_RecordSignal(""region_scout"", ""misty_forest"", ""雾泽林最近的地界异动已记入经历。"");",,{{omit}},420;40
+Player_13_3,13,3,1,14,AskRoute,确认安全路线,若只求先稳住脚跟，该从哪几段路试着往里探？,False,,Normal,,"Story_RecordSignal(""region_scout"", ""route_misty_forest"", ""雾泽林更稳妥的推进路线已记入经历。"");",,{{omit}},610;160
+雾泽老斥候_13_4,13,4,14,1,ReplyClue,这两天林里的鸟声断得太齐，像有什么东西在逼着它们一起改道。你若听见雾里忽然很静，就别把那份安静当好事。,这两天林里的鸟声断得太齐，像有什么东西在逼着它们一起改道。你若听见雾里忽然很静，就别把那份安静当好事。,False,,Normal,,,,{{omit}},800;40
+雾泽老斥候_13_5,13,5,14,1,ReplyRoute,先沿着水浅、草低的边线走，宁可多绕半圈，也别一头扎进最浓的那层白雾。雾越厚，里头留给你改主意的余地越少。,先沿着水浅、草低的边线走，宁可多绕半圈，也别一头扎进最浓的那层白雾。雾越厚，里头留给你改主意的余地越少。,False,,Normal,,,,{{omit}},990;160
+Player_14_0,14,0,1,15,START,,,False,,Normal,,,,{{omit}},40;40
+赤霞采火人_14_1,14,1,15,1,Opening,赤霞谷不是只有火热，它最麻烦的是脾气。岩壁、热流、残响都像随时会翻脸。你若想进去，先问清哪种脸色最先要命。,赤霞谷不是只有火热，它最麻烦的是脾气。岩壁、热流、残响都像随时会翻脸。你若想进去，先问清哪种脸色最先要命。,False,,Normal,,,,{{omit}},230;160
+Player_14_2,14,2,1,15,AskClue,询问地界异动,谷里这几日最不对劲的是哪一处？,False,,Normal,,"Story_RecordSignal(""region_scout"", ""crimson_valley"", ""赤霞谷最近的地界异动已记入经历。"");",,{{omit}},420;40
+Player_14_3,14,3,1,15,AskRoute,确认安全路线,若只求先站稳脚，再往深处看，该从哪边入谷？,False,,Normal,,"Story_RecordSignal(""region_scout"", ""route_crimson_valley"", ""赤霞谷更稳妥的推进路线已记入经历。"");",,{{omit}},610;160
+赤霞采火人_14_4,14,4,15,1,ReplyClue,东侧那片赤壁最近掉渣掉得太勤，像是里头有什么东西在呼吸。你若看见热浪是往回卷的，立刻退，那不是风，是谷在吐气。,东侧那片赤壁最近掉渣掉得太勤，像是里头有什么东西在呼吸。你若看见热浪是往回卷的，立刻退，那不是风，是谷在吐气。,False,,Normal,,,,{{omit}},800;40
+赤霞采火人_14_5,14,5,15,1,ReplyRoute,先贴阴面走，别贪快穿最亮的谷心。亮处看着开阔，实则一出事连能躲的岩角都找不到。,先贴阴面走，别贪快穿最亮的谷心。亮处看着开阔，实则一出事连能躲的岩角都找不到。,False,,Normal,,,,{{omit}},990;160
+Player_15_0,15,0,1,16,START,,,False,,Normal,,,,{{omit}},40;40
+泉眼守望_15_1,15,1,16,1,Opening,玄泉洞天最会骗新来的人，以为越安静越安全。其实有些路一旦静得太过，反倒说明水脉已经改了方向。,玄泉洞天最会骗新来的人，以为越安静越安全。其实有些路一旦静得太过，反倒说明水脉已经改了方向。,False,,Normal,,,,{{omit}},230;160
+Player_15_2,15,2,1,16,AskClue,询问地界异动,泉路这阵子有什么反常的变化？,False,,Normal,,"Story_RecordSignal(""region_scout"", ""deep_springs"", ""玄泉洞天最近的地界异动已记入经历。"");",,{{omit}},420;40
+Player_15_3,15,3,1,16,AskRoute,确认安全路线,若想先把调息和落脚都顾上，该往哪条泉路走？,False,,Normal,,"Story_RecordSignal(""region_scout"", ""route_deep_springs"", ""玄泉洞天更稳妥的推进路线已记入经历。"");",,{{omit}},610;160
+泉眼守望_15_4,15,4,16,1,ReplyClue,北支洞里近来总有回声晚半拍，像是谁在替你把声音慢慢送回来。那不是好兆头，通常意味着前头有会扰心神的空腔。,北支洞里近来总有回声晚半拍，像是谁在替你把声音慢慢送回来。那不是好兆头，通常意味着前头有会扰心神的空腔。,False,,Normal,,,,{{omit}},800;40
+泉眼守望_15_5,15,5,16,1,ReplyRoute,想稳，就顺着水温最均匀的那道泉脉走。泉声太急的地方虽灵气足，却也最容易把人的呼吸和心念一起带乱。,想稳，就顺着水温最均匀的那道泉脉走。泉声太急的地方虽灵气足，却也最容易把人的呼吸和心念一起带乱。,False,,Normal,,,,{{omit}},990;160
+Player_16_0,16,0,1,17,START,,,False,,Normal,,,,{{omit}},40;40
+雪路驿使_16_1,16,1,17,1,Opening,北冥古道最像一场慢慢逼人认输的试炼。你若想穿过去，别只问路，还得先问自己能撑多久不乱。,北冥古道最像一场慢慢逼人认输的试炼。你若想穿过去，别只问路，还得先问自己能撑多久不乱。,False,,Normal,,,,{{omit}},230;160
+Player_16_2,16,2,1,17,AskClue,询问地界异动,雪线上最近有什么征兆值得提前防着？,False,,Normal,,"Story_RecordSignal(""region_scout"", ""northern_pass"", ""北冥古道最近的地界异动已记入经历。"");",,{{omit}},420;40
+Player_16_3,16,3,1,17,AskRoute,确认安全路线,若只求稳妥推进，该按什么节奏走这段雪路？,False,,Normal,,"Story_RecordSignal(""region_scout"", ""route_northern_pass"", ""北冥古道更稳妥的推进路线已记入经历。"");",,{{omit}},610;160
+雪路驿使_16_4,16,4,17,1,ReplyClue,昨夜风向换得太急，前头几段雪脊怕是已经开始藏空。你若踩下去声音发闷，就别硬往前挤，那下面多半不是实地。,昨夜风向换得太急，前头几段雪脊怕是已经开始藏空。你若踩下去声音发闷，就别硬往前挤，那下面多半不是实地。,False,,Normal,,,,{{omit}},800;40
+雪路驿使_16_5,16,5,17,1,ReplyRoute,三十步一换气，百步一回看。北冥古道上真正保命的不是脚快，而是你还能不能把每一段路都走在自己掌控里。,三十步一换气，百步一回看。北冥古道上真正保命的不是脚快，而是你还能不能把每一段路都走在自己掌控里。,False,,Normal,,,,{{omit}},990;160
+Player_17_0,17,0,1,18,START,,,False,,Normal,,,,{{omit}},40;40
+灵墟勘阵师_17_1,17,1,18,1,Opening,天外灵墟这种地方，最怕的不是你看不懂，而是你以为自己已经看懂。残阵和断墙从不只是在那儿给人看，它们也在试着把人引错。,天外灵墟这种地方，最怕的不是你看不懂，而是你以为自己已经看懂。残阵和断墙从不只是在那儿给人看，它们也在试着把人引错。,False,,Normal,,,,{{omit}},230;160
+Player_17_2,17,2,1,18,AskClue,询问地界异动,灵墟近来最值得警惕的是哪一种变化？,False,,Normal,,"Story_RecordSignal(""region_scout"", ""celestial_ruins"", ""天外灵墟最近的地界异动已记入经历。"");",,{{omit}},420;40
+Player_17_3,17,3,1,18,AskRoute,确认安全路线,若只想先探清外围，该沿哪几处残阵边缘落脚？,False,,Normal,,"Story_RecordSignal(""region_scout"", ""route_celestial_ruins"", ""天外灵墟更稳妥的推进路线已记入经历。"");",,{{omit}},610;160
+灵墟勘阵师_17_4,17,4,18,1,ReplyClue,西侧断阵最近亮得太勤，像是有人触了不该触的节点。你若见到同一块残片在不同角度都反着光，最好当场记下再退远些。,西侧断阵最近亮得太勤，像是有人触了不该触的节点。你若见到同一块残片在不同角度都反着光，最好当场记下再退远些。,False,,Normal,,,,{{omit}},800;40
+灵墟勘阵师_17_5,17,5,18,1,ReplyRoute,先沿着还能看出旧阵纹走向的外圈试探。看得懂它曾怎么运转，就比较不容易在它如今的废墟里走成它想让你走的样子。,先沿着还能看出旧阵纹走向的外圈试探。看得懂它曾怎么运转，就比较不容易在它如今的废墟里走成它想让你走的样子。,False,,Normal,,,,{{omit}},990;160
+OutgoingLinks
+OriginConvID,OriginID,DestConvID,DestID,ConditionPriority
+Number,Number,Number,Number,Special
+1,0,1,1,Normal
+1,1,1,2,Normal
+1,1,1,3,Normal
+1,2,1,4,Normal
+1,3,1,5,Normal
+2,0,2,1,Normal
+2,1,2,2,Normal
+2,1,2,3,Normal
+2,2,2,4,Normal
+2,3,2,5,Normal
+3,0,3,1,Normal
+3,1,3,2,Normal
+3,1,3,3,Normal
+3,2,3,4,Normal
+3,3,3,5,Normal
+4,0,4,1,Normal
+4,1,4,2,Normal
+4,1,4,3,Normal
+4,2,4,4,Normal
+4,3,4,5,Normal
+5,0,5,1,Normal
+5,1,5,2,Normal
+5,1,5,3,Normal
+5,2,5,4,Normal
+5,3,5,5,Normal
+6,0,6,1,Normal
+6,1,6,2,Normal
+6,1,6,3,Normal
+6,2,6,4,Normal
+6,3,6,5,Normal
+7,0,7,1,Normal
+7,1,7,2,Normal
+7,1,7,3,Normal
+7,2,7,4,Normal
+7,3,7,5,Normal
+8,0,8,1,Normal
+8,1,8,2,Normal
+8,1,8,3,Normal
+8,2,8,4,Normal
+8,3,8,5,Normal
+9,0,9,1,Normal
+9,1,9,2,Normal
+9,1,9,3,Normal
+9,2,9,4,Normal
+9,3,9,5,Normal
+10,0,10,1,Normal
+10,1,10,2,Normal
+10,1,10,3,Normal
+10,2,10,4,Normal
+10,3,10,5,Normal
+11,0,11,1,Normal
+11,1,11,2,Normal
+11,1,11,3,Normal
+11,2,11,4,Normal
+11,3,11,5,Normal
+12,0,12,1,Normal
+12,1,12,2,Normal
+12,1,12,3,Normal
+12,2,12,4,Normal
+12,3,12,5,Normal
+13,0,13,1,Normal
+13,1,13,2,Normal
+13,1,13,3,Normal
+13,2,13,4,Normal
+13,3,13,5,Normal
+14,0,14,1,Normal
+14,1,14,2,Normal
+14,1,14,3,Normal
+14,2,14,4,Normal
+14,3,14,5,Normal
+15,0,15,1,Normal
+15,1,15,2,Normal
+15,1,15,3,Normal
+15,2,15,4,Normal
+15,3,15,5,Normal
+16,0,16,1,Normal
+16,1,16,2,Normal
+16,1,16,3,Normal
+16,2,16,4,Normal
+16,3,16,5,Normal
+17,0,17,1,Normal
+17,1,17,2,Normal
+17,1,17,3,Normal
+17,2,17,4,Normal
+17,3,17,5,Normal

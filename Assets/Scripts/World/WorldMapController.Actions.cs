@@ -1,7 +1,21 @@
 using UnityEngine;
-
+using QFramework;
 public sealed partial class WorldMapController
 {
+    public void TravelToRegionById(string regionId)
+    {
+        int regionIndex;
+        if (!TryResolveRegionIndex(regionId, out regionIndex))
+        {
+            SetHint("当前地点数据未同步，无法进入历练。");
+            ShowWarningMessage("当前地点数据未同步，无法进入历练。");
+            return;
+        }
+
+        selectedRegionIndex = regionIndex;
+        TravelToSelectedRegion();
+    }
+
     public void TravelToSelectedRegion()
     {
         if (!EnsureValidSelectedRegionSelection())
@@ -28,6 +42,11 @@ public sealed partial class WorldMapController
         }
 
         CloseFloatingPanels();
+        if (TryStartRegionIntroConversation(region))
+        {
+            return;
+        }
+
         SceneFlow.RequestScene(gameplaySceneName);
     }
 
@@ -109,8 +128,72 @@ public sealed partial class WorldMapController
         SetHint("已进入整备区域，可处理储物、炼制与法器养成。");
     }
 
+    private bool TryStartRegionIntroConversation(WorldRegionDefinition region)
+    {
+        if (saveData == null || region == null)
+        {
+            return false;
+        }
+
+        var introFlag = BuildRegionIntroFlag(region.Id);
+        if (HasStoryFlag(introFlag))
+        {
+            return false;
+        }
+
+        var conversationTitle = BuildRegionIntroConversationTitle(region.Id);
+        var dialogueSystem = this.GetSystem<CultivationDialogueSystem>();
+        if (dialogueSystem == null || !dialogueSystem.HasConversation(conversationTitle))
+        {
+            return false;
+        }
+
+        SetHint("初到 " + region.DisplayName + "，一段见闻在心头浮现。");
+        return StartEventConversation(conversationTitle, saveData, () =>
+        {
+            CultivationApp.RecordStorySignal(saveData, new StorySignal
+            {
+                StoryId = "region_intro",
+                NodeId = region.Id,
+                Title = "地域初见",
+                ResultText = "已记录对 " + region.DisplayName + " 的初见见闻。"
+            });
+            SaveArchive(currentSlotIndex, saveData);
+            SceneFlow.RequestScene(gameplaySceneName);
+        });
+    }
+
+    private static string BuildRegionIntroConversationTitle(string regionId)
+    {
+        return "region_intro_" + (regionId ?? string.Empty);
+    }
+
+    private static string BuildRegionIntroFlag(string regionId)
+    {
+        return "region_intro:" + (regionId ?? string.Empty);
+    }
+
+    private bool HasStoryFlag(string flagId)
+    {
+        if (saveData == null || saveData.storyFlags == null || string.IsNullOrWhiteSpace(flagId))
+        {
+            return false;
+        }
+
+        for (var i = 0; i < saveData.storyFlags.Length; i++)
+        {
+            if (saveData.storyFlags[i] == flagId)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public void CloseSettlement()
     {
+        selectedSettlementLocationId = string.Empty;
         CloseGameUiPanel(GameUiPanelId.WorldMapSettlement);
         OpenWorldMapHome();
         SetHint("已离开整备区域，回到山海大地图。");
@@ -175,6 +258,7 @@ public sealed partial class WorldMapController
 
     public void CloseSect()
     {
+        selectedSectLocationId = string.Empty;
         if (saveData != null)
         {
             saveData.isInSectResidence = false;
@@ -224,6 +308,7 @@ public sealed partial class WorldMapController
 
     public void CloseRegionPage()
     {
+        selectedRegionLocationId = string.Empty;
         CloseGameUiPanel(GameUiPanelId.WorldMapRegion);
         CloseGameUiPanel(GameUiPanelId.WorldMapNpcDialogue);
         ShowGameUiPanel(GameUiPanelId.WorldMap);
@@ -249,6 +334,7 @@ public sealed partial class WorldMapController
     public void SelectSectHall(int index)
     {
         selectedSectHallIndex = index;
+        selectedSectLocationId = string.Empty;
         RefreshOpenPanels();
     }
 
@@ -274,46 +360,57 @@ public sealed partial class WorldMapController
         }
     }
 
-    public void OpenSettlementDialogue()
+    public void OpenSettlementDialogue(string locationId = null)
     {
-        selectedNpcId = string.Empty;
-        OpenNpcDialoguePanel(NpcSceneType.Settlement, string.Empty, string.Empty);
+        selectedSettlementLocationId = locationId ?? string.Empty;
+        OpenNpcDialoguePanel(NpcSceneType.Settlement, string.Empty, string.Empty, locationId);
     }
 
-    public void OpenSectDialogue()
+    public void OpenSectDialogue(string locationId = null)
     {
-        selectedNpcId = string.Empty;
-        OpenNpcDialoguePanel(NpcSceneType.SectResidence, string.Empty, GetSelectedSectHallId());
+        selectedSectLocationId = locationId ?? string.Empty;
+        OpenNpcDialoguePanel(NpcSceneType.SectResidence, string.Empty, GetSelectedSectHallId(), locationId);
     }
 
-    public void OpenRegionDialogue(string regionId)
+    public void OpenRegionDialogue(string regionId, string locationId = null)
     {
-        selectedNpcId = string.Empty;
-        OpenNpcDialoguePanel(NpcSceneType.Region, regionId, string.Empty);
+        selectedRegionLocationId = locationId ?? string.Empty;
+        OpenNpcDialoguePanel(NpcSceneType.Region, regionId, string.Empty, locationId);
     }
 
-    public void SelectNpc(string npcId)
+    public void SelectNpc(NpcSceneType sceneType, string regionId, string sectHallId, string locationId, string npcId)
     {
         selectedNpcId = npcId ?? string.Empty;
+        SetSelectedNpcForContext(sceneType, regionId, sectHallId, locationId, selectedNpcId);
         RefreshOpenPanels();
     }
 
     public void CloseNpcDialogue()
     {
         CloseGameUiPanel(GameUiPanelId.WorldMapNpcDialogue);
+        RefreshOpenPanels();
     }
 
-    public WorldMapNpcDialogueSnapshot BuildNpcDialogueSnapshot(NpcSceneType sceneType, string regionId, string sectHallId)
+    public WorldMapNpcDialogueSnapshot BuildNpcDialogueSnapshot(NpcSceneType sceneType, string regionId, string sectHallId, string locationId)
     {
-        return base.BuildNpcDialogueSnapshot(saveData, sceneType, regionId, sectHallId, selectedNpcId);
+        var resolvedSelectedNpcId = ResolveSelectedNpcForContext(sceneType, regionId, sectHallId, locationId);
+        var snapshot = base.BuildNpcDialogueSnapshot(saveData, sceneType, regionId, sectHallId, locationId, resolvedSelectedNpcId);
+        if (snapshot != null)
+        {
+            selectedNpcId = snapshot.SelectedNpcId ?? string.Empty;
+            SetSelectedNpcForContext(sceneType, regionId, sectHallId, locationId, selectedNpcId);
+        }
+
+        return snapshot;
     }
 
-    public void ExecuteNpcDialogueChoice(NpcSceneType sceneType, string regionId, string sectHallId, string npcId, string choiceId)
+    public void ExecuteNpcDialogueChoice(NpcSceneType sceneType, string regionId, string sectHallId, string locationId, string npcId, string choiceId)
     {
-        var result = base.ExecuteNpcDialogueChoice(currentSlotIndex, saveData, sceneType, regionId, sectHallId, npcId, choiceId);
+        var result = base.ExecuteNpcDialogueChoice(currentSlotIndex, saveData, sceneType, regionId, sectHallId, locationId, npcId, choiceId);
         if (result != null)
         {
             selectedNpcId = result.SelectedNpcId;
+            SetSelectedNpcForContext(sceneType, regionId, sectHallId, locationId, selectedNpcId);
         }
 
         RefreshAll();
@@ -329,38 +426,65 @@ public sealed partial class WorldMapController
         ShowWarningMessage(message);
     }
 
-    private bool CanCraft(string recipeId)
+    public void OpenIncidentEntry(NpcSceneType sceneType, string regionId, string sectHallId, string locationId, string incidentId)
     {
-        WorkshopRecipeDefinition[] recipes = WorkshopLibrary.GetRecipes();
-        if (recipes == null)
+        var incident = FindIncidentById(incidentId);
+        if (incident == null || incident.status != WorldIncidentStatus.Active)
         {
-            return false;
+            const string unavailableMessage = "这则风闻已经散去，当前无法继续追查。";
+            SetHint(unavailableMessage);
+            ShowWarningMessage(unavailableMessage);
+            RefreshOpenPanels();
+            return;
         }
 
-        for (var i = 0; i < recipes.Length; i++)
+        var primaryNpc = ResolvePrimaryIncidentNpc(incident);
+        if (primaryNpc != null)
         {
-            if (recipes[i] == null || recipes[i].Id != recipeId)
-            {
-                continue;
-            }
-
-            if (recipes[i].CostItems == null)
-            {
-                return true;
-            }
-
-            for (var itemIndex = 0; itemIndex < recipes[i].CostItems.Length; itemIndex++)
-            {
-                if (saveData.GetItemCount(recipes[i].CostItems[itemIndex].itemId) < recipes[i].CostItems[itemIndex].quantity)
-                {
-                    return false;
-                }
-            }
-
-            return true;
+            selectedNpcId = primaryNpc.npcId;
+            SetSelectedNpcForContext(sceneType, regionId, sectHallId, locationId, selectedNpcId);
         }
 
-        return false;
+        var dialogueSystem = this.GetSystem<CultivationDialogueSystem>();
+        if (!string.IsNullOrWhiteSpace(incident.conversationTitle) &&
+            dialogueSystem != null &&
+            dialogueSystem.IsReady &&
+            dialogueSystem.HasConversation(incident.conversationTitle))
+        {
+            var bindingSystem = this.GetSystem<CultivationDialogueBindingSystem>();
+            var worldGenerationSystem = this.GetSystem<CultivationWorldGenerationSystem>();
+            var runtimeLocation = worldGenerationSystem != null
+                ? worldGenerationSystem.ResolveLocationState(saveData, incident.locationId)
+                : null;
+
+            bindingSystem?.BindNpcConversationContext(saveData, primaryNpc, runtimeLocation, incident);
+            var started = StartEventConversation(incident.conversationTitle, saveData, () =>
+            {
+                SaveArchive(currentSlotIndex, saveData);
+                RefreshAll();
+                RefreshOpenPanels();
+            });
+
+            if (started)
+            {
+                SetHint("已切入风闻：" + incident.displayTitle);
+                RefreshOpenPanels();
+                return;
+            }
+        }
+
+        if (primaryNpc != null)
+        {
+            ExecuteNpcDialogueChoice(sceneType, regionId, sectHallId, locationId, primaryNpc.npcId, "generated_incident_followup");
+            return;
+        }
+
+        RefreshOpenPanels();
+        var fallbackMessage = string.IsNullOrWhiteSpace(incident.description)
+            ? "这则风闻暂时还没有落到具体人物身上。"
+            : incident.description;
+        SetHint(fallbackMessage);
+        ShowInfoMessage(fallbackMessage);
     }
 
     private void SetHint(string message)
@@ -382,11 +506,11 @@ public sealed partial class WorldMapController
         CloseGameUiPanel(GameUiPanelId.WorldMapNpcDialogue);
     }
 
-    private void OpenNpcDialoguePanel(NpcSceneType sceneType, string regionId, string sectHallId)
+    private void OpenNpcDialoguePanel(NpcSceneType sceneType, string regionId, string sectHallId, string locationId)
     {
         CloseGameUiPanel(GameUiPanelId.WorldMapInventory);
         CloseGameUiPanel(GameUiPanelId.WorldMapWorkshop);
-        var panel = OpenGameUiPanel(GameUiPanelId.WorldMapNpcDialogue, new WorldMapNpcDialoguePanelData(this, sceneType, regionId, sectHallId));
+        var panel = OpenGameUiPanel(GameUiPanelId.WorldMapNpcDialogue, new WorldMapNpcDialoguePanelData(this, sceneType, regionId, sectHallId, locationId));
         if (panel == null)
         {
             SetHint("人物对话面板 prefab 缺失，请先重新生成 WorldMap UI Prefabs。");
@@ -395,18 +519,143 @@ public sealed partial class WorldMapController
         }
 
         RefreshOpenPanels();
-        SetHint("已打开人物交谈界面。");
+        SetHint(BuildNpcLocaleHint(sceneType, regionId, sectHallId, locationId));
     }
 
-    private string GetSelectedSectHallId()
+    private string BuildNpcLocaleHint(NpcSceneType sceneType, string regionId, string sectHallId, string locationId)
     {
-        if (sectHallSnapshots == null || sectHallSnapshots.Length == 0)
+        var locationName = ResolveRuntimeLocationName(locationId);
+        if (!string.IsNullOrWhiteSpace(locationName))
+        {
+            return "已进入" + locationName + "。";
+        }
+
+        switch (sceneType)
+        {
+            case NpcSceneType.SectResidence:
+                var sectSystem = this.GetSystem<CultivationSectSystem>();
+                SectHallDefinition hallDefinition;
+                if (sectSystem != null && sectSystem.TryGetHallDefinition(sectHallId, out hallDefinition) && hallDefinition != null)
+                {
+                    return "已进入" + hallDefinition.DisplayName + "。";
+                }
+
+                return "已进入宗门殿堂。";
+            case NpcSceneType.Region:
+                return "已进入" + WorldRegionLibrary.GetRegionDisplayName(regionId) + "的前沿据点。";
+            default:
+                return saveData != null && saveData.isSectDisciple ? "已进入山门坊市。" : "已进入行脚坊市。";
+        }
+    }
+
+    private string ResolveRuntimeLocationName(string locationId)
+    {
+        if (string.IsNullOrWhiteSpace(locationId))
         {
             return string.Empty;
         }
 
-        var index = Mathf.Clamp(selectedSectHallIndex, 0, sectHallSnapshots.Length - 1);
-        var snapshot = sectHallSnapshots[index];
-        return snapshot != null && snapshot.Definition != null ? snapshot.Definition.Id : string.Empty;
+        var worldGenerationSystem = this.GetSystem<CultivationWorldGenerationSystem>();
+        return worldGenerationSystem != null ? worldGenerationSystem.ResolveLocationName(saveData, locationId) : string.Empty;
+    }
+
+    private bool TryResolveRegionIndex(string regionId, out int regionIndex)
+    {
+        regionIndex = -1;
+        if (!HasRegions() || string.IsNullOrWhiteSpace(regionId))
+        {
+            return false;
+        }
+
+        for (var i = 0; i < regions.Count; i++)
+        {
+            var region = regions[i];
+            if (region == null || region.Id != regionId)
+            {
+                continue;
+            }
+
+            regionIndex = i;
+            return true;
+        }
+
+        return false;
+    }
+
+    private string GetSelectedSectHallId()
+    {
+        return selectedSectHallId ?? string.Empty;
+    }
+
+    private string ResolveSelectedNpcForContext(NpcSceneType sceneType, string regionId, string sectHallId, string locationId)
+    {
+        var key = BuildNpcContextKey(sceneType, regionId, sectHallId, locationId);
+        string resolvedNpcId;
+        if (selectedNpcIdsByContext.TryGetValue(key, out resolvedNpcId))
+        {
+            return resolvedNpcId ?? string.Empty;
+        }
+
+        return string.Empty;
+    }
+
+    private void SetSelectedNpcForContext(NpcSceneType sceneType, string regionId, string sectHallId, string locationId, string npcId)
+    {
+        var key = BuildNpcContextKey(sceneType, regionId, sectHallId, locationId);
+        if (string.IsNullOrWhiteSpace(npcId))
+        {
+            selectedNpcIdsByContext.Remove(key);
+            return;
+        }
+
+        selectedNpcIdsByContext[key] = npcId;
+    }
+
+    private string BuildNpcContextKey(NpcSceneType sceneType, string regionId, string sectHallId, string locationId)
+    {
+        var anchorId = sceneType == NpcSceneType.Region
+            ? regionId ?? string.Empty
+            : sceneType == NpcSceneType.SectResidence
+                ? sectHallId ?? string.Empty
+                : saveData != null ? saveData.currentRegionId : string.Empty;
+        return sceneType + "|" + anchorId + "|" + (locationId ?? string.Empty);
+    }
+
+    private WorldIncidentData FindIncidentById(string incidentId)
+    {
+        if (saveData == null || saveData.activeWorldIncidents == null || string.IsNullOrWhiteSpace(incidentId))
+        {
+            return null;
+        }
+
+        for (var i = 0; i < saveData.activeWorldIncidents.Length; i++)
+        {
+            var incident = saveData.activeWorldIncidents[i];
+            if (incident != null && incident.incidentId == incidentId)
+            {
+                return incident;
+            }
+        }
+
+        return null;
+    }
+
+    private GeneratedNpcData ResolvePrimaryIncidentNpc(WorldIncidentData incident)
+    {
+        if (saveData == null || incident == null || incident.participantNpcIds == null)
+        {
+            return null;
+        }
+
+        for (var i = 0; i < incident.participantNpcIds.Length; i++)
+        {
+            var npc = saveData.FindGeneratedNpc(incident.participantNpcIds[i]);
+            if (npc != null)
+            {
+                return npc;
+            }
+        }
+
+        return null;
     }
 }

@@ -93,22 +93,22 @@ public abstract class CultivationController : MonoBehaviour, IController
 
     protected void BindButton(Button button, UnityAction action, CultivationButtonSound sound = CultivationButtonSound.Click)
     {
-        CultivationUiAudio.BindButton(button, action, SoundSystem, sound);
+        CultivationControllerExtensions.BindButton(this, button, action, sound);
     }
 
     protected void PlayButtonSound(CultivationButtonSound sound = CultivationButtonSound.Click)
     {
-        CultivationUiAudio.PlayButtonSound(SoundSystem, sound);
+        CultivationControllerExtensions.PlayButtonSound(this, sound);
     }
 
     protected T LoadResource<T>(string path) where T : Object
     {
-        return this.GetUtility<IGameResourceService>().Load<T>(path);
+        return CultivationControllerExtensions.LoadResource<T>(this, path);
     }
 
     protected GameObject InstantiatePrefab(string path, Transform parent = null)
     {
-        return this.GetUtility<IGameResourceService>().InstantiatePrefab(path, parent);
+        return CultivationControllerExtensions.InstantiatePrefab(this, path, parent);
     }
 
     protected UIPanel OpenGameUiPanel(GameUiPanelId panelId, IUIData uiData = null)
@@ -166,12 +166,12 @@ public abstract class CultivationController : MonoBehaviour, IController
         this.SendCommand(new SetPlayerCompendiumSelectionCommand(mainTab, sectionId));
     }
 
-    protected void SaveArchive(int slotIndex, MainMenuSaveData saveData)
+    protected void SaveArchive(int slotIndex, CultivationSaveData saveData)
     {
         this.SendCommand(new SaveArchiveCommand(slotIndex, saveData));
     }
 
-    protected void SyncArchiveState(int slotIndex, MainMenuSaveData saveData)
+    protected void SyncArchiveState(int slotIndex, CultivationSaveData saveData)
     {
         this.SendCommand(new SyncArchiveStateCommand(slotIndex, saveData));
     }
@@ -186,24 +186,54 @@ public abstract class CultivationController : MonoBehaviour, IController
         return this.SendCommand(new BootstrapCurrentArchiveCommand());
     }
 
-    protected string ResolveTaskBoard(int slotIndex, MainMenuSaveData saveData)
+    protected string ResolveTaskBoard(int slotIndex, CultivationSaveData saveData)
     {
         return this.SendCommand(new ResolveTaskBoardCommand(slotIndex, saveData));
     }
 
-    protected TaskContextSnapshot GetActiveTaskContext(MainMenuSaveData saveData)
+    protected TaskContextSnapshot GetActiveTaskContext(CultivationSaveData saveData)
     {
         return this.SendCommand(new GetActiveTaskContextCommand(saveData));
     }
 
-    protected WorldMapNpcDialogueSnapshot BuildNpcDialogueSnapshot(MainMenuSaveData saveData, NpcSceneType sceneType, string regionId, string sectHallId, string selectedNpcId)
+    protected WorldMapRegionSnapshot BuildWorldMapRegionSnapshot(CultivationSaveData saveData, string regionId, string fallbackRegionId)
     {
-        return this.SendCommand(new BuildNpcDialogueSnapshotCommand(saveData, sceneType, regionId, sectHallId, selectedNpcId));
+        return CultivationControllerExtensions.BuildWorldMapRegionSnapshot(this, saveData, regionId, fallbackRegionId);
     }
 
-    protected NpcInteractionResult ExecuteNpcDialogueChoice(int slotIndex, MainMenuSaveData saveData, NpcSceneType sceneType, string regionId, string sectHallId, string npcId, string choiceId)
+    protected WorldMapInventorySnapshot BuildWorldMapInventorySnapshot(CultivationSaveData saveData)
     {
-        return this.SendCommand(new ExecuteNpcDialogueChoiceCommand(slotIndex, saveData, sceneType, regionId, sectHallId, npcId, choiceId));
+        return CultivationControllerExtensions.BuildWorldMapInventorySnapshot(this, saveData);
+    }
+
+    protected WorldMapWorkshopSnapshot BuildWorldMapWorkshopSnapshot(CultivationSaveData saveData)
+    {
+        return CultivationControllerExtensions.BuildWorldMapWorkshopSnapshot(this, saveData);
+    }
+
+    protected WorldMapSettlementSnapshot BuildWorldMapSettlementSnapshot(CultivationSaveData saveData)
+    {
+        return CultivationControllerExtensions.BuildWorldMapSettlementSnapshot(this, saveData);
+    }
+
+    protected WorldMapSectResidenceSnapshot BuildWorldMapSectResidenceSnapshot(CultivationSaveData saveData, int selectedSectHallIndex)
+    {
+        return CultivationControllerExtensions.BuildWorldMapSectResidenceSnapshot(this, saveData, selectedSectHallIndex);
+    }
+
+    protected WorldMapNpcDialogueSnapshot BuildNpcDialogueSnapshot(CultivationSaveData saveData, NpcSceneType sceneType, string regionId, string sectHallId, string locationId, string selectedNpcId)
+    {
+        return this.SendCommand(new BuildNpcDialogueSnapshotCommand(saveData, sceneType, regionId, sectHallId, locationId, selectedNpcId));
+    }
+
+    protected NpcInteractionResult ExecuteNpcDialogueChoice(int slotIndex, CultivationSaveData saveData, NpcSceneType sceneType, string regionId, string sectHallId, string locationId, string npcId, string choiceId)
+    {
+        return this.SendCommand(new ExecuteNpcDialogueChoiceCommand(slotIndex, saveData, sceneType, regionId, sectHallId, locationId, npcId, choiceId));
+    }
+
+    protected bool StartEventConversation(string conversationTitle, CultivationSaveData saveData, System.Action onEnd = null)
+    {
+        return this.SendCommand(new StartEventConversationCommand(conversationTitle, saveData, onEnd));
     }
 
     protected ExpeditionView OpenExpeditionPanel()
@@ -211,12 +241,12 @@ public abstract class CultivationController : MonoBehaviour, IController
         return this.SendCommand(new OpenExpeditionPanelCommand());
     }
 
-    protected System.Collections.Generic.List<ExpeditionRoomState> BuildExpeditionRooms(WorldRegionDefinition region, MainMenuSaveData saveData, System.Random random)
+    protected System.Collections.Generic.List<ExpeditionRoomState> BuildExpeditionRooms(WorldRegionDefinition region, CultivationSaveData saveData, System.Random random)
     {
         return this.SendCommand(new BuildExpeditionRoomsCommand(region, saveData, random));
     }
 
-    protected System.Collections.Generic.List<ExpeditionEnemyState> BuildEncounterEnemies(WorldRegionDefinition region, ExpeditionRoomState room, MainMenuSaveData saveData, System.Random random)
+    protected System.Collections.Generic.List<ExpeditionEnemyState> BuildEncounterEnemies(WorldRegionDefinition region, ExpeditionRoomState room, CultivationSaveData saveData, System.Random random)
     {
         return this.SendCommand(new BuildEncounterEnemiesCommand(region, room, saveData, random));
     }
@@ -288,7 +318,7 @@ public abstract class CultivationController : MonoBehaviour, IController
 
     protected ExpeditionResolutionResult CompleteExpedition(
         int slotIndex,
-        MainMenuSaveData saveData,
+        CultivationSaveData saveData,
         WorldRegionDefinition region,
         ExpeditionHeroState hero,
         int torchlight,
@@ -309,7 +339,7 @@ public abstract class CultivationController : MonoBehaviour, IController
 
     protected ExpeditionResolutionResult RetreatExpedition(
         int slotIndex,
-        MainMenuSaveData saveData,
+        CultivationSaveData saveData,
         WorldRegionDefinition region,
         int pendingQiGain,
         int pendingCrystalGain,
@@ -326,7 +356,7 @@ public abstract class CultivationController : MonoBehaviour, IController
 
     protected ExpeditionResolutionResult FailExpedition(
         int slotIndex,
-        MainMenuSaveData saveData,
+        CultivationSaveData saveData,
         WorldRegionDefinition region,
         string reason,
         System.Collections.Generic.List<SaveItemStack> pendingItemRewards)
@@ -349,42 +379,42 @@ public abstract class CultivationController : MonoBehaviour, IController
         this.SendCommand(new ClearExpeditionRuntimeCommand());
     }
 
-    protected WorldMapActionResult TravelToRegion(int slotIndex, MainMenuSaveData saveData, WorldRegionDefinition region)
+    protected WorldMapActionResult TravelToRegion(int slotIndex, CultivationSaveData saveData, WorldRegionDefinition region)
     {
         return this.SendCommand(new TravelToRegionCommand(slotIndex, saveData, region));
     }
 
-    protected WorldMapActionResult UpgradeProtectiveRelic(int slotIndex, MainMenuSaveData saveData)
+    protected WorldMapActionResult UpgradeProtectiveRelic(int slotIndex, CultivationSaveData saveData)
     {
         return this.SendCommand(new UpgradeProtectiveRelicCommand(slotIndex, saveData));
     }
 
-    protected WorldMapActionResult UpgradeMainArtifact(int slotIndex, MainMenuSaveData saveData)
+    protected WorldMapActionResult UpgradeMainArtifact(int slotIndex, CultivationSaveData saveData)
     {
         return this.SendCommand(new UpgradeMainArtifactCommand(slotIndex, saveData));
     }
 
-    protected WorldMapActionResult CraftWorldMapRecipe(int slotIndex, MainMenuSaveData saveData, string recipeId)
+    protected WorldMapActionResult CraftWorldMapRecipe(int slotIndex, CultivationSaveData saveData, string recipeId)
     {
         return this.SendCommand(new CraftWorldMapRecipeCommand(slotIndex, saveData, recipeId));
     }
 
-    protected string BuildSettlementSummary(MainMenuSaveData saveData)
+    protected string BuildSettlementSummary(CultivationSaveData saveData)
     {
         return this.SendCommand(new BuildSettlementSummaryCommand(saveData));
     }
 
-    protected SectHallSnapshot[] GetSectHallSnapshots(MainMenuSaveData saveData)
+    protected SectHallSnapshot[] GetSectHallSnapshots(CultivationSaveData saveData)
     {
         return this.SendCommand(new GetSectHallSnapshotsCommand(saveData));
     }
 
-    protected string BuildSectOverview(MainMenuSaveData saveData)
+    protected string BuildSectOverview(CultivationSaveData saveData)
     {
         return this.SendCommand(new BuildSectOverviewCommand(saveData));
     }
 
-    protected SectActionResult ExecuteSectAction(int slotIndex, MainMenuSaveData saveData, string actionId)
+    protected SectActionResult ExecuteSectAction(int slotIndex, CultivationSaveData saveData, string actionId)
     {
         return this.SendCommand(new ExecuteSectActionCommand(slotIndex, saveData, actionId));
     }
@@ -475,27 +505,27 @@ public abstract class CultivationController : MonoBehaviour, IController
         float duration = 2.4f,
         CultivationMessagePopupStyle style = CultivationMessagePopupStyle.Info)
     {
-        return this.GetUtility<IGameUiService>().ShowMessagePopup(message, title, duration, style);
+        return CultivationControllerExtensions.ShowMessagePopup(this, message, title, duration, style);
     }
 
     protected CultivationMessagePopupPanel ShowInfoMessage(string message, float duration = 2.2f)
     {
-        return ShowMessagePopup(message, "提示", duration, CultivationMessagePopupStyle.Info);
+        return CultivationControllerExtensions.ShowInfoMessage(this, message, duration);
     }
 
     protected CultivationMessagePopupPanel ShowWarningMessage(string message, float duration = 2.8f)
     {
-        return ShowMessagePopup(message, "注意", duration, CultivationMessagePopupStyle.Warning);
+        return CultivationControllerExtensions.ShowWarningMessage(this, message, duration);
     }
 
     protected CultivationMessagePopupPanel ShowErrorMessage(string message, float duration = 3.2f)
     {
-        return ShowMessagePopup(message, "异常", duration, CultivationMessagePopupStyle.Error);
+        return CultivationControllerExtensions.ShowErrorMessage(this, message, duration);
     }
 
     protected CultivationMessagePopupPanel ShowSuccessMessage(string message, float duration = 2.4f)
     {
-        return ShowMessagePopup(message, "完成", duration, CultivationMessagePopupStyle.Success);
+        return CultivationControllerExtensions.ShowSuccessMessage(this, message, duration);
     }
 }
 
@@ -523,22 +553,22 @@ public abstract class CultivationUIPanel : UIPanel, IController
 
     protected void BindButton(Button button, UnityAction action, CultivationButtonSound sound = CultivationButtonSound.Click)
     {
-        CultivationUiAudio.BindButton(button, action, SoundSystem, sound);
+        CultivationControllerExtensions.BindButton(this, button, action, sound);
     }
 
     protected void PlayButtonSound(CultivationButtonSound sound = CultivationButtonSound.Click)
     {
-        CultivationUiAudio.PlayButtonSound(SoundSystem, sound);
+        CultivationControllerExtensions.PlayButtonSound(this, sound);
     }
 
     protected T LoadResource<T>(string path) where T : Object
     {
-        return this.GetUtility<IGameResourceService>().Load<T>(path);
+        return CultivationControllerExtensions.LoadResource<T>(this, path);
     }
 
     protected GameObject InstantiatePrefab(string path, Transform parent = null)
     {
-        return this.GetUtility<IGameResourceService>().InstantiatePrefab(path, parent);
+        return CultivationControllerExtensions.InstantiatePrefab(this, path, parent);
     }
 
     protected UIPanel OpenGameUiPanel(GameUiPanelId panelId, IUIData uiData = null)
@@ -596,12 +626,12 @@ public abstract class CultivationUIPanel : UIPanel, IController
         this.SendCommand(new SetPlayerCompendiumSelectionCommand(mainTab, sectionId));
     }
 
-    protected void SaveArchive(int slotIndex, MainMenuSaveData saveData)
+    protected void SaveArchive(int slotIndex, CultivationSaveData saveData)
     {
         this.SendCommand(new SaveArchiveCommand(slotIndex, saveData));
     }
 
-    protected void SyncArchiveState(int slotIndex, MainMenuSaveData saveData)
+    protected void SyncArchiveState(int slotIndex, CultivationSaveData saveData)
     {
         this.SendCommand(new SyncArchiveStateCommand(slotIndex, saveData));
     }
@@ -616,24 +646,54 @@ public abstract class CultivationUIPanel : UIPanel, IController
         return this.SendCommand(new BootstrapCurrentArchiveCommand());
     }
 
-    protected string ResolveTaskBoard(int slotIndex, MainMenuSaveData saveData)
+    protected string ResolveTaskBoard(int slotIndex, CultivationSaveData saveData)
     {
         return this.SendCommand(new ResolveTaskBoardCommand(slotIndex, saveData));
     }
 
-    protected TaskContextSnapshot GetActiveTaskContext(MainMenuSaveData saveData)
+    protected TaskContextSnapshot GetActiveTaskContext(CultivationSaveData saveData)
     {
         return this.SendCommand(new GetActiveTaskContextCommand(saveData));
     }
 
-    protected WorldMapNpcDialogueSnapshot BuildNpcDialogueSnapshot(MainMenuSaveData saveData, NpcSceneType sceneType, string regionId, string sectHallId, string selectedNpcId)
+    protected WorldMapRegionSnapshot BuildWorldMapRegionSnapshot(CultivationSaveData saveData, string regionId, string fallbackRegionId)
     {
-        return this.SendCommand(new BuildNpcDialogueSnapshotCommand(saveData, sceneType, regionId, sectHallId, selectedNpcId));
+        return CultivationControllerExtensions.BuildWorldMapRegionSnapshot(this, saveData, regionId, fallbackRegionId);
     }
 
-    protected NpcInteractionResult ExecuteNpcDialogueChoice(int slotIndex, MainMenuSaveData saveData, NpcSceneType sceneType, string regionId, string sectHallId, string npcId, string choiceId)
+    protected WorldMapInventorySnapshot BuildWorldMapInventorySnapshot(CultivationSaveData saveData)
     {
-        return this.SendCommand(new ExecuteNpcDialogueChoiceCommand(slotIndex, saveData, sceneType, regionId, sectHallId, npcId, choiceId));
+        return CultivationControllerExtensions.BuildWorldMapInventorySnapshot(this, saveData);
+    }
+
+    protected WorldMapWorkshopSnapshot BuildWorldMapWorkshopSnapshot(CultivationSaveData saveData)
+    {
+        return CultivationControllerExtensions.BuildWorldMapWorkshopSnapshot(this, saveData);
+    }
+
+    protected WorldMapSettlementSnapshot BuildWorldMapSettlementSnapshot(CultivationSaveData saveData)
+    {
+        return CultivationControllerExtensions.BuildWorldMapSettlementSnapshot(this, saveData);
+    }
+
+    protected WorldMapSectResidenceSnapshot BuildWorldMapSectResidenceSnapshot(CultivationSaveData saveData, int selectedSectHallIndex)
+    {
+        return CultivationControllerExtensions.BuildWorldMapSectResidenceSnapshot(this, saveData, selectedSectHallIndex);
+    }
+
+    protected WorldMapNpcDialogueSnapshot BuildNpcDialogueSnapshot(CultivationSaveData saveData, NpcSceneType sceneType, string regionId, string sectHallId, string locationId, string selectedNpcId)
+    {
+        return this.SendCommand(new BuildNpcDialogueSnapshotCommand(saveData, sceneType, regionId, sectHallId, locationId, selectedNpcId));
+    }
+
+    protected NpcInteractionResult ExecuteNpcDialogueChoice(int slotIndex, CultivationSaveData saveData, NpcSceneType sceneType, string regionId, string sectHallId, string locationId, string npcId, string choiceId)
+    {
+        return this.SendCommand(new ExecuteNpcDialogueChoiceCommand(slotIndex, saveData, sceneType, regionId, sectHallId, locationId, npcId, choiceId));
+    }
+
+    protected bool StartEventConversation(string conversationTitle, CultivationSaveData saveData, System.Action onEnd = null)
+    {
+        return this.SendCommand(new StartEventConversationCommand(conversationTitle, saveData, onEnd));
     }
 
     protected ExpeditionView OpenExpeditionPanel()
@@ -641,12 +701,12 @@ public abstract class CultivationUIPanel : UIPanel, IController
         return this.SendCommand(new OpenExpeditionPanelCommand());
     }
 
-    protected System.Collections.Generic.List<ExpeditionRoomState> BuildExpeditionRooms(WorldRegionDefinition region, MainMenuSaveData saveData, System.Random random)
+    protected System.Collections.Generic.List<ExpeditionRoomState> BuildExpeditionRooms(WorldRegionDefinition region, CultivationSaveData saveData, System.Random random)
     {
         return this.SendCommand(new BuildExpeditionRoomsCommand(region, saveData, random));
     }
 
-    protected System.Collections.Generic.List<ExpeditionEnemyState> BuildEncounterEnemies(WorldRegionDefinition region, ExpeditionRoomState room, MainMenuSaveData saveData, System.Random random)
+    protected System.Collections.Generic.List<ExpeditionEnemyState> BuildEncounterEnemies(WorldRegionDefinition region, ExpeditionRoomState room, CultivationSaveData saveData, System.Random random)
     {
         return this.SendCommand(new BuildEncounterEnemiesCommand(region, room, saveData, random));
     }
@@ -713,7 +773,7 @@ public abstract class CultivationUIPanel : UIPanel, IController
 
     protected ExpeditionResolutionResult CompleteExpedition(
         int slotIndex,
-        MainMenuSaveData saveData,
+        CultivationSaveData saveData,
         WorldRegionDefinition region,
         ExpeditionHeroState hero,
         int torchlight,
@@ -734,7 +794,7 @@ public abstract class CultivationUIPanel : UIPanel, IController
 
     protected ExpeditionResolutionResult RetreatExpedition(
         int slotIndex,
-        MainMenuSaveData saveData,
+        CultivationSaveData saveData,
         WorldRegionDefinition region,
         int pendingQiGain,
         int pendingCrystalGain,
@@ -751,7 +811,7 @@ public abstract class CultivationUIPanel : UIPanel, IController
 
     protected ExpeditionResolutionResult FailExpedition(
         int slotIndex,
-        MainMenuSaveData saveData,
+        CultivationSaveData saveData,
         WorldRegionDefinition region,
         string reason,
         System.Collections.Generic.List<SaveItemStack> pendingItemRewards)
@@ -774,42 +834,42 @@ public abstract class CultivationUIPanel : UIPanel, IController
         this.SendCommand(new ClearExpeditionRuntimeCommand());
     }
 
-    protected WorldMapActionResult TravelToRegion(int slotIndex, MainMenuSaveData saveData, WorldRegionDefinition region)
+    protected WorldMapActionResult TravelToRegion(int slotIndex, CultivationSaveData saveData, WorldRegionDefinition region)
     {
         return this.SendCommand(new TravelToRegionCommand(slotIndex, saveData, region));
     }
 
-    protected WorldMapActionResult UpgradeProtectiveRelic(int slotIndex, MainMenuSaveData saveData)
+    protected WorldMapActionResult UpgradeProtectiveRelic(int slotIndex, CultivationSaveData saveData)
     {
         return this.SendCommand(new UpgradeProtectiveRelicCommand(slotIndex, saveData));
     }
 
-    protected WorldMapActionResult UpgradeMainArtifact(int slotIndex, MainMenuSaveData saveData)
+    protected WorldMapActionResult UpgradeMainArtifact(int slotIndex, CultivationSaveData saveData)
     {
         return this.SendCommand(new UpgradeMainArtifactCommand(slotIndex, saveData));
     }
 
-    protected WorldMapActionResult CraftWorldMapRecipe(int slotIndex, MainMenuSaveData saveData, string recipeId)
+    protected WorldMapActionResult CraftWorldMapRecipe(int slotIndex, CultivationSaveData saveData, string recipeId)
     {
         return this.SendCommand(new CraftWorldMapRecipeCommand(slotIndex, saveData, recipeId));
     }
 
-    protected string BuildSettlementSummary(MainMenuSaveData saveData)
+    protected string BuildSettlementSummary(CultivationSaveData saveData)
     {
         return this.SendCommand(new BuildSettlementSummaryCommand(saveData));
     }
 
-    protected SectHallSnapshot[] GetSectHallSnapshots(MainMenuSaveData saveData)
+    protected SectHallSnapshot[] GetSectHallSnapshots(CultivationSaveData saveData)
     {
         return this.SendCommand(new GetSectHallSnapshotsCommand(saveData));
     }
 
-    protected string BuildSectOverview(MainMenuSaveData saveData)
+    protected string BuildSectOverview(CultivationSaveData saveData)
     {
         return this.SendCommand(new BuildSectOverviewCommand(saveData));
     }
 
-    protected SectActionResult ExecuteSectAction(int slotIndex, MainMenuSaveData saveData, string actionId)
+    protected SectActionResult ExecuteSectAction(int slotIndex, CultivationSaveData saveData, string actionId)
     {
         return this.SendCommand(new ExecuteSectActionCommand(slotIndex, saveData, actionId));
     }
@@ -900,26 +960,26 @@ public abstract class CultivationUIPanel : UIPanel, IController
         float duration = 2.4f,
         CultivationMessagePopupStyle style = CultivationMessagePopupStyle.Info)
     {
-        return this.GetUtility<IGameUiService>().ShowMessagePopup(message, title, duration, style);
+        return CultivationControllerExtensions.ShowMessagePopup(this, message, title, duration, style);
     }
 
     protected CultivationMessagePopupPanel ShowInfoMessage(string message, float duration = 2.2f)
     {
-        return ShowMessagePopup(message, "提示", duration, CultivationMessagePopupStyle.Info);
+        return CultivationControllerExtensions.ShowInfoMessage(this, message, duration);
     }
 
     protected CultivationMessagePopupPanel ShowWarningMessage(string message, float duration = 2.8f)
     {
-        return ShowMessagePopup(message, "注意", duration, CultivationMessagePopupStyle.Warning);
+        return CultivationControllerExtensions.ShowWarningMessage(this, message, duration);
     }
 
     protected CultivationMessagePopupPanel ShowErrorMessage(string message, float duration = 3.2f)
     {
-        return ShowMessagePopup(message, "异常", duration, CultivationMessagePopupStyle.Error);
+        return CultivationControllerExtensions.ShowErrorMessage(this, message, duration);
     }
 
     protected CultivationMessagePopupPanel ShowSuccessMessage(string message, float duration = 2.4f)
     {
-        return ShowMessagePopup(message, "完成", duration, CultivationMessagePopupStyle.Success);
+        return CultivationControllerExtensions.ShowSuccessMessage(this, message, duration);
     }
 }

@@ -237,18 +237,20 @@ public sealed class WorldMapSectResidencePanelData : UIPanelData
 
 public sealed class WorldMapNpcDialoguePanelData : UIPanelData
 {
-    public WorldMapNpcDialoguePanelData(WorldMapController owner, NpcSceneType sceneType, string regionId, string sectHallId)
+    public WorldMapNpcDialoguePanelData(WorldMapController owner, NpcSceneType sceneType, string regionId, string sectHallId, string locationId)
     {
         Owner = owner;
         SceneType = sceneType;
         RegionId = regionId ?? string.Empty;
         SectHallId = sectHallId ?? string.Empty;
+        LocationId = locationId ?? string.Empty;
     }
 
     public WorldMapController Owner { get; }
     public NpcSceneType SceneType { get; }
     public string RegionId { get; }
     public string SectHallId { get; }
+    public string LocationId { get; }
 }
 
 public sealed class MainMenuSettingsSnapshot
@@ -282,7 +284,7 @@ public sealed class MainMenuLoadSnapshot
 public sealed class MainMenuCharacterSnapshot
 {
     public MainMenuSlotSnapshot[] Slots;
-    public MainMenuArchetype[] Archetypes;
+    public HeroArchetypeOption[] Archetypes;
     public int SelectedArchetypeIndex;
     public string SummaryTitle;
     public string SummaryBody;

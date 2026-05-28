@@ -4,7 +4,7 @@ using UnityEngine;
 
 public sealed partial class GameController
 {
-    public void InitializeFromSnapshot(int slotIndex, MainMenuSaveData activeSave, WorldRegionDefinition activeRegion, PersistentExpeditionRuntimeSnapshot snapshot)
+    public void InitializeFromSnapshot(int slotIndex, CultivationSaveData activeSave, WorldRegionDefinition activeRegion, PersistentExpeditionRuntimeSnapshot snapshot)
     {
         currentSlotIndex = slotIndex;
         saveData = activeSave;
@@ -127,7 +127,7 @@ public sealed partial class GameController
         }
 
         SyncExpeditionRuntime(CreateCombatTurnContext());
-        MainMenuSaveStore.SaveExpeditionRuntime(BuildPersistentSnapshot());
+        CultivationLocalSaveStore.SaveExpeditionRuntime(BuildPersistentSnapshot());
     }
 
     private PersistentExpeditionRuntimeSnapshot BuildPersistentSnapshot()

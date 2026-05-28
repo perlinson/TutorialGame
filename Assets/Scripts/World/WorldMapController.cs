@@ -38,6 +38,7 @@ public sealed partial class WorldMapController : CultivationUIPanel, IGameHubNav
 
     private readonly List<WorldRegionDefinition> regions = new List<WorldRegionDefinition>();
     private readonly List<WorldRegionNodeView> nodeViews = new List<WorldRegionNodeView>();
+    private readonly Dictionary<string, string> selectedNpcIdsByContext = new Dictionary<string, string>();
 
     private RectTransform rootRect;
     private RectTransform titlePanelRect;
@@ -61,8 +62,11 @@ public sealed partial class WorldMapController : CultivationUIPanel, IGameHubNav
     private float detailPanelTargetVisibility;
     private Vector2 detailPanelShownPosition;
     private Vector2 detailPanelHiddenPosition;
-    private MainMenuSaveData saveData;
-    private SectHallSnapshot[] sectHallSnapshots = new SectHallSnapshot[0];
+    private CultivationSaveData saveData;
+    private string selectedSectHallId = string.Empty;
+    private string selectedSettlementLocationId = string.Empty;
+    private string selectedRegionLocationId = string.Empty;
+    private string selectedSectLocationId = string.Empty;
 
     // 地图滚动相关
     private Vector2 mapScrollPosition;

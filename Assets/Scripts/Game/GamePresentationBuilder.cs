@@ -6,7 +6,7 @@ public static class GamePresentationBuilder
 {
     private static HeroArchetypeDatabaseAsset cachedHeroArchetypeDatabase;
 
-    public static GameHubSnapshot BuildGameHubSnapshot(MainMenuSaveData saveData, GameHubContext context, string worldTimeText)
+    public static GameHubSnapshot BuildGameHubSnapshot(CultivationSaveData saveData, GameHubContext context, string worldTimeText)
     {
         if (saveData == null)
         {
@@ -47,7 +47,7 @@ public static class GamePresentationBuilder
             LocationText = "当前位置：" + saveData.location,
             HealthText = "气血 " + currentHealth + " / " + maxHealth,
             SpiritText = "灵力 " + currentSpirit + " / " + maxSpirit,
-            ResourceText = "灵石 " + saveData.spiritCrystals +
+            ResourceText = "灵石 " + saveData.wallet.ToDisplayString() +
                            " · 主法器 +" + saveData.mainArtifactLevel +
                            " · 护身 +" + saveData.protectiveRelicLevel,
             CurrentHealth = currentHealth,
@@ -62,7 +62,7 @@ public static class GamePresentationBuilder
         };
     }
 
-    public static PlayerCompendiumSnapshot BuildPlayerCompendiumSnapshot(MainMenuSaveData saveData, PlayerCompendiumMainTab mainTab, string sectionId)
+    public static PlayerCompendiumSnapshot BuildPlayerCompendiumSnapshot(CultivationSaveData saveData, PlayerCompendiumMainTab mainTab, string sectionId)
     {
         if (saveData == null)
         {
@@ -97,7 +97,7 @@ public static class GamePresentationBuilder
         }
     }
 
-    public static Sprite ResolvePortrait(MainMenuSaveData saveData)
+    public static Sprite ResolvePortrait(CultivationSaveData saveData)
     {
         if (saveData == null)
         {
@@ -113,7 +113,7 @@ public static class GamePresentationBuilder
         return GeneratedArtLibrary.GetHeroPortrait(saveData.archetypeId);
     }
 
-    public static int ComputeMaxHealth(MainMenuSaveData saveData)
+    public static int ComputeMaxHealth(CultivationSaveData saveData)
     {
         if (saveData == null)
         {
@@ -131,7 +131,7 @@ public static class GamePresentationBuilder
             saveData.pillCauldronLevel);
     }
 
-    private static PlayerCompendiumSnapshot BuildCharacterCompendium(MainMenuSaveData saveData, string sectionId)
+    private static PlayerCompendiumSnapshot BuildCharacterCompendium(CultivationSaveData saveData, string sectionId)
     {
         var sections = new[]
         {
@@ -162,9 +162,8 @@ public static class GamePresentationBuilder
         return new PlayerCompendiumSnapshot
         {
             PanelTitle = saveData.heroName + " · 修士总览",
-            PanelSubtitle = saveData.realm + " / " + saveData.archetypeName,
-            SummaryText = "当前位置：" + saveData.location + "\n灵石：" + saveData.spiritCrystals + "    修为：" + saveData.qi +
-                          "    储物袋：" + saveData.GetUsedBagSlots() + " / " + saveData.bagCapacity,
+            PanelSubtitle = saveData.realm + " / " + saveData.archetypeName + " / " + (saveData.isSectDisciple ? saveData.sectName : "散修行旅"),
+            SummaryText = BuildCharacterSummaryText(saveData),
             ContentTitle = contentTitle,
             ContentBody = contentBody,
             ResolvedSectionId = resolved,
@@ -174,11 +173,12 @@ public static class GamePresentationBuilder
                 Label = saveData.archetypeName + "立绘",
                 PlaceholderColor = new Color(0.24f, 0.19f, 0.14f, 1f)
             },
-            Sections = sections
+            Sections = sections,
+            CharacterOverview = resolved == "overview" ? BuildCharacterOverviewSnapshot(saveData) : null
         };
     }
 
-    private static PlayerCompendiumSnapshot BuildItemsCompendium(MainMenuSaveData saveData, string sectionId)
+    private static PlayerCompendiumSnapshot BuildItemsCompendium(CultivationSaveData saveData, string sectionId)
     {
         var sections = new[]
         {
@@ -217,7 +217,7 @@ public static class GamePresentationBuilder
         };
     }
 
-    private static PlayerCompendiumSnapshot BuildTalentsCompendium(MainMenuSaveData saveData, string sectionId)
+    private static PlayerCompendiumSnapshot BuildTalentsCompendium(CultivationSaveData saveData, string sectionId)
     {
         var record = GetHeroArchetypeRecord(saveData.archetypeId);
         var sections = new[]
@@ -265,7 +265,7 @@ public static class GamePresentationBuilder
         };
     }
 
-    private static PlayerCompendiumSnapshot BuildArtsCompendium(MainMenuSaveData saveData, string sectionId)
+    private static PlayerCompendiumSnapshot BuildArtsCompendium(CultivationSaveData saveData, string sectionId)
     {
         var sections = new[]
         {
@@ -319,7 +319,7 @@ public static class GamePresentationBuilder
         };
     }
 
-    private static string BuildCharacterOverviewBody(MainMenuSaveData saveData)
+    private static string BuildCharacterOverviewBody(CultivationSaveData saveData)
     {
         var builder = new StringBuilder();
         builder.Append("姓名：").Append(saveData.heroName).Append('\n');
@@ -333,7 +333,40 @@ public static class GamePresentationBuilder
         return builder.ToString();
     }
 
-    private static string BuildCharacterGrowthBody(MainMenuSaveData saveData)
+    private static PlayerCompendiumCharacterOverviewSnapshot BuildCharacterOverviewSnapshot(CultivationSaveData saveData)
+    {
+        var maxHealth = ComputeMaxHealth(saveData);
+        var nextQi = WorldRegionLibrary.GetQiRequiredForNextRealm(saveData.realmTier);
+        var qiFill = nextQi > 0 ? Mathf.Clamp01((float) saveData.qi / nextQi) : 1f;
+        var vitalityFill = Mathf.Clamp01(maxHealth / (24f + saveData.realmTier * 12f + 12f));
+        var heartDemonText = saveData.heartDemonMark > 0 ? saveData.heartDemonMark + " 层未净" : "心湖澄明";
+        var bottleneckText = saveData.atBottleneck ? "已入瓶颈" : "周天平稳";
+
+        return new PlayerCompendiumCharacterOverviewSnapshot
+        {
+            RealmBadgeText = saveData.atBottleneck ? saveData.realm + " · 临关" : saveData.realm + " · 巩固中",
+            NarrativeText = BuildCharacterOverviewNarrative(saveData),
+            PrimaryStatsText = BuildCharacterOverviewPrimaryStats(saveData),
+            SecondaryStatsText = BuildCharacterOverviewSecondaryStats(saveData),
+            GrowthStatusText =
+                "修为进度：" + (nextQi > 0 ? saveData.qi + " / " + nextQi : "当前阶段圆满") + "\n" +
+                "修行节奏：" + EstimateTrainingSpeed(saveData) + " / 月\n" +
+                "破境状态：" + bottleneckText + "\n" +
+                "心魔印记：" + heartDemonText,
+            SectStatusText =
+                "身份归属：" + (saveData.isSectDisciple ? saveData.sectName + "门人" : "散修") + "\n" +
+                "当前驻地：" + saveData.location + "\n" +
+                "洞府整备：" + saveData.settlementBuildCount + " 次\n" +
+                "历次突破：" + saveData.breakthroughCount + " 次",
+            VitalityMeterText = "气血气海\n" + maxHealth + " / " + maxHealth,
+            QiMeterText = nextQi > 0 ? "修为积累\n" + saveData.qi + " / " + nextQi : "修为积累\n圆满待破境",
+            VitalityFillAmount = vitalityFill,
+            QiFillAmount = qiFill,
+            Seals = BuildCharacterOverviewSeals(saveData)
+        };
+    }
+
+    private static string BuildCharacterGrowthBody(CultivationSaveData saveData)
     {
         var nextQi = WorldRegionLibrary.GetQiRequiredForNextRealm(saveData.realmTier);
         var hp = ComputeMaxHealth(saveData);
@@ -342,7 +375,7 @@ public static class GamePresentationBuilder
         builder.Append("境界：").Append(saveData.realm).Append("（第 ").Append(saveData.realmTier + 1).Append(" 阶）\n");
         builder.Append("气血：").Append(hp).Append(" / ").Append(hp).Append('\n');
         builder.Append("灵力：").Append(saveData.qi).Append(" / ").Append(spiritCap).Append('\n');
-        builder.Append("灵石：").Append(saveData.spiritCrystals).Append('\n');
+        builder.Append("灵石：").Append(saveData.wallet.ToDisplayString()).Append('\n');
         builder.Append("洞府建设：").Append(saveData.settlementBuildCount).Append(" 次\n");
         builder.Append("最近整备：").Append(string.IsNullOrWhiteSpace(saveData.lastSettlementAction) ? "暂无" : saveData.lastSettlementAction).Append('\n');
         builder.Append("世界时间：").Append(CultivationGameTime.Format(saveData)).Append('\n');
@@ -351,7 +384,7 @@ public static class GamePresentationBuilder
         return builder.ToString();
     }
 
-    private static string BuildCharacterLoadoutBody(MainMenuSaveData saveData)
+    private static string BuildCharacterLoadoutBody(CultivationSaveData saveData)
     {
         return CultivationLoadoutLibrary.BuildEquipmentOverview(saveData) +
                "\n\n" +
@@ -359,7 +392,7 @@ public static class GamePresentationBuilder
                "\n\n储物袋上限：" + saveData.bagCapacity + " 格";
     }
 
-    private static string BuildItemsBody(MainMenuSaveData saveData, string sectionId)
+    private static string BuildItemsBody(CultivationSaveData saveData, string sectionId)
     {
         var lines = new List<string>();
         lines.Add("储物袋：" + saveData.GetUsedBagSlots() + " / " + saveData.bagCapacity + " 格");
@@ -403,7 +436,7 @@ public static class GamePresentationBuilder
         return string.Join("\n", lines.ToArray()).TrimEnd();
     }
 
-    private static string BuildTalentTraitBody(MainMenuSaveData saveData, HeroArchetypeRecord record)
+    private static string BuildTalentTraitBody(CultivationSaveData saveData, HeroArchetypeRecord record)
     {
         var builder = new StringBuilder();
         builder.Append("核心天赋：").Append(record != null ? record.trait : saveData.specialty).Append('\n');
@@ -414,7 +447,7 @@ public static class GamePresentationBuilder
         return builder.ToString();
     }
 
-    private static string BuildTalentBackgroundBody(MainMenuSaveData saveData, HeroArchetypeRecord record)
+    private static string BuildTalentBackgroundBody(CultivationSaveData saveData, HeroArchetypeRecord record)
     {
         var builder = new StringBuilder();
         builder.Append("出身：").Append(saveData.origin).Append('\n');
@@ -434,7 +467,7 @@ public static class GamePresentationBuilder
         return builder.ToString();
     }
 
-    private static string BuildTalentIdentityBody(MainMenuSaveData saveData)
+    private static string BuildTalentIdentityBody(CultivationSaveData saveData)
     {
         var builder = new StringBuilder();
         builder.Append("当前身份：").Append(saveData.isSectDisciple ? saveData.sectName + "门人" : "散修").Append('\n');
@@ -447,7 +480,7 @@ public static class GamePresentationBuilder
         return builder.ToString();
     }
 
-    private static string BuildArtsMainLawBody(MainMenuSaveData saveData)
+    private static string BuildArtsMainLawBody(CultivationSaveData saveData)
     {
         var nextQi = WorldRegionLibrary.GetQiRequiredForNextRealm(saveData.realmTier);
         var currentStage = saveData.realmTier + 1;
@@ -484,7 +517,7 @@ public static class GamePresentationBuilder
         }
     }
 
-    private static PlayerCompendiumVisualNodeSnapshot[] BuildArtsVisualNodes(MainMenuSaveData saveData, string sectionId)
+    private static PlayerCompendiumVisualNodeSnapshot[] BuildArtsVisualNodes(CultivationSaveData saveData, string sectionId)
     {
         switch (sectionId)
         {
@@ -499,7 +532,7 @@ public static class GamePresentationBuilder
         }
     }
 
-    private static string BuildArtsCombatTreeBody(MainMenuSaveData saveData)
+    private static string BuildArtsCombatTreeBody(CultivationSaveData saveData)
     {
         var region = ResolveCompendiumRegion(saveData);
         var hero = ExpeditionBuildFactory.CreateHero(saveData, region);
@@ -524,7 +557,7 @@ public static class GamePresentationBuilder
         return builder.ToString().TrimEnd();
     }
 
-    private static PlayerCompendiumVisualNodeSnapshot[] BuildArtsMainLawNodes(MainMenuSaveData saveData)
+    private static PlayerCompendiumVisualNodeSnapshot[] BuildArtsMainLawNodes(CultivationSaveData saveData)
     {
         var nextQi = WorldRegionLibrary.GetQiRequiredForNextRealm(saveData.realmTier);
         return new[]
@@ -536,7 +569,7 @@ public static class GamePresentationBuilder
         };
     }
 
-    private static PlayerCompendiumVisualNodeSnapshot[] BuildArtsCombatNodes(MainMenuSaveData saveData)
+    private static PlayerCompendiumVisualNodeSnapshot[] BuildArtsCombatNodes(CultivationSaveData saveData)
     {
         var region = ResolveCompendiumRegion(saveData);
         var hero = ExpeditionBuildFactory.CreateHero(saveData, region);
@@ -571,7 +604,7 @@ public static class GamePresentationBuilder
         return nodes;
     }
 
-    private static PlayerCompendiumVisualNodeSnapshot[] BuildArtsAlchemyNodes(MainMenuSaveData saveData)
+    private static PlayerCompendiumVisualNodeSnapshot[] BuildArtsAlchemyNodes(CultivationSaveData saveData)
     {
         return new[]
         {
@@ -581,7 +614,7 @@ public static class GamePresentationBuilder
         };
     }
 
-    private static PlayerCompendiumVisualNodeSnapshot[] BuildArtsTalismanNodes(MainMenuSaveData saveData)
+    private static PlayerCompendiumVisualNodeSnapshot[] BuildArtsTalismanNodes(CultivationSaveData saveData)
     {
         return new[]
         {
@@ -591,7 +624,7 @@ public static class GamePresentationBuilder
         };
     }
 
-    private static string BuildArtsAlchemyBody(MainMenuSaveData saveData)
+    private static string BuildArtsAlchemyBody(CultivationSaveData saveData)
     {
         var builder = new StringBuilder();
         builder.Append("丹炉：").Append(CultivationLoadoutLibrary.GetPillCauldronName(saveData.archetypeId, saveData.pillCauldronLevel))
@@ -608,7 +641,7 @@ public static class GamePresentationBuilder
         return builder.ToString();
     }
 
-    private static string BuildArtsTalismanBody(MainMenuSaveData saveData)
+    private static string BuildArtsTalismanBody(CultivationSaveData saveData)
     {
         var builder = new StringBuilder();
         builder.Append("符匣：").Append(CultivationLoadoutLibrary.GetTalismanCaseName(saveData.archetypeId, saveData.talismanCaseLevel))
@@ -626,7 +659,69 @@ public static class GamePresentationBuilder
         return builder.ToString();
     }
 
-    private static WorldMapPreviewSnapshot BuildCompendiumInventoryPreview(MainMenuSaveData saveData)
+    private static string BuildCharacterSummaryText(CultivationSaveData saveData)
+    {
+        var builder = new StringBuilder();
+        builder.Append("出身：").Append(saveData.origin).Append('\n');
+        builder.Append("专长：").Append(saveData.specialty).Append('\n');
+        builder.Append("灵石：").Append(saveData.wallet.ToDisplayString()).Append("    储物袋：")
+            .Append(saveData.GetUsedBagSlots()).Append(" / ").Append(saveData.bagCapacity).Append('\n');
+        builder.Append("时序：").Append(CultivationGameTime.Format(saveData)).Append('\n');
+        builder.Append('\n').Append(string.IsNullOrWhiteSpace(saveData.description) ? "暂无额外人物描述。" : saveData.description);
+        return builder.ToString();
+    }
+
+    private static string BuildCharacterOverviewNarrative(CultivationSaveData saveData)
+    {
+        var builder = new StringBuilder();
+        builder.Append(saveData.heroName).Append("，").Append(saveData.archetypeName).Append("。");
+        builder.Append("出身于").Append(string.IsNullOrWhiteSpace(saveData.origin) ? "未载明来历" : saveData.origin).Append("，");
+        builder.Append("当前主修方向偏向").Append(string.IsNullOrWhiteSpace(saveData.specialty) ? "稳守与积累" : saveData.specialty).Append("。");
+        builder.Append('\n');
+        builder.Append(saveData.isSectDisciple
+            ? "如今已入" + saveData.sectName + "修行体系，可同时经营门派事务与山外历练。"
+            : "如今仍以散修身份行走四方，修行节奏更自由，但万事需自备根基。");
+        if (!string.IsNullOrWhiteSpace(saveData.description))
+        {
+            builder.Append('\n').Append(saveData.description);
+        }
+
+        return builder.ToString();
+    }
+
+    private static string BuildCharacterOverviewPrimaryStats(CultivationSaveData saveData)
+    {
+        var builder = new StringBuilder();
+        builder.Append("根骨：").Append(ResolveDisplayAttribute(saveData.rootBone, 18 + saveData.realmTier * 4 + saveData.protectiveRelicLevel * 3)).Append('\n');
+        builder.Append("悟性：").Append(ResolveDisplayAttribute(saveData.insight, 16 + saveData.realmTier * 5 + saveData.pillCauldronLevel * 2)).Append('\n');
+        builder.Append("神识：").Append(ResolveDisplayAttribute(saveData.spiritSense, 15 + saveData.realmTier * 5 + saveData.talismanCaseLevel * 2)).Append('\n');
+        builder.Append("灵根：").Append(GetSpiritRootDisplayName(saveData.spiritRoot));
+        return builder.ToString();
+    }
+
+    private static string BuildCharacterOverviewSecondaryStats(CultivationSaveData saveData)
+    {
+        var builder = new StringBuilder();
+        builder.Append("体魄：").Append(ResolveDisplayAttribute(saveData.vitalityStat, 20 + saveData.realmTier * 5 + saveData.protectiveRelicLevel * 4)).Append('\n');
+        builder.Append("法力：").Append(ResolveDisplayAttribute(saveData.manaStat, 22 + saveData.realmTier * 6 + saveData.qi)).Append('\n');
+        builder.Append("魂力：").Append(ResolveDisplayAttribute(saveData.soulPower, 14 + saveData.realmTier * 4 + saveData.mainArtifactLevel * 3)).Append('\n');
+        builder.Append("意志：").Append(ResolveDisplayAttribute(saveData.willpower, 16 + saveData.realmTier * 4 + saveData.breakthroughCount * 3));
+        return builder.ToString();
+    }
+
+    private static PlayerCompendiumOverviewSealSnapshot[] BuildCharacterOverviewSeals(CultivationSaveData saveData)
+    {
+        return new[]
+        {
+            CreateOverviewSeal("骨", "根骨", ResolveDisplayAttribute(saveData.rootBone, 18 + saveData.realmTier * 4 + saveData.protectiveRelicLevel * 3).ToString(), true),
+            CreateOverviewSeal("悟", "悟性", ResolveDisplayAttribute(saveData.insight, 16 + saveData.realmTier * 5 + saveData.pillCauldronLevel * 2).ToString(), false),
+            CreateOverviewSeal("识", "神识", ResolveDisplayAttribute(saveData.spiritSense, 15 + saveData.realmTier * 5 + saveData.talismanCaseLevel * 2).ToString(), false),
+            CreateOverviewSeal("志", "意志", ResolveDisplayAttribute(saveData.willpower, 16 + saveData.realmTier * 4 + saveData.breakthroughCount * 3).ToString(), false),
+            CreateOverviewSeal("根", "灵根", GetSpiritRootDisplayName(saveData.spiritRoot), saveData.spiritRoot >= 3)
+        };
+    }
+
+    private static WorldMapPreviewSnapshot BuildCompendiumInventoryPreview(CultivationSaveData saveData)
     {
         for (var i = 0; i < saveData.storageItems.Length; i++)
         {
@@ -657,7 +752,7 @@ public static class GamePresentationBuilder
         };
     }
 
-    private static WorldRegionDefinition ResolveCompendiumRegion(MainMenuSaveData saveData)
+    private static WorldRegionDefinition ResolveCompendiumRegion(CultivationSaveData saveData)
     {
         WorldRegionDefinition region;
         if (saveData != null && WorldRegionLibrary.TryGetRegion(saveData.currentRegionId, out region))
@@ -696,6 +791,17 @@ public static class GamePresentationBuilder
         {
             Id = id,
             Label = label
+        };
+    }
+
+    private static PlayerCompendiumOverviewSealSnapshot CreateOverviewSeal(string shortLabel, string title, string valueText, bool isHighlighted)
+    {
+        return new PlayerCompendiumOverviewSealSnapshot
+        {
+            ShortLabel = shortLabel,
+            Title = title,
+            ValueText = valueText,
+            IsHighlighted = isHighlighted
         };
     }
 
@@ -765,5 +871,32 @@ public static class GamePresentationBuilder
         }
 
         return null;
+    }
+
+    private static int ResolveDisplayAttribute(int persistedValue, int fallbackValue)
+    {
+        return persistedValue > 0 ? persistedValue : Mathf.Max(1, fallbackValue);
+    }
+
+    private static int EstimateTrainingSpeed(CultivationSaveData saveData)
+    {
+        return 36 +
+               saveData.realmTier * 18 +
+               ResolveDisplayAttribute(saveData.insight, 0) * 3 +
+               ResolveDisplayAttribute(saveData.spiritSense, 0) * 2 +
+               saveData.pillCauldronLevel * 12 +
+               saveData.talismanCaseLevel * 8;
+    }
+
+    private static string GetSpiritRootDisplayName(int spiritRoot)
+    {
+        return spiritRoot switch
+        {
+            4 => "变异灵根",
+            3 => "天灵根",
+            2 => "真灵根",
+            1 => "伪灵根",
+            _ => "凡体"
+        };
     }
 }

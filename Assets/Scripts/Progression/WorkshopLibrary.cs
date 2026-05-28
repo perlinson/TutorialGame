@@ -23,7 +23,7 @@ public static class WorkshopLibrary
         return recipes;
     }
 
-    public static string BuildWorkshopSummary(MainMenuSaveData saveData)
+    public static string BuildWorkshopSummary(CultivationSaveData saveData)
     {
         saveData.EnsureDefaults();
         var loadedRecipes = GetRecipes();
@@ -49,7 +49,7 @@ public static class WorkshopLibrary
         return builder.ToString();
     }
 
-    public static string BuildRecipeButtonLabel(MainMenuSaveData saveData, string recipeId)
+    public static string BuildRecipeButtonLabel(CultivationSaveData saveData, string recipeId)
     {
         var recipe = GetRecipe(recipeId);
         if (recipe == null)
@@ -60,8 +60,16 @@ public static class WorkshopLibrary
         return recipe.Title + (CanCraft(saveData, recipe) ? " · 可炼" : " · 缺材");
     }
 
-    public static bool Craft(MainMenuSaveData saveData, string recipeId, CultivationRealmSystem realmSystem, out string summary)
+    // Legacy compatibility for tests and older callers. New gameplay flow uses CultivationTradeSystem.CraftRecipe().
+    public static bool Craft(CultivationSaveData saveData, string recipeId, CultivationRealmSystem realmSystem, out string summary)
     {
+        summary = string.Empty;
+        if (saveData == null || string.IsNullOrEmpty(recipeId))
+        {
+            summary = "无效的配方。";
+            return false;
+        }
+
         saveData.EnsureDefaults();
         var recipe = GetRecipe(recipeId);
         if (recipe == null)
@@ -84,7 +92,8 @@ public static class WorkshopLibrary
             }
         }
 
-        saveData.spiritCrystals += recipe.RewardCrystals;
+        var grade = CultivationCurrencySystem.RealmToGrade(saveData.realmTier);
+        saveData.wallet.Add(grade, recipe.RewardCrystals);
         saveData.mainArtifactLevel += recipe.RewardMainArtifactLevel + recipe.RewardAttackLevel;
         saveData.protectiveRelicLevel += recipe.RewardProtectiveRelicLevel + recipe.RewardVitalityLevel;
         saveData.pillCauldronLevel += recipe.RewardPillCauldronLevel;
@@ -93,7 +102,6 @@ public static class WorkshopLibrary
         saveData.attackLevel = saveData.mainArtifactLevel;
         saveData.vitalityLevel = saveData.protectiveRelicLevel;
 
-        // 使用 RealmSystem.GainQi 处理修为获取和突破
         var gainResult = realmSystem != null
             ? realmSystem.GainQi(saveData, recipe.RewardQi, autoBreakthrough: true)
             : new RealmGainResult(recipe.RewardQi, 0, saveData.realmTier, saveData.realmTier);
@@ -108,7 +116,7 @@ public static class WorkshopLibrary
         return true;
     }
 
-    private static bool CanCraft(MainMenuSaveData saveData, WorkshopRecipeDefinition recipe)
+    private static bool CanCraft(CultivationSaveData saveData, WorkshopRecipeDefinition recipe)
     {
         if (recipe.CostItems == null)
         {
@@ -126,7 +134,7 @@ public static class WorkshopLibrary
         return true;
     }
 
-    private static WorkshopRecipeDefinition GetRecipe(string recipeId)
+    public static WorkshopRecipeDefinition GetRecipe(string recipeId)
     {
         var loadedRecipes = GetRecipes();
         for (var i = 0; i < loadedRecipes.Length; i++)
@@ -225,7 +233,7 @@ public static class WorkshopLibrary
         return builder.ToString();
     }
 
-    private static string FormatReward(WorkshopRecipeDefinition recipe)
+    public static string FormatReward(WorkshopRecipeDefinition recipe)
     {
         var builder = new StringBuilder();
         var wrote = false;

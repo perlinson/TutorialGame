@@ -5,7 +5,7 @@ public sealed class GamePresentationBuilderEditModeTests
     [Test]
     public void BuildPlayerCompendiumSnapshot_ArtsTab_CreatesVisualNodes()
     {
-        var saveData = new MainMenuSaveData
+        var saveData = new CultivationSaveData
         {
             heroName = "沈墨",
             archetypeId = "sword",
@@ -14,13 +14,13 @@ public sealed class GamePresentationBuilderEditModeTests
             realm = "练气中期",
             realmTier = 1,
             qi = 48,
-            spiritCrystals = 23,
             mainArtifactLevel = 2,
             protectiveRelicLevel = 1,
             pillCauldronLevel = 2,
             talismanCaseLevel = 1,
             currentRegionId = "green_stone_gate"
         };
+        saveData.wallet.Add(SpiritCrystalGrade.Low, 23);
         saveData.EnsureDefaults();
 
         var snapshot = GamePresentationBuilder.BuildPlayerCompendiumSnapshot(saveData, PlayerCompendiumMainTab.Arts, "main-law");
@@ -35,11 +35,13 @@ public sealed class GamePresentationBuilderEditModeTests
     [Test]
     public void BuildPlayerCompendiumSnapshot_CharacterTab_DoesNotCreateVisualNodes()
     {
-        var saveData = new MainMenuSaveData
+        var saveData = new CultivationSaveData
         {
             heroName = "沈墨",
             archetypeId = "sword",
-            archetypeName = "流云剑修"
+            archetypeName = "流云剑修",
+            origin = "青石城旧户",
+            specialty = "御剑攻伐"
         };
         saveData.EnsureDefaults();
 
@@ -47,5 +49,8 @@ public sealed class GamePresentationBuilderEditModeTests
 
         Assert.That(snapshot, Is.Not.Null);
         Assert.That(snapshot.VisualNodes, Is.Null.Or.Empty);
+        Assert.That(snapshot.CharacterOverview, Is.Not.Null);
+        Assert.That(snapshot.CharacterOverview.Seals, Is.Not.Null);
+        Assert.That(snapshot.CharacterOverview.Seals.Length, Is.EqualTo(5));
     }
 }

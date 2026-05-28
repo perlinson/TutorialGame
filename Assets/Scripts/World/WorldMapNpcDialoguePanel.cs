@@ -10,6 +10,7 @@ public sealed class WorldMapNpcDialoguePanel : CultivationUIPanel
     public Button blockerButton;
     public Button closeButton;
     public Button[] entryButtons;
+    public Button[] incidentButtons;
     public Button[] choiceButtons;
     public TextMeshProUGUI panelTitleText;
     public TextMeshProUGUI panelSubtitleText;
@@ -27,6 +28,7 @@ public sealed class WorldMapNpcDialoguePanel : CultivationUIPanel
     private NpcSceneType sceneType;
     private string regionId;
     private string sectHallId;
+    private string locationId;
     private RectTransform rootRect;
     private int lastLayoutWidth = -1;
     private int lastLayoutHeight = -1;
@@ -38,6 +40,7 @@ public sealed class WorldMapNpcDialoguePanel : CultivationUIPanel
         sceneType = panelData != null ? panelData.SceneType : NpcSceneType.Settlement;
         regionId = panelData != null ? panelData.RegionId : string.Empty;
         sectHallId = panelData != null ? panelData.SectHallId : string.Empty;
+        locationId = panelData != null ? panelData.LocationId : string.Empty;
         rootRect = transform as RectTransform;
         EnsureBindings();
         RefreshFromOwner();
@@ -65,7 +68,7 @@ public sealed class WorldMapNpcDialoguePanel : CultivationUIPanel
             return;
         }
 
-        var snapshot = owner.BuildNpcDialogueSnapshot(sceneType, regionId, sectHallId);
+        var snapshot = owner.BuildNpcDialogueSnapshot(sceneType, regionId, sectHallId, locationId);
         if (snapshot == null)
         {
             return;
@@ -122,6 +125,7 @@ public sealed class WorldMapNpcDialoguePanel : CultivationUIPanel
         }
 
         ApplyEntryButtons(snapshot.Entries);
+        ApplyIncidentButtons(snapshot.Incidents);
         ApplyChoiceButtons(snapshot.SelectedNpcId, snapshot.Choices);
     }
 
@@ -166,7 +170,43 @@ public sealed class WorldMapNpcDialoguePanel : CultivationUIPanel
             button.interactable = entry.IsInteractable;
             var npcId = entry.NpcId;
             CultivationTooltipBinder.Bind(button, entry.DisplayName, entry.RoleLabel + "\n" + entry.StatusText);
-            BindButton(button, () => owner?.SelectNpc(npcId));
+            BindButton(button, () => owner?.SelectNpc(sceneType, regionId, sectHallId, locationId, npcId));
+        }
+    }
+
+    private void ApplyIncidentButtons(WorldMapIncidentEntrySnapshot[] incidents)
+    {
+        if (incidentButtons == null)
+        {
+            return;
+        }
+
+        for (var i = 0; i < incidentButtons.Length; i++)
+        {
+            var button = incidentButtons[i];
+            if (button == null)
+            {
+                continue;
+            }
+
+            var hasIncident = incidents != null && i < incidents.Length && incidents[i] != null && incidents[i].IsVisible;
+            button.gameObject.SetActive(hasIncident);
+            if (!hasIncident)
+            {
+                continue;
+            }
+
+            var incident = incidents[i];
+            var label = button.GetComponentInChildren<TextMeshProUGUI>(true);
+            if (label != null)
+            {
+                label.text = incident.ButtonLabel;
+            }
+
+            button.interactable = incident.IsInteractable;
+            CultivationTooltipBinder.Bind(button, incident.TooltipTitle, incident.TooltipBody);
+            var incidentId = incident.IncidentId;
+            BindButton(button, () => owner?.OpenIncidentEntry(sceneType, regionId, sectHallId, locationId, incidentId), CultivationButtonSound.Confirm);
         }
     }
 
@@ -202,7 +242,7 @@ public sealed class WorldMapNpcDialoguePanel : CultivationUIPanel
             button.interactable = choice.IsInteractable;
             CultivationTooltipBinder.Bind(button, choice.TooltipTitle, choice.TooltipBody);
             var choiceId = choice.ChoiceId;
-            BindButton(button, () => owner?.ExecuteNpcDialogueChoice(sceneType, regionId, sectHallId, selectedNpcId, choiceId), CultivationButtonSound.Confirm);
+            BindButton(button, () => owner?.ExecuteNpcDialogueChoice(sceneType, regionId, sectHallId, locationId, selectedNpcId, choiceId), CultivationButtonSound.Confirm);
         }
     }
 

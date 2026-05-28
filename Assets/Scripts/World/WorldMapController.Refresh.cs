@@ -135,12 +135,12 @@ public sealed partial class WorldMapController
 
             if (vitalityUpgradeButton != null)
             {
-                vitalityUpgradeButton.interactable = saveData.spiritCrystals >= WorldRegionLibrary.GetVitalityUpgradeCost(saveData);
+                vitalityUpgradeButton.interactable = saveData.wallet.CanAfford(CultivationCurrencySystem.RealmToGrade(saveData.realmTier), WorldRegionLibrary.GetVitalityUpgradeCost(saveData));
             }
 
             if (attackUpgradeButton != null)
             {
-                attackUpgradeButton.interactable = saveData.spiritCrystals >= WorldRegionLibrary.GetAttackUpgradeCost(saveData);
+                attackUpgradeButton.interactable = saveData.wallet.CanAfford(CultivationCurrencySystem.RealmToGrade(saveData.realmTier), WorldRegionLibrary.GetAttackUpgradeCost(saveData));
             }
 
             return;
@@ -149,8 +149,8 @@ public sealed partial class WorldMapController
         var region = regions[selectedRegionIndex];
         string reason;
         travelButton.interactable = WorldRegionLibrary.CanTravel(saveData, region, out reason);
-        vitalityUpgradeButton.interactable = saveData.spiritCrystals >= WorldRegionLibrary.GetVitalityUpgradeCost(saveData);
-        attackUpgradeButton.interactable = saveData.spiritCrystals >= WorldRegionLibrary.GetAttackUpgradeCost(saveData);
+        vitalityUpgradeButton.interactable = saveData.wallet.CanAfford(CultivationCurrencySystem.RealmToGrade(saveData.realmTier), WorldRegionLibrary.GetVitalityUpgradeCost(saveData));
+        attackUpgradeButton.interactable = saveData.wallet.CanAfford(CultivationCurrencySystem.RealmToGrade(saveData.realmTier), WorldRegionLibrary.GetAttackUpgradeCost(saveData));
         if (sectResidenceButton != null)
         {
             sectResidenceButton.gameObject.SetActive(saveData.isSectDisciple);
@@ -165,349 +165,152 @@ public sealed partial class WorldMapController
 
     public WorldMapInventorySnapshot BuildInventorySnapshot()
     {
-        return new WorldMapInventorySnapshot
-        {
-            DetailText = InventoryLibrary.BuildDetailedBagSummary(saveData),
-            Preview = BuildInventoryPreviewSnapshot()
-        };
+        return BuildWorldMapInventorySnapshot(saveData);
     }
 
     public WorldMapRegionSnapshot BuildRegionSnapshot(string regionId)
     {
-        WorldRegionDefinition region = null;
-        if (!string.IsNullOrWhiteSpace(regionId))
+        var fallbackRegionId = string.Empty;
+        if (EnsureValidSelectedRegionSelection())
         {
-            for (var i = 0; i < regions.Count; i++)
-            {
-                if (regions[i] != null && regions[i].Id == regionId)
-                {
-                    region = regions[i];
-                    break;
-                }
-            }
+            var selectedRegion = regions[selectedRegionIndex];
+            fallbackRegionId = selectedRegion != null ? selectedRegion.Id : string.Empty;
         }
 
-        if (region == null && EnsureValidSelectedRegionSelection())
+        var snapshot = BuildWorldMapRegionSnapshot(saveData, regionId, fallbackRegionId);
+        DecorateLocationEntries(snapshot != null ? snapshot.LocationEntries : null, selectedRegionLocationId);
+        if (snapshot != null)
         {
-            region = regions[selectedRegionIndex];
+            snapshot.Description = AppendFocusedLocationSummary(snapshot.Description, snapshot.LocationEntries, "当前聚焦驻点");
+            snapshot.Status = AppendFocusedLocationStatus(snapshot.Status, snapshot.LocationEntries);
         }
 
-        if (region == null)
-        {
-            return new WorldMapRegionSnapshot
-            {
-                PanelTitle = "历练地点",
-                PanelSubtitle = "地域情报缺失",
-                Description = "当前没有可展示的地域数据。",
-                Status = "状态：不可进入。",
-                TaskSummary = "委托：暂无。",
-                TravelButtonLabel = "不可前往",
-                VitalityButtonLabel = "温养护身器",
-                AttackButtonLabel = "祭炼主法器",
-                CanTravel = false,
-                CanUpgradeVitality = false,
-                CanUpgradeAttack = false,
-                Preview = new WorldMapPreviewSnapshot
-                {
-                    Label = "地域占位图",
-                    PlaceholderColor = new Color(0.22f, 0.18f, 0.14f, 1f)
-                }
-            };
-        }
-
-        var unlocked = saveData.IsRegionUnlocked(region.Id);
-        var cleared = saveData.IsRegionCleared(region.Id);
-        string reason;
-        var canTravel = WorldRegionLibrary.CanTravel(saveData, region, out reason);
-        var taskContext = GetActiveTaskContext(saveData);
-        var vitalityCost = WorldRegionLibrary.GetVitalityUpgradeCost(saveData);
-        var attackCost = WorldRegionLibrary.GetAttackUpgradeCost(saveData);
-
-        var description = region.Description + "\n\n" +
-                          "危险阶：第 " + region.DangerRank + " 等\n" +
-                          "基础奖赏：修为 +" + region.ClearQiReward + " / 灵石 +" + region.ClearCrystalReward + "\n" +
-                          "遭遇配置：心障 " + (region.EnemyCount + region.EliteEnemyCount) +
-                          " · 灵气 " + region.SpiritNodeCount +
-                          " · 灵草 " + region.HerbCount +
-                          " · 遗物 " + region.RelicCount + "\n\n" +
-                          "当前养成：\n" + CultivationLoadoutLibrary.BuildEquipmentOverview(saveData);
-
-        var status = !unlocked
-            ? "状态：路引未明，需要先完成前置地界。"
-            : cleared && canTravel
-                ? "状态：已肃清，可再次进入刷取资源。"
-                : canTravel
-                    ? "状态：可前往历练。"
-                    : "状态：" + reason;
-
-        return new WorldMapRegionSnapshot
-        {
-            PanelTitle = region.DisplayName,
-            PanelSubtitle = region.Subtitle + " / " + WorldRegionLibrary.GetRealmName(region.RequiredRealmTier),
-            Description = description,
-            Status = status,
-            TaskSummary = taskContext != null
-                ? taskContext.ActiveTaskSummary
-                : "委托：暂无新任务，可先前往此地探路。",
-            TravelButtonLabel = canTravel ? "进入历练" : unlocked ? "暂不可前往" : "尚未探明",
-            VitalityButtonLabel = CultivationLoadoutLibrary.GetProtectiveRelicName(saveData.archetypeId, saveData.protectiveRelicLevel) + " +" +
-                                  saveData.protectiveRelicLevel + "  升阶-" + vitalityCost,
-            AttackButtonLabel = CultivationLoadoutLibrary.GetMainArtifactName(saveData.archetypeId, saveData.mainArtifactLevel) + " +" +
-                                saveData.mainArtifactLevel + "  升阶-" + attackCost,
-            CanTravel = canTravel,
-            CanUpgradeVitality = saveData.spiritCrystals >= vitalityCost,
-            CanUpgradeAttack = saveData.spiritCrystals >= attackCost,
-            Preview = new WorldMapPreviewSnapshot
-            {
-                Sprite = region.IllustrationImage,
-                Label = region.DisplayName + "占位图",
-                PlaceholderColor = new Color(region.AccentColor.r * 0.7f, region.AccentColor.g * 0.7f, region.AccentColor.b * 0.7f, 1f)
-            }
-        };
+        return snapshot;
     }
 
     public WorldMapWorkshopSnapshot BuildWorkshopSnapshot()
     {
-        return new WorldMapWorkshopSnapshot
-        {
-            SummaryText = BuildSettlementSummary(saveData),
-            Preview = BuildWorkshopPreviewSnapshot(),
-            Recipes = new[]
-            {
-                BuildWorkshopRecipeSnapshot("pill_cauldron_upgrade"),
-                BuildWorkshopRecipeSnapshot("talisman_case_upgrade"),
-                BuildWorkshopRecipeSnapshot("peiyuan_powder"),
-                BuildWorkshopRecipeSnapshot("nawu_pouch")
-            }
-        };
+        return BuildWorldMapWorkshopSnapshot(saveData);
     }
 
     public WorldMapSettlementSnapshot BuildSettlementSnapshot()
     {
-        if (saveData == null)
+        var snapshot = BuildWorldMapSettlementSnapshot(saveData);
+        DecorateLocationEntries(snapshot != null ? snapshot.LocationEntries : null, selectedSettlementLocationId);
+        if (snapshot != null)
         {
-            return new WorldMapSettlementSnapshot
-            {
-                PanelTitle = "整备区域",
-                PanelSubtitle = "数据缺失",
-                SummaryText = "当前没有可用存档。",
-                StatusText = "状态：不可整备。",
-                ActionHintText = "请先返回主菜单建立存档。",
-                InventoryButtonLabel = "修士总览",
-                WorkshopButtonLabel = "打开炼制台",
-                VitalityButtonLabel = "温养护身法器",
-                AttackButtonLabel = "祭炼主法器",
-                Preview = new WorldMapPreviewSnapshot
-                {
-                    Label = "整备区域占位图",
-                    PlaceholderColor = new Color(0.18f, 0.16f, 0.12f, 1f)
-                }
-            };
+            snapshot.SummaryText = AppendFocusedLocationSummary(snapshot.SummaryText, snapshot.LocationEntries, "当前聚焦分区");
+            snapshot.ActionHintText = AppendFocusedLocationStatus(snapshot.ActionHintText, snapshot.LocationEntries);
         }
 
-        var vitalityCost = WorldRegionLibrary.GetVitalityUpgradeCost(saveData);
-        var attackCost = WorldRegionLibrary.GetAttackUpgradeCost(saveData);
-
-        return new WorldMapSettlementSnapshot
-        {
-            PanelTitle = saveData != null && saveData.isSectDisciple ? "山门外坊市" : "行脚坊市",
-            PanelSubtitle = saveData != null && saveData.isSectDisciple
-                ? "洞府整备 / 储物 / 炼制 / 法器养成"
-                : "路边坊市 / 储物 / 炼制 / 行前整备",
-            SummaryText = BuildSettlementSummary(saveData) + "\n\n" +
-                          CultivationLoadoutLibrary.BuildEquipmentOverview(saveData),
-            StatusText = "灵石：" + saveData.spiritCrystals +
-                         "    储物袋：" + saveData.GetUsedBagSlots() + " / " + saveData.bagCapacity +
-                         "\n当前所在：" + saveData.location,
-            ActionHintText = "可先查看修士总览，再处理炼制、主法器祭炼与护身法器温养。",
-            InventoryButtonLabel = "修士总览",
-            WorkshopButtonLabel = "打开炼制台",
-            VitalityButtonLabel = "温养护身法器 · " + vitalityCost + " 灵石",
-            AttackButtonLabel = "祭炼主法器 · " + attackCost + " 灵石",
-            CanUpgradeVitality = saveData.spiritCrystals >= vitalityCost,
-            CanUpgradeAttack = saveData.spiritCrystals >= attackCost,
-            Preview = BuildWorkshopPreviewSnapshot()
-        };
+        return snapshot;
     }
 
     public WorldMapSectResidenceSnapshot BuildSectResidenceSnapshot()
     {
-        var hallSnapshots = GetSectHallSnapshots(saveData) ?? new SectHallSnapshot[0];
-        sectHallSnapshots = hallSnapshots;
-
-        var hallButtons = new WorldMapSectHallButtonSnapshot[hallSnapshots.Length];
-        for (var i = 0; i < hallSnapshots.Length; i++)
+        var snapshot = BuildWorldMapSectResidenceSnapshot(saveData, selectedSectHallIndex);
+        selectedSectHallIndex = snapshot != null ? snapshot.ResolvedSelectedHallIndex : -1;
+        selectedSectHallId = snapshot != null ? snapshot.SelectedHallId ?? string.Empty : string.Empty;
+        DecorateLocationEntries(snapshot != null ? snapshot.LocationEntries : null, selectedSectLocationId);
+        if (snapshot != null)
         {
-            var hall = hallSnapshots[i];
-            if (hall == null || hall.Definition == null)
-            {
-                hallButtons[i] = new WorldMapSectHallButtonSnapshot { DisplayName = string.Empty, IsSelected = false };
-                continue;
-            }
-
-            hallButtons[i] = new WorldMapSectHallButtonSnapshot
-            {
-                DisplayName = hall.Definition.DisplayName,
-                IsSelected = i == Mathf.Clamp(selectedSectHallIndex, 0, Mathf.Max(0, hallSnapshots.Length - 1))
-            };
+            snapshot.Description = AppendFocusedLocationSummary(snapshot.Description, snapshot.LocationEntries, "当前聚焦支点");
+            snapshot.Status = AppendFocusedLocationStatus(snapshot.Status, snapshot.LocationEntries);
         }
 
-        if (hallSnapshots.Length == 0)
-        {
-            return new WorldMapSectResidenceSnapshot
-            {
-                PanelTitle = string.IsNullOrWhiteSpace(saveData.sectName) ? "宗门驻地" : saveData.sectName,
-                PanelSubtitle = "门派驻地 / 殿堂事务 / 洞府整备",
-                HallTitle = "宗门",
-                Description = "宗门尚未接引。",
-                Status = string.Empty,
-                Preview = new WorldMapPreviewSnapshot
-                {
-                    Sprite = null,
-                    Label = "宗门占位图",
-                    PlaceholderColor = new Color(0.24f, 0.18f, 0.12f, 1f)
-                },
-                HallButtons = hallButtons,
-                ActionButtons = new WorldMapSectActionButtonSnapshot[0]
-            };
-        }
-
-        selectedSectHallIndex = Mathf.Clamp(selectedSectHallIndex, 0, hallSnapshots.Length - 1);
-        var current = hallSnapshots[selectedSectHallIndex];
-        if (current == null || current.Definition == null)
-        {
-            return new WorldMapSectResidenceSnapshot
-            {
-                PanelTitle = string.IsNullOrWhiteSpace(saveData.sectName) ? "宗门驻地" : saveData.sectName,
-                PanelSubtitle = "门派驻地 / 殿堂事务 / 洞府整备",
-                HallTitle = "宗门",
-                Description = "宗门数据异常。",
-                Status = string.Empty,
-                Preview = new WorldMapPreviewSnapshot
-                {
-                    Sprite = null,
-                    Label = "宗门占位图",
-                    PlaceholderColor = new Color(0.24f, 0.18f, 0.12f, 1f)
-                },
-                HallButtons = hallButtons,
-                ActionButtons = new WorldMapSectActionButtonSnapshot[0]
-            };
-        }
-
-        var definition = current.Definition;
-        var actions = current.Actions ?? new SectActionSnapshot[0];
-        var actionButtons = new WorldMapSectActionButtonSnapshot[actions.Length];
-        for (var i = 0; i < actions.Length; i++)
-        {
-            var action = actions[i];
-            actionButtons[i] = new WorldMapSectActionButtonSnapshot
-            {
-                ActionId = action.Definition != null ? action.Definition.Id : string.Empty,
-                ButtonLabel = action.ButtonLabel,
-                IsVisible = action.Definition != null,
-                IsInteractable = action.IsAvailable,
-                TooltipTitle = action.Definition != null ? action.Definition.Title : string.Empty,
-                TooltipBody = action.Definition != null
-                    ? action.Definition.Description + (action.IsAvailable || string.IsNullOrWhiteSpace(action.UnavailableReason) ? string.Empty : "\n\n" + action.UnavailableReason)
-                    : string.Empty
-            };
-        }
-
-        return new WorldMapSectResidenceSnapshot
-        {
-            PanelTitle = string.IsNullOrWhiteSpace(saveData.sectName) ? "宗门驻地" : saveData.sectName,
-            PanelSubtitle = "门派驻地 / 殿堂事务 / 洞府整备",
-            HallTitle = definition.DisplayName + " · " + definition.Subtitle,
-            Description = definition.Description + "\n\n" + BuildSectOverview(saveData),
-            Status = current.StatusSummary,
-            Preview = new WorldMapPreviewSnapshot
-            {
-                Sprite = definition.IllustrationImage,
-                Label = definition.DisplayName + "占位图",
-                PlaceholderColor = definition.PlaceholderColor
-            },
-            HallButtons = hallButtons,
-            ActionButtons = actionButtons
-        };
+        return snapshot;
     }
 
-    private WorldMapWorkshopRecipeSnapshot BuildWorkshopRecipeSnapshot(string recipeId)
+    private static void DecorateLocationEntries(WorldMapLocationEntrySnapshot[] entries, string selectedLocationId)
     {
-        WorkshopRecipeDefinition[] recipes = WorkshopLibrary.GetRecipes();
-        if (recipes == null)
+        if (entries == null)
         {
-            return new WorldMapWorkshopRecipeSnapshot
-            {
-                RecipeId = recipeId,
-                ButtonLabel = recipeId,
-                IsInteractable = false,
-                TooltipTitle = recipeId,
-                TooltipBody = "未找到对应配方。"
-            };
+            return;
         }
 
-        for (var i = 0; i < recipes.Length; i++)
+        for (var i = 0; i < entries.Length; i++)
         {
-            var recipe = recipes[i];
-            if (recipe == null || recipe.Id != recipeId)
+            var entry = entries[i];
+            if (entry == null)
             {
                 continue;
             }
 
-            return new WorldMapWorkshopRecipeSnapshot
-            {
-                RecipeId = recipeId,
-                ButtonLabel = WorkshopLibrary.BuildRecipeButtonLabel(saveData, recipeId),
-                IsInteractable = CanCraft(recipeId),
-                TooltipTitle = recipe.Title,
-                TooltipBody = recipe.Description + "\n\n" + WorkshopLibrary.BuildRecipeButtonLabel(saveData, recipeId)
-            };
+            entry.IsSelected = !string.IsNullOrWhiteSpace(selectedLocationId) && entry.LocationId == selectedLocationId;
         }
-
-        return new WorldMapWorkshopRecipeSnapshot
-        {
-            RecipeId = recipeId,
-            ButtonLabel = recipeId,
-            IsInteractable = false,
-            TooltipTitle = recipeId,
-            TooltipBody = "未找到对应配方。"
-        };
     }
 
-    private WorldMapPreviewSnapshot BuildInventoryPreviewSnapshot()
+    private static string AppendFocusedLocationSummary(string baseText, WorldMapLocationEntrySnapshot[] entries, string label)
     {
-        string itemId = null;
-        var items = saveData != null ? saveData.storageItems : null;
-        for (var i = 0; items != null && i < items.Length; i++)
+        var entry = FindSelectedLocationEntry(entries);
+        if (entry == null)
         {
-            var stack = items[i];
-            if (stack == null || string.IsNullOrWhiteSpace(stack.itemId) || stack.quantity <= 0)
+            return baseText;
+        }
+
+        var builder = new System.Text.StringBuilder(baseText ?? string.Empty);
+        if (builder.Length > 0)
+        {
+            builder.Append("\n\n");
+        }
+
+        builder.Append(label).Append("：").Append(entry.DisplayName);
+        if (!string.IsNullOrWhiteSpace(entry.StatusText))
+        {
+            builder.Append("\n").Append(entry.StatusText);
+        }
+
+        var body = entry.TooltipBody ?? string.Empty;
+        var firstBreak = body.IndexOf("\n\n", System.StringComparison.Ordinal);
+        var excerpt = firstBreak >= 0 ? body.Substring(0, firstBreak) : body;
+        if (!string.IsNullOrWhiteSpace(excerpt))
+        {
+            builder.Append("\n").Append(excerpt);
+        }
+
+        return builder.ToString();
+    }
+
+    private static string AppendFocusedLocationStatus(string baseText, WorldMapLocationEntrySnapshot[] entries)
+    {
+        var entry = FindSelectedLocationEntry(entries);
+        if (entry == null)
+        {
+            return baseText;
+        }
+
+        var builder = new System.Text.StringBuilder(baseText ?? string.Empty);
+        if (builder.Length > 0)
+        {
+            builder.Append("\n");
+        }
+
+        builder.Append("当前聚焦：").Append(entry.DisplayName);
+        if (!string.IsNullOrWhiteSpace(entry.StatusText))
+        {
+            builder.Append(" / ").Append(entry.StatusText);
+        }
+
+        return builder.ToString();
+    }
+
+    private static WorldMapLocationEntrySnapshot FindSelectedLocationEntry(WorldMapLocationEntrySnapshot[] entries)
+    {
+        if (entries == null)
+        {
+            return null;
+        }
+
+        for (var i = 0; i < entries.Length; i++)
+        {
+            var entry = entries[i];
+            if (entry != null && entry.IsSelected)
             {
-                continue;
+                return entry;
             }
-
-            itemId = stack.itemId;
-            break;
         }
 
-        return new WorldMapPreviewSnapshot
-        {
-            Sprite = string.IsNullOrWhiteSpace(itemId) ? null : InventoryLibrary.GetArtwork(itemId),
-            Label = string.IsNullOrWhiteSpace(itemId) ? "储物袋占位图" : InventoryLibrary.GetDisplayName(itemId),
-            PlaceholderColor = new Color(0.22f, 0.18f, 0.14f, 1f)
-        };
-    }
-
-    private WorldMapPreviewSnapshot BuildWorkshopPreviewSnapshot()
-    {
-        var recipes = WorkshopLibrary.GetRecipes();
-        var recipe = recipes != null && recipes.Length > 0 ? recipes[0] : null;
-        return new WorldMapPreviewSnapshot
-        {
-            Sprite = recipe != null ? recipe.IllustrationImage : null,
-            Label = recipe != null ? recipe.Title : "洞府整备占位图",
-            PlaceholderColor = new Color(0.18f, 0.2f, 0.16f, 1f)
-        };
+        return null;
     }
 
     private void BindTaskPreview(TaskContextSnapshot taskContext)

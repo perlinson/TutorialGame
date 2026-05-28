@@ -3,7 +3,7 @@ using QFramework;
 /// <summary>
 /// M2 AttributeModel：修仙类持久属性（10个基础属性）。
 /// 区别于 <see cref="CultivationCombatStatsModel"/>（战斗运行时属性）。
-/// 写入字段时请通过 <see cref="MainMenuSaveData"/>，再调用 <see cref="Apply"/> 同步到 Bindable。
+/// 写入字段时请通过 <see cref="CultivationSaveData"/>，再调用 <see cref="Apply"/> 同步到 Bindable。
 /// </summary>
 public sealed class CultivationAttributeModel : AbstractModel
 {
@@ -22,13 +22,13 @@ public sealed class CultivationAttributeModel : AbstractModel
     public readonly BindableProperty<int> Dexterity = new BindableProperty<int>(0);
     public readonly BindableProperty<int> SpiritRoot = new BindableProperty<int>(0);
 
-    public MainMenuSaveData CurrentSaveData { get; private set; }
+    public CultivationSaveData CurrentSaveData { get; private set; }
 
     protected override void OnInit()
     {
     }
 
-    public void Apply(MainMenuSaveData saveData)
+    public void Apply(CultivationSaveData saveData)
     {
         CurrentSaveData = saveData;
         if (saveData == null)

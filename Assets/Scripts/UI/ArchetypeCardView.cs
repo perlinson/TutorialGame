@@ -18,9 +18,9 @@ public sealed class ArchetypeCardView : MonoBehaviour
     private AspectRatioFitter portraitAspectFitter;
 
     private int index;
-    private MainMenuArchetype boundData;
+    private HeroArchetypeOption boundData;
 
-    public void Bind(int newIndex, MainMenuArchetype data, bool selected, UnityEngine.Events.UnityAction onClick)
+    public void Bind(int newIndex, HeroArchetypeOption data, bool selected, UnityEngine.Events.UnityAction onClick)
     {
         index = newIndex;
         boundData = data;
@@ -66,7 +66,7 @@ public sealed class ArchetypeCardView : MonoBehaviour
     }
 
     public int Index => index;
-    public MainMenuArchetype Data => boundData;
+    public HeroArchetypeOption Data => boundData;
 
     private void RefreshPortraitLayout()
     {
